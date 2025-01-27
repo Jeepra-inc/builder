@@ -1,0 +1,10 @@
+:root {
+  --heading-color: #1a1a1a;
+  /* Add more CSS variables as needed */
+}
+
+h1 {
+  color: var(--heading-color);
+}
+
+/* Add more global styles as needed */
