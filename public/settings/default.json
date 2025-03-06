@@ -1,0 +1,56 @@
+{
+  "sections": [],
+  "headerSettings": {
+    "logo": {
+      "text": "Your Brand",
+      "showText": true
+    },
+    "navigation": {
+      "items": [
+        { "text": "Home", "url": "#", "isButton": false },
+        { "text": "About", "url": "#", "isButton": false },
+        { "text": "Contact", "url": "#", "isButton": true }
+      ]
+    },
+    "layout": {
+      "sticky": true,
+      "maxWidth": "1200px"
+    }
+  },
+  "footerSettings": {
+    "content": {
+      "copyright": "© 2024 Your Company. All rights reserved.",
+      "description": "Building amazing websites with ease"
+    },
+    "links": {
+      "items": [
+        { "text": "About Us", "url": "#" },
+        { "text": "Contact", "url": "#" },
+        { "text": "Privacy Policy", "url": "#" }
+      ]
+    },
+    "layout": {
+      "maxWidth": "1200px",
+      "showSocials": true,
+      "multiColumn": true
+    }
+  },
+  "globalStyles": {
+    "colors": {},
+    "typography": {
+      "headingFont": "Assistant",
+      "bodyFont": "Assistant",
+      "headingSizeScale": 100,
+      "bodySizeScale": 100,
+      "headingColor": "#1a1a1a"
+    },
+    "customCSS": "",
+    "branding": {
+      "logoUrl": "",
+      "logoWidth": 90,
+      "faviconUrl": "",
+      "backgroundColor": "#ffffff"
+    }
+  },
+  "version": "1.0.0"
+}

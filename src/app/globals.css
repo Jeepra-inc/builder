@@ -81,13 +81,13 @@
 }
 
 /* Custom hover state for parent section */
-[data-section-hover='true'] .parent-section-hover\:border {
+[data-section-hover="true"] .parent-section-hover\:border {
   border-width: 1px;
   border-style: dashed;
   border-color: rgba(59, 130, 246, 0.5); /* blue-500/50 */
 }
 
-[data-section-hover='true'] .parent-section-hover\:rounded {
+[data-section-hover="true"] .parent-section-hover\:rounded {
   border-radius: 0.25rem; /* rounded */
 }
 
@@ -119,4 +119,68 @@
 
 .hover\:border-blue-500 {
   border-color: rgb(59, 130, 246); /* blue-500 */
+}
+
+/* Dynamic CSS variables */
+:root {
+  /* Base sizes */
+  --base-heading-size: 2rem;
+  --base-body-size: 1rem;
+
+  /* Scale factors */
+  --heading-size-scale: 1;
+  --body-size-scale: 1;
+
+  /* Calculated sizes */
+  --heading-size: calc(var(--base-heading-size) * var(--heading-size-scale));
+  --body-size: calc(var(--base-body-size) * var(--body-size-scale));
+}
+
+/* Apply these variables wherever needed */
+.heading-text {
+  font-size: var(--heading-size);
+}
+
+.body-text {
+  font-size: var(--body-size);
+}
+
+/* Custom drag and drop styles */
+.drop-target {
+  transition: border-color 0.2s ease;
+}
+
+.drop-target-active {
+  border-color: #3b82f6 !important;
+  border-style: solid !important;
+}
+
+#dragged-item {
+  opacity: 0.8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* React DnD styles */
+.dnd-dragging {
+  opacity: 0.5;
+}
+
+.dnd-over {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-color: #3b82f6 !important;
+}
+
+/* Sortable item styles */
+.sortable-item {
+  transition: transform 0.2s ease;
+}
+
+.sortable-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sortable-item.dragging {
+  opacity: 0.5;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 }

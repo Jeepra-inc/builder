@@ -36,7 +36,7 @@
     "**/*.ts",
     "**/*.tsx",
     "webpack.d.ts"
-  ],
+, "src/app/builder/components/BuilderLayout/Container.tsx.swap", "src/app/builder/components/BuilderLayout/header/HeaderBottom.tsx.swap", "src/app/builder/components/BuilderLayout/header/HeaderMain.tsx.wap"  ],
   "exclude": [
     "node_modules"
   ]

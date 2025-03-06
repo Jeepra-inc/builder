@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Section, SettingField } from '@/app/builder/types';
-import { sections } from '@/app/builder/elements/sections';
-import { SectionSettingsRendererProps } from '@/app/builder/types';
-import { useSettingsManager } from '../../hooks/useSettingsManager';
+import React, { useState } from "react";
+import { Section, SettingField } from "@/app/builder/types";
+import { sections } from "@/app/builder/elements/sections";
+import { SectionSettingsRendererProps } from "@/app/builder/types";
+import { useSettingsManager } from "../../hooks/useSettingsManager";
 import {
   FieldWrapper,
   TextInput,
@@ -13,7 +13,7 @@ import {
   SelectInput,
   ColorInput,
   RangeInput,
-} from './SettingsInputs';
+} from "./SettingsInputs";
 
 const InputComponents = {
   text: TextInput,
@@ -24,19 +24,22 @@ const InputComponents = {
   range: RangeInput,
 };
 
-export function SectionSettingsRenderer({ section, onUpdateSection }: SectionSettingsRendererProps) {
-  const {
-    localSettings,
-    padding,
-    handleSettingChange,
-    handlePaddingChange,
-  } = useSettingsManager(section, onUpdateSection);
+export function SectionSettingsRenderer({
+  section,
+  onUpdateSection,
+}: SectionSettingsRendererProps) {
+  const { localSettings, padding, handleSettingChange, handlePaddingChange } =
+    useSettingsManager(section, onUpdateSection);
 
   const getCorrectSectionConfig = () => sections.sections[section.type] || null;
   const correctSectionConfig = getCorrectSectionConfig();
 
   if (!correctSectionConfig) {
-    return <div>No settings schema available for this section type: {section.type}</div>;
+    return (
+      <div>
+        No settings schema available for this section type: {section.type}
+      </div>
+    );
   }
 
   const schemaFields = correctSectionConfig.settings || [];
@@ -46,28 +49,41 @@ export function SectionSettingsRenderer({ section, onUpdateSection }: SectionSet
       <FieldWrapper id="paddingTop" label="Top Padding">
         <NumberInput
           value={padding.top}
-          onChange={(value) => handlePaddingChange('top', value)}
+          onChange={(event) => {
+            const target = event.target as HTMLInputElement;
+            const value = target.valueAsNumber;
+            handlePaddingChange("top", value);
+          }}
         />
       </FieldWrapper>
 
       <FieldWrapper id="paddingBottom" label="Bottom Padding">
         <NumberInput
           value={padding.bottom}
-          onChange={(value) => handlePaddingChange('bottom', value)}
+          onChange={(event) => {
+            const target = event.target as HTMLInputElement;
+            const value = target.valueAsNumber;
+            handlePaddingChange("bottom", value);
+          }}
         />
       </FieldWrapper>
 
       {schemaFields.map((field: SettingField) => {
+        const [value, setValue] = useState<Field['default']>(field.default);
         const currentValue = localSettings?.[field.id];
-        const Component = InputComponents[field.type as keyof typeof InputComponents];
+        const Component =
+          InputComponents[field.type as keyof typeof InputComponents];
 
         if (!Component) {
           return <div key={field.id}>Unsupported field type: {field.type}</div>;
         }
 
         const fieldProps = {
-          value: currentValue ?? field.default ?? '',
-          onChange: (val: any) => handleSettingChange(field.id, val),
+          value: currentValue ?? value,
+          onChange: (val: any) => {
+            setValue(val);
+            handleSettingChange(field.id, val);
+          },
           ...field,
         };
 

@@ -1,64 +1,64 @@
 // src/sections/moderBanner/moderBanner-component.tsx
-import { FC } from 'react';
-import clsx from 'clsx';
-import { SectionSchema, SectionType } from '@/app/builder/types';
-import withSection from '../withSection';
+import { FC } from "react";
+import clsx from "clsx";
+import { SectionSchema, SectionType } from "@/app/builder/types";
+import withSection from "../withSection";
 
 interface ModernBannerComponentType extends FC<any> {
   schema?: SectionSchema;
 }
 
 export const moderBannerSchema: SectionSchema = {
-  name: 'moderBanner',
+  name: "moderBanner",
   type: SectionType.ModernBanner,
   schema: [
     {
-      id: 'title',
-      type: 'text',
-      label: 'Title',
-      default: 'Your moderBanner Title',
+      id: "title",
+      type: "text",
+      label: "Title",
+      default: "Your moderBanner Title",
     },
     {
-      id: 'description',
-      type: 'textarea',
-      label: 'Description',
-      default: 'Add your moderBanner description here',
+      id: "description",
+      type: "textarea",
+      label: "Description",
+      default: "Add your moderBanner description here",
     },
   ],
   settings: [
     {
-      id: 'textAlignment',
-      type: 'select',
-      label: 'Text Alignment',
+      id: "textAlignment",
+      type: "select",
+      label: "Text Alignment",
       options: [
-        { value: 'left', label: 'Left' },
-        { value: 'center', label: 'Center' },
-        { value: 'right', label: 'Right' },
+        { value: "left", label: "Left" },
+        { value: "center", label: "Center" },
+        { value: "right", label: "Right" },
       ],
-      default: 'center',
+      default: "center",
     },
     {
-      id: 'buttonText',
-      type: 'text',
-      label: 'Button Text',
-      default: 'Learn More',
+      id: "buttonText",
+      type: "text",
+      label: "Button Text",
+      default: "Learn More",
     },
     {
-      id: 'buttonLink',
-      type: 'text',
-      label: 'Button Link',
-      default: '#',
+      id: "buttonLink",
+      type: "text",
+      label: "Button Link",
+      default: "#",
     },
     {
-      id: 'buttonStyle',
-      type: 'select',
-      label: 'Button Style',
+      id: "buttonStyle",
+      type: "select",
+      label: "Button Style",
       options: [
-        { value: 'primary', label: 'Primary' },
-        { value: 'secondary', label: 'Secondary' },
-        { value: 'outline', label: 'Outline' },
+        { value: "primary", label: "Primary" },
+        { value: "secondary", label: "Secondary" },
+        { value: "outline", label: "Outline" },
       ],
-      default: 'primary',
+      default: "primary",
     },
   ],
 };
@@ -69,17 +69,13 @@ export const moderBannerSchema: SectionSchema = {
 const ModernBannerComponent: ModernBannerComponentType = withSection({
   schema: moderBannerSchema,
   renderContent: (settings) => {
-
     return (
       <div
-        className={clsx(
-          'max-w-4xl mx-auto pt-[30px]',
-          {
-            'text-left': settings.textAlignment === 'left',
-            'text-center': settings.textAlignment === 'center',
-            'text-right': settings.textAlignment === 'right',
-          }
-        )}
+        className={clsx("max-w-4xl mx-auto pt-[30px]", {
+          "text-left": settings.textAlignment === "left",
+          "text-center": settings.textAlignment === "center",
+          "text-right": settings.textAlignment === "right",
+        })}
       >
         {settings.title && (
           <h1
@@ -90,10 +86,7 @@ const ModernBannerComponent: ModernBannerComponentType = withSection({
           </h1>
         )}
         {settings.description && (
-          <p
-            className="text-lg mb-6"
-            style={{ color: settings.textColor }}
-          >
+          <p className="text-lg mb-6" style={{ color: settings.textColor }}>
             {settings.description}
           </p>
         )}
@@ -101,14 +94,14 @@ const ModernBannerComponent: ModernBannerComponentType = withSection({
           <a
             href={settings.buttonLink}
             className={clsx(
-              'inline-block px-6 py-2 rounded transition-colors duration-300',
+              "inline-block px-6 py-2 rounded transition-colors duration-300",
               {
-                'bg-blue-500 text-white hover:bg-blue-600':
-                  settings.buttonStyle === 'primary',
-                'bg-gray-500 text-white hover:bg-gray-600':
-                  settings.buttonStyle === 'secondary',
-                'border border-blue-500 text-blue-500 hover:bg-blue-50':
-                  settings.buttonStyle === 'outline',
+                "bg-blue-500 text-white hover:bg-blue-600":
+                  settings.buttonStyle === "primary",
+                "bg-gray-500 text-white hover:bg-gray-600":
+                  settings.buttonStyle === "secondary",
+                "border border-blue-500 text-blue-500 hover:bg-blue-50":
+                  settings.buttonStyle === "outline",
               }
             )}
           >

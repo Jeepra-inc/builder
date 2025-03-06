@@ -3,9 +3,17 @@ import React, { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Copy, Trash2, GripVertical, Eye, EyeOff } from "lucide-react";
-import { SortableItemProps, ExtendedSortableArguments, ActionButtonProps } from '@/app/builder/types';
+import {
+  SortableItemProps,
+  ExtendedSortableArguments,
+  ActionButtonProps,
+} from "@/app/builder/types";
 
 // Reusable action button component
 const ActionButton = ({
@@ -31,52 +39,63 @@ const ActionButton = ({
 
 export function SortableItem({
   section,
+  index,
   onHover,
   onSelectSection,
   onDuplicate,
   onDelete,
   onToggleVisibility,
-  isOverlay = false,
   isDragging = false,
+  selectedSectionId,
   className = "",
 }: SortableItemProps) {
   const [isHovered, setIsHovered] = useState(false);
 
-  // Outer DnD for the entire section
+  // Enhanced sortable setup with custom options
   const {
     attributes,
     listeners,
     setNodeRef,
     transform,
     transition,
+    isDragging: isDraggingNow,
+    isSorting,
+    over,
   } = useSortable({
     id: section.id,
-    disabled: isOverlay,
-    activationConstraint: {
-      type: "pointer",
-      activationMethod: "pointer",
+    data: {
+      type: "section",
+      section,
+      index,
     },
-  } as ExtendedSortableArguments);
+    animateLayoutChanges: () => false, // Disable automatic layout animations
+  });
 
+  // Combined dragging state
+  const isActive = isDragging || isDraggingNow;
+  const isSelected = selectedSectionId === section.id;
+  const isOver = over?.id === section.id;
+
+  // Enhanced style with better visual feedback
   const style = {
-    transform: transform
-      ? CSS.Transform.toString({ ...transform, scaleX: 1, scaleY: 1 })
-      : undefined,
+    transform: CSS.Transform.toString(
+      transform || { x: 0, y: 0, scaleX: 1, scaleY: 1 }
+    ),
     transition,
-    opacity: isDragging ? 0.9 : 1,
-    cursor: "move",
+    zIndex: isActive ? 999 : isOver ? 100 : 1,
+    opacity: isActive ? 0.8 : 1,
+    position: isActive ? "relative" : ("static" as any),
+    pointerEvents: isActive ? "none" : "auto",
   };
-
-  const dragHandleAttributes = { ...attributes, ...listeners };
 
   const handleMouseEnter = () => {
     setIsHovered(true);
-    onHover(section.id);
+    onHover?.(section.id);
   };
 
   const handleMouseLeave = () => {
     setIsHovered(false);
-    onHover(null);
+    onHover?.(null);
   };
 
   const handleSectionClick = () => {
@@ -88,58 +107,62 @@ export function SortableItem({
   };
 
   return (
-    <div>
-      <div
-        ref={setNodeRef}
-        style={style}
-        className={`p-2 rounded-md cursor-pointer transition-colors duration-200 ${
-          isOverlay ? "" : isHovered ? "bg-blue-50" : "bg-gray-100/50"
-        } ${className}`}
-        onClick={handleSectionClick}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center space-x-2 flex-grow">
-            <div
-              {...dragHandleAttributes}
-              className="cursor-move w-4 h-4 text-gray-400 mr-2"
-            >
-              <GripVertical className="w-4 h-4" />
-            </div>
-            <span className="text-sm font-medium flex-grow">{section.type}</span>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`p-2 rounded-md border border-zinc-200 cursor-pointer transition-all duration-200 
+        ${isActive ? "bg-gray-200 shadow-lg" : ""}
+        ${isHovered && !isActive ? "bg-blue-50" : "bg-gray-100/50"}
+        ${isSelected ? "border-l-2 border-blue-500" : ""}
+        ${isOver && !isActive ? "border border-blue-500 bg-blue-50" : ""}
+        ${className}
+      `}
+      onClick={handleSectionClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center space-x-2 flex-grow">
+          <div
+            {...attributes}
+            {...listeners}
+            className="cursor-move w-6 h-6 text-gray-400 hover:text-blue-500 rounded-full hover:bg-blue-100 flex items-center justify-center"
+            data-drag-handle
+          >
+            <GripVertical className="w-4 h-4" />
           </div>
-
-          {!isOverlay && isHovered && (
-            <div className="flex space-x-2 ml-auto">
-              <ActionButton
-                icon={section.isVisible ? Eye : EyeOff}
-                tooltip={section.isVisible ? "Hide" : "Show"}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleVisibility(section);
-                }}
-              />
-              <ActionButton
-                icon={Copy}
-                tooltip="Duplicate"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDuplicate?.();
-                }}
-              />
-              <ActionButton
-                icon={Trash2}
-                tooltip="Delete"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete?.();
-                }}
-                className="text-red-500"
-              />
-            </div>
-          )}
+          <span className="text-sm font-medium flex-grow">{section.type}</span>
         </div>
+
+        {isHovered && !isActive && (
+          <div className="flex ml-auto">
+            <ActionButton
+              icon={section.isVisible ? Eye : EyeOff}
+              tooltip={section.isVisible ? "Hide" : "Show"}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleVisibility?.(section);
+              }}
+            />
+            <ActionButton
+              icon={Copy}
+              tooltip="Duplicate"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDuplicate?.();
+              }}
+            />
+            <ActionButton
+              icon={Trash2}
+              tooltip="Delete"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.();
+              }}
+              className="text-red-500"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

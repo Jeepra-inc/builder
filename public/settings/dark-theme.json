@@ -1,0 +1,59 @@
+{
+  "sections": [],
+  "headerSettings": {
+    "logo": {
+      "text": "Dark Theme",
+      "showText": true
+    },
+    "navigation": {
+      "items": [
+        { "text": "Home", "url": "#", "isButton": false },
+        { "text": "Features", "url": "#", "isButton": false },
+        { "text": "Pricing", "url": "#", "isButton": false },
+        { "text": "Get Started", "url": "#", "isButton": true }
+      ]
+    },
+    "layout": {
+      "sticky": true,
+      "maxWidth": "1200px"
+    }
+  },
+  "footerSettings": {
+    "content": {
+      "copyright": "© 2024 Dark Theme Inc. All rights reserved.",
+      "description": "Premium digital solutions for modern businesses"
+    },
+    "links": {
+      "items": [
+        { "text": "About", "url": "#" },
+        { "text": "Features", "url": "#" },
+        { "text": "Pricing", "url": "#" },
+        { "text": "FAQ", "url": "#" },
+        { "text": "Contact", "url": "#" }
+      ]
+    },
+    "layout": {
+      "maxWidth": "1200px",
+      "showSocials": true,
+      "multiColumn": true
+    }
+  },
+  "globalStyles": {
+    "colors": {},
+    "typography": {
+      "headingFont": "Arial",
+      "bodyFont": "Arial",
+      "headingSizeScale": 100,
+      "bodySizeScale": 100,
+      "headingColor": "#ffffff"
+    },
+    "customCSS": "",
+    "branding": {
+      "logoUrl": "",
+      "logoWidth": 100,
+      "faviconUrl": "",
+      "backgroundColor": "#121212"
+    }
+  },
+  "version": "1.0.0"
+}

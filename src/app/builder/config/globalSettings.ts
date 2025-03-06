@@ -1,4 +1,5 @@
-import { Database, Palette, Layout, Type, Globe, Share, Bell, Shield, Code } from 'lucide-react';
+import { Database, Palette, Layout, Type, Globe, Share, Bell, Shield, Code, Play, Group, FormInput, Paperclip, MedalIcon, Image } from 'lucide-react';
+import { ColorsSettings } from '@/app/builder/components/BuilderLayout/GlobalSettings/settings/ColorsSettings';
 
 export interface SettingConfig {
   id: string;
@@ -13,6 +14,7 @@ export interface SettingCategory {
   icon: any;
   description?: string;
   settings: SettingConfig[];
+  component?: any; 
 }
 
 export const globalSettingsConfig: SettingCategory[] = [
@@ -24,8 +26,19 @@ export const globalSettingsConfig: SettingCategory[] = [
     settings: [
       { id: 'logo', label: 'Logo', icon: Database },
       { id: 'favicon', label: 'Favicon', icon: Database },
-      { id: 'colors', label: 'Brand Colors', icon: Palette },
     ]
+  },
+  {
+    id: 'colors',
+    label: 'Colors',
+    icon: Palette,
+    description: 'Manage your color settings',
+    settings: [
+      { id: 'primary-color', label: 'Primary Color', icon: Palette },
+      { id: 'secondary-color', label: 'Secondary Color', icon: Palette },
+      { id: 'accent-color', label: 'Accent Color', icon: Palette },
+    ],
+    component: ColorsSettings
   },
   {
     id: 'layout',
@@ -50,23 +63,30 @@ export const globalSettingsConfig: SettingCategory[] = [
     ]
   },
   {
-    id: 'custom-css',
-    label: 'Custom CSS',
-    icon: Code,
-    description: 'Add custom CSS styles',
+    id: 'animation',
+    label: 'Animation',
+    icon: Play,
+    description: 'Manage animation settings',
     settings: [
-      { id: 'css-editor', label: 'CSS Editor', icon: Code },
+      { id: 'animations', label: 'Animations', icon: Play },
     ]
   },
   {
-    id: 'localization',
-    label: 'Localization',
-    icon: Globe,
-    description: 'Manage languages and regional settings',
+    id: 'buttons',
+    label: 'Buttons',
+    icon: Group,
+    description: 'Manage button settings',
     settings: [
-      { id: 'languages', label: 'Languages', icon: Globe },
-      { id: 'timezone', label: 'Timezone', icon: Globe },
-      { id: 'currency', label: 'Currency', icon: Globe },
+      { id: 'buttons', label: 'Buttons', icon: Play },
+    ]
+  },
+  {
+    id: 'inputs',
+    label: 'Inputs',
+    icon: FormInput,
+    description: 'Manage input settings',
+    settings: [
+      { id: 'inputs', label: 'Inputs', icon: Play },
     ]
   },
   {
@@ -80,23 +100,30 @@ export const globalSettingsConfig: SettingCategory[] = [
     ]
   },
   {
-    id: 'notifications',
-    label: 'Notifications',
-    icon: Bell,
-    description: 'Configure site notifications and alerts',
+    id: 'blog-card',
+    label: 'Blog Card',
+    icon: Paperclip,
+    description: 'Configure Blog card settings',
     settings: [
-      { id: 'popups', label: 'Pop-ups', icon: Bell },
-      { id: 'alerts', label: 'Alerts', icon: Bell },
+      { id: 'blog-card', label: 'Blog Card', icon: Share },
     ]
   },
   {
-    id: 'security',
-    label: 'Security',
-    icon: Shield,
-    description: 'Manage security settings',
+    id: 'media',
+    label: 'Media',
+    icon: Image,
+    description: 'Manage media settings',
     settings: [
-      { id: 'authentication', label: 'Authentication', icon: Shield },
-      { id: 'privacy', label: 'Privacy', icon: Shield },
+      { id: 'media', label: 'Media', icon: Share },
     ]
-  }
+  },
+  {
+    id: 'custom-css',
+    label: 'Custom CSS',
+    icon: Code,
+    description: 'Add custom CSS styles',
+    settings: [
+      { id: 'css-editor', label: 'CSS Editor', icon: Code },
+    ]
+  },
 ];

@@ -1,6 +1,7 @@
 // -- File: types.ts --
 import { ReactNode, ReactElement, ReactNode as ReactNodeType } from "react";
-import { LucideIcon } from 'lucide-react';
+import { DivideIcon as LucideIcon } from 'lucide-react';
+import { GlobalSettings } from './utils/settingsStorage';
 
 export enum SectionType {
   Text = 'text',
@@ -47,7 +48,7 @@ export interface SectionSchema {
   settings?: Record<string, any>;
 }
 
-export interface SettingField {
+export interface SettingField<T = any> {
   type: 
     | 'text'
     | 'textarea'
@@ -74,7 +75,7 @@ export interface SettingField {
   description?: string;
   subtitle?: string;
   image?: string;
-  default?: any;
+  default?: T;
   required?: boolean;
   disabled?: boolean;
   readonly?: boolean;
@@ -135,7 +136,7 @@ export interface Setting {
 
 export type ViewportSize = 'mobile' | 'tablet' | 'desktop' | 'fullscreen';
 
-export type ActiveSidebar = 'layers' | 'settings' | 'global-settings' | null;
+export type ActiveSidebar = 'layers' | 'settings' | 'global-settings' | 'header-settings' | 'footer-settings' | null;
 
 export interface BannerSettings {
   title: string;
@@ -153,7 +154,8 @@ export interface TopBarProps {
   onViewportChange: (size: ViewportSize) => void;
   onUndo: () => void;
   onRedo: () => void;
-  onOpenGlobalSettings?: () => void;
+  sections?: Section[];
+  onImportSections?: (sections: Section[]) => void;
 }
 
 export interface SidebarButton {
@@ -245,7 +247,6 @@ export interface PageBuilderLayoutProps {
   content?: ReactNodeType;
   rightSidebar?: ReactNodeType;
   isLeftSidebarOpen: boolean;
-  screenWidth: number;
 }
 
 export interface NarrowSidebarProps {
@@ -254,25 +255,21 @@ export interface NarrowSidebarProps {
   activeNarrowSidebar: ActiveSidebar | null;
   toggleNarrowSidebar: (type: ActiveSidebar) => void;
   handleOpenGlobalSettings: () => void;
+  onHeaderClick?: () => void; // Add this line
 }
 
 export interface SidebarLeftProps {
-  screenWidth: number;
-  activeNarrowSidebar: ActiveSidebar | null;
   sections: Section[];
   selectedSectionId: string | null;
   onSelectSection: (id: string) => void;
   onHoverSection: (id: string | null) => void;
   contentRef: React.RefObject<HTMLIFrameElement | null>;
   toggleNarrowSidebar: (sidebar: ActiveSidebar) => void;
+  settingsPanelRef: React.RefObject<HTMLDivElement | null>; // Ensure it's not undefined
+  activeSubmenu?: string | null;
+  headerSettings?: any; // Add headerSettings to the props
 }
 
-export interface SidebarRightProps {
-  selectedSectionId: string | null;
-  sections: Section[];
-  contentRef: React.RefObject<HTMLIFrameElement | null>;
-  toggleNarrowSidebar: (arg: ActiveSidebar) => void;
-}
 
 export interface SectionPadding {
   top: number;
@@ -291,7 +288,6 @@ export interface SectionSettingsPanelProps {
   selectedSectionId: string | null;
   sections: Section[];
   contentRef: React.RefObject<HTMLIFrameElement | null>;
-  onToggleLayers: () => void;
   settingsPanelRef: React.RefObject<HTMLDivElement | null>; // Add this line
 }
 
@@ -343,6 +339,13 @@ export interface AddSectionModalProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onAddSection: (sectionType: SectionType) => void;
+  buttonVariant?: 'default' | 'outline' | 'ghost';
+  buttonSize?: 'default' | 'sm' | 'lg' | 'icon';
+  buttonClassName?: string;
+  buttonText?: string;
+  showButtonText?: boolean;
+  side?: "top" | "right" | "bottom" | "left";
+  align?: "start" | "center" | "end";
 }
 
 export interface SectionCardProps {
@@ -425,7 +428,7 @@ export interface SectionControlsProps {
 }
 
 export interface ControlButtonProps {
-  icon: LucideIcon;
+icon: typeof LucideIcon;
   onClick: () => void;
   tooltip: string;
   className?: string;

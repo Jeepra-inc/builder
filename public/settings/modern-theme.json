@@ -1,0 +1,59 @@
+{
+  "sections": [],
+  "headerSettings": {
+    "logo": {
+      "text": "Modern Brand",
+      "showText": true
+    },
+    "navigation": {
+      "items": [
+        { "text": "Home", "url": "#", "isButton": false },
+        { "text": "Products", "url": "#", "isButton": false },
+        { "text": "Services", "url": "#", "isButton": false },
+        { "text": "Contact", "url": "#", "isButton": true }
+      ]
+    },
+    "layout": {
+      "sticky": true,
+      "maxWidth": "1400px"
+    }
+  },
+  "footerSettings": {
+    "content": {
+      "copyright": "© 2024 Modern Company. All rights reserved.",
+      "description": "Creating innovative solutions for tomorrow's challenges"
+    },
+    "links": {
+      "items": [
+        { "text": "About Us", "url": "#" },
+        { "text": "Services", "url": "#" },
+        { "text": "Blog", "url": "#" },
+        { "text": "Contact", "url": "#" },
+        { "text": "Privacy Policy", "url": "#" }
+      ]
+    },
+    "layout": {
+      "maxWidth": "1400px",
+      "showSocials": true,
+      "multiColumn": true
+    }
+  },
+  "globalStyles": {
+    "colors": {},
+    "typography": {
+      "headingFont": "Roboto",
+      "bodyFont": "Roboto",
+      "headingSizeScale": 110,
+      "bodySizeScale": 100,
+      "headingColor": "#222222"
+    },
+    "customCSS": "",
+    "branding": {
+      "logoUrl": "",
+      "logoWidth": 120,
+      "faviconUrl": "",
+      "backgroundColor": "#f8f9fa"
+    }
+  },
+  "version": "1.0.0"
+}

@@ -1,0 +1,125 @@
+{
+  "sections": [],
+  "headerSettings": {
+    "logo": {
+      "text": "Your Brand",
+      "showText": true
+    },
+    "navigation": {
+      "items": [
+        {
+          "text": "Home",
+          "url": "#",
+          "isButton": false
+        },
+        {
+          "text": "About",
+          "url": "#",
+          "isButton": false
+        },
+        {
+          "text": "Contact",
+          "url": "#",
+          "isButton": true
+        }
+      ]
+    },
+    "layout": {
+      "sticky": true,
+      "maxWidth": "1200px",
+      "currentPreset": "preset2",
+      "containers": {
+        "top_left": [],
+        "top_center": [
+          null,
+          "html_block_3"
+        ],
+        "top_right": [
+          "topBarMenu",
+          "followIcons"
+        ],
+        "middle_left": [
+          "mainMenu"
+        ],
+        "middle_center": [
+          "logo"
+        ],
+        "middle_right": [
+          "account",
+          "cart"
+        ],
+        "bottom_left": [],
+        "bottom_center": [],
+        "bottom_right": [],
+        "available": [
+          "search",
+          "html_block_1",
+          "html_block_2",
+          "html_block_4",
+          "html_block_5",
+          "news_letter",
+          "top_bar_menu",
+          "nav_icon",
+          "main_menu",
+          "contact",
+          "button_1",
+          "button_2",
+          "checkout",
+          "wishlist",
+          "social_icon",
+          "divider_1",
+          "divider_2",
+          "divider_3",
+          "divider_4"
+        ]
+      }
+    }
+  },
+  "footerSettings": {
+    "content": {
+      "copyright": "© 2024 Your Company. All rights reserved.",
+      "description": "Building amazing websites with ease"
+    },
+    "links": {
+      "items": [
+        {
+          "text": "About Us",
+          "url": "#"
+        },
+        {
+          "text": "Contact",
+          "url": "#"
+        },
+        {
+          "text": "Privacy Policy",
+          "url": "#"
+        }
+      ]
+    },
+    "layout": {
+      "maxWidth": "1200px",
+      "showSocials": true,
+      "multiColumn": true
+    }
+  },
+  "globalStyles": {
+    "colors": {
+      "schemes": []
+    },
+    "typography": {
+      "headingFont": "ADLaM Display:400",
+      "bodyFont": "Assistant",
+      "headingSizeScale": 100,
+      "bodySizeScale": 100,
+      "headingColor": "#1a1a1a"
+    },
+    "customCSS": "",
+    "branding": {
+      "logoUrl": "",
+      "logoWidth": 252,
+      "faviconUrl": "",
+      "backgroundColor": "#ffffff"
+    }
+  },
+  "version": "1.0.0"
+}

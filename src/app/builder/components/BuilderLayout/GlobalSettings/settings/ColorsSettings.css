@@ -1,0 +1,106 @@
+/* Basic styling for color scheme cards */
+.color-settings {
+  padding: 16px;
+}
+
+.schemes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 16px;
+}
+
+.scheme-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: box-shadow 0.3s ease;
+}
+
+.scheme-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.scheme-preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.scheme-text {
+  font-size: 24px;
+  margin-right: 8px;
+}
+
+.scheme-toggle {
+  width: 24px;
+  height: 12px;
+  background-color: currentColor;
+  border-radius: 6px;
+}
+
+.add-scheme {
+  border: 2px dashed #ccc;
+  color: #999;
+}
+
+.scheme-full-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 300px; /* Adjust width to fit sidebar */
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  z-index: 1000;
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+.scheme-full-panel h3 {
+  margin-bottom: 10px;
+}
+
+.scheme-full-panel p {
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #666;
+}
+
+.color-inputs {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+  width: 100%;
+}
+
+.color-inputs label {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  color: #333;
+}
+
+.color-inputs input[type="color"] {
+  margin-top: 5px;
+  width: 100%;
+  height: 30px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.scheme-full-panel button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
