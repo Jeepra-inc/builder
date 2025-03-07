@@ -83,8 +83,8 @@ export default function IframeContent() {
         bottom_left: [],
         bottom_center: [],
         bottom_right: [],
-        available: []
-      }
+        available: [],
+      },
     },
   });
 
@@ -111,6 +111,9 @@ export default function IframeContent() {
   // Add header selection state
   const [isHeaderSelected, setIsHeaderSelected] = useState(false);
   const [isFooterSelected, setIsFooterSelected] = useState(false);
+
+  // Add a flag to track if we're processing settings from parent
+  const processingParentSettings = useRef(false);
 
   const handleHeaderSelect = useCallback(() => {
     setIsHeaderSelected(true);
@@ -278,7 +281,7 @@ export default function IframeContent() {
           }
           break;
         }
-        
+
         case "SELECT_PRESET": {
           const { presetId } = event.data;
           // Send a request to the parent window to get the preset data
@@ -293,7 +296,7 @@ export default function IframeContent() {
           }
           break;
         }
-        
+
         case "UPDATE_HEADER_LAYOUT": {
           // This receives the layout data from the parent after SELECT_PRESET
           const layoutData = event.data;
@@ -301,12 +304,12 @@ export default function IframeContent() {
           if (layoutData) {
             const presetId = layoutData.presetId;
             delete layoutData.type; // Remove message type before storing
-            
-            setHeaderSettings(prevSettings => ({
+
+            setHeaderSettings((prevSettings) => ({
               ...prevSettings,
               layout: {
                 ...prevSettings.layout,
-                preset: presetId || prevSettings.layout.preset,
+                currentPreset: presetId || prevSettings.layout.currentPreset,
                 // Store all layout data from the preset
                 topLeft: layoutData.top_left || [],
                 topCenter: layoutData.top_center || [],
@@ -317,16 +320,19 @@ export default function IframeContent() {
                 bottomLeft: layoutData.bottom_left || [],
                 bottomCenter: layoutData.bottom_center || [],
                 bottomRight: layoutData.bottom_right || [],
-                available: layoutData.available || []
-              }
+                available: layoutData.available || [],
+              },
             }));
-            
+
             // Also notify parent that header was updated
             if (window.parent) {
-              window.parent.postMessage({
-                type: "HEADER_LAYOUT_UPDATED",
-                presetId
-              }, "*");
+              window.parent.postMessage(
+                {
+                  type: "HEADER_LAYOUT_UPDATED",
+                  presetId,
+                },
+                "*"
+              );
             }
           }
           break;
@@ -574,45 +580,74 @@ export default function IframeContent() {
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === "LOAD_SETTINGS") {
-        console.log('Iframe received LOAD_SETTINGS message:', event.data);
-        const settings = event.data.settings as GlobalSettings;
+        console.log("Iframe received LOAD_SETTINGS message:", event.data);
 
-        // Apply sections
-        if (settings.sections.length > 0) {
-          setLocalSections(settings.sections);
-          dispatch({ type: "SET_SECTIONS", payload: settings.sections });
-        }
+        // Set flag to prevent sending updates while processing parent settings
+        processingParentSettings.current = true;
 
-        // Apply header settings
-        console.log('Setting header settings in iframe:', settings.headerSettings);
-        setHeaderSettings(settings.headerSettings);
+        try {
+          // Process settings from parent
+          if (event.data.settings) {
+            if (event.data.settings.sections) {
+              console.log(
+                "Setting sections in iframe:",
+                event.data.settings.sections
+              );
+              setLocalSections(event.data.settings.sections);
+            }
 
-        // Apply footer settings
-        setFooterSettings(settings.footerSettings);
+            if (event.data.settings.headerSettings) {
+              console.log(
+                "Setting header settings in iframe:",
+                event.data.settings.headerSettings
+              );
+              setHeaderSettings(event.data.settings.headerSettings);
+            }
 
-        // Apply global styles
-        document.body.style.backgroundColor =
-          settings.globalStyles.branding.backgroundColor;
+            if (event.data.settings.footerSettings) {
+              console.log(
+                "Setting footer settings in iframe:",
+                event.data.settings.footerSettings
+              );
+              setFooterSettings(event.data.settings.footerSettings);
+            }
 
-        // Apply typography settings
-        const root = document.documentElement;
-        root.style.setProperty(
-          "--heading-color",
-          settings.globalStyles.typography.headingColor
-        );
-        root.style.setProperty(
-          "--heading-size-scale",
-          `${settings.globalStyles.typography.headingSizeScale / 100}`
-        );
-        root.style.setProperty(
-          "--body-size-scale",
-          `${settings.globalStyles.typography.bodySizeScale / 100}`
-        );
+            // Apply global styles
+            document.body.style.backgroundColor =
+              event.data.settings.globalStyles.branding.backgroundColor;
 
-        // Apply custom CSS
-        const customStyleElement = document.getElementById("custom-css");
-        if (customStyleElement) {
-          customStyleElement.textContent = settings.globalStyles.customCSS;
+            // Apply typography settings
+            const root = document.documentElement;
+            root.style.setProperty(
+              "--heading-color",
+              event.data.settings.globalStyles.typography.headingColor
+            );
+            root.style.setProperty(
+              "--heading-size-scale",
+              `${
+                event.data.settings.globalStyles.typography.headingSizeScale /
+                100
+              }`
+            );
+            root.style.setProperty(
+              "--body-size-scale",
+              `${
+                event.data.settings.globalStyles.typography.bodySizeScale / 100
+              }`
+            );
+
+            // Apply custom CSS
+            const customStyleElement = document.getElementById("custom-css");
+            if (customStyleElement) {
+              customStyleElement.textContent =
+                event.data.settings.globalStyles.customCSS;
+            }
+          }
+        } finally {
+          // Reset the flag after a short delay to ensure all state updates have been processed
+          setTimeout(() => {
+            processingParentSettings.current = false;
+          }, 500);
         }
       }
     };
@@ -648,7 +683,8 @@ export default function IframeContent() {
   }, [sections]);
 
   useEffect(() => {
-    if (window.parent) {
+    // Only notify parent of section updates if not currently processing parent settings
+    if (window.parent && !processingParentSettings.current) {
       window.parent.postMessage({ type: "SECTIONS_UPDATED", sections }, "*");
     }
   }, [sections]);
@@ -717,6 +753,53 @@ export default function IframeContent() {
       sectionRefs.current[sectionId] = React.createRef<HTMLDivElement | null>();
     }
     return sectionRefs.current[sectionId];
+  }, []);
+
+  useEffect(() => {
+    const handleHeaderLayoutMessage = (event: MessageEvent) => {
+      if (event.data.type === "UPDATE_HEADER_LAYOUT") {
+        console.log(
+          "Iframe received UPDATE_HEADER_LAYOUT message:",
+          event.data
+        );
+
+        try {
+          const { presetId, ...layoutData } = event.data;
+
+          // Extract the containers from the message
+          const containers = {
+            top_left: layoutData.top_left || [],
+            top_center: layoutData.top_center || [],
+            top_right: layoutData.top_right || [],
+            middle_left: layoutData.middle_left || [],
+            middle_center: layoutData.middle_center || [],
+            middle_right: layoutData.middle_right || [],
+            bottom_left: layoutData.bottom_left || [],
+            bottom_center: layoutData.bottom_center || [],
+            bottom_right: layoutData.bottom_right || [],
+            available: layoutData.available || [],
+          };
+
+          // Update header settings with the new layout
+          setHeaderSettings((prev) => ({
+            ...prev,
+            layout: {
+              ...prev.layout,
+              currentPreset: presetId,
+              containers: containers,
+            },
+          }));
+
+          console.log("Header layout updated in iframe:", containers);
+        } catch (error) {
+          console.error("Error updating header layout in iframe:", error);
+        }
+      }
+    };
+
+    window.addEventListener("message", handleHeaderLayoutMessage);
+    return () =>
+      window.removeEventListener("message", handleHeaderLayoutMessage);
   }, []);
 
   // ----------------- RENDER -----------------

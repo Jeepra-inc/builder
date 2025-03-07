@@ -13,8 +13,8 @@ export function PageBuilderLayout({
   return (
     <ResizablePanelGroup direction="horizontal" className="flex-grow">
       <ResizablePanel
-        defaultSize={20}
-        minSize={10}
+        defaultSize={23}
+        minSize={15}
         maxSize={30}
         className={`bg-white shadow-md ${!isLeftSidebarOpen ? "hidden" : ""}`}
       >

@@ -7,6 +7,7 @@ import {
   SETTINGS_CONSTANTS,
 } from "@/app/builder/types";
 import { Input } from "@/components/ui/input";
+import { getCustomSettingInput } from "./CustomSettingsInputs";
 
 interface LocalInputComponentProps<T> {
   value: T;
@@ -123,3 +124,111 @@ export const RangeInput: React.FC<RangeProps> = ({
     <div className="text-sm text-gray-500 mt-1">Value: {value ?? 0}</div>
   </div>
 );
+
+export const InputComponent: React.FC<InputComponentProps<any>> = ({
+  id,
+  type,
+  value,
+  onChange,
+  options,
+  min,
+  max,
+  step,
+  setting,
+  ...props
+}) => {
+  // First, check for custom input based on setting
+  const customInput = getCustomSettingInput(
+    setting,
+    id,
+    value,
+    onChange,
+    props.disabled
+  );
+
+  // If we have a custom input for this setting, use it
+  if (customInput) {
+    return customInput;
+  }
+
+  // Otherwise, use standard inputs based on type
+  switch (type) {
+    case "text":
+    case "email":
+    case "url":
+    case "password":
+      return (
+        <FieldWrapper id={id} label={setting.label}>
+          <TextInput
+            value={value as string}
+            onChange={(e) => onChange(e.target.value)}
+            {...props}
+          />
+        </FieldWrapper>
+      );
+    case "textarea":
+      return (
+        <FieldWrapper id={id} label={setting.label}>
+          <TextArea
+            value={value as string}
+            onChange={(e) => onChange(e.target.value)}
+            {...props}
+          />
+        </FieldWrapper>
+      );
+    case "number":
+      return (
+        <FieldWrapper id={id} label={setting.label}>
+          <NumberInput
+            value={value as number}
+            onChange={(e) => onChange(Number(e.target.value))}
+            {...props}
+          />
+        </FieldWrapper>
+      );
+    case "select":
+      return (
+        <FieldWrapper id={id} label={setting.label}>
+          <SelectInput
+            value={value as string}
+            onChange={onChange}
+            options={options}
+            {...props}
+          />
+        </FieldWrapper>
+      );
+    case "color":
+      return (
+        <FieldWrapper id={id} label={setting.label}>
+          <ColorInput
+            value={value as string}
+            onChange={(e) => onChange(e.target.value)}
+            {...props}
+          />
+        </FieldWrapper>
+      );
+    case "range":
+      return (
+        <FieldWrapper id={id} label={setting.label}>
+          <RangeInput
+            value={value as number}
+            onChange={onChange}
+            min={min}
+            max={max}
+            step={step}
+            {...props}
+          />
+        </FieldWrapper>
+      );
+    default:
+      return (
+        <FieldWrapper id={id} label={setting.label}>
+          <TextInput
+            value={value as string}
+            onChange={(e) => onChange(e.target.value)}
+            {...props}
+          />
+        </FieldWrapper>
+      );
+  }
+};

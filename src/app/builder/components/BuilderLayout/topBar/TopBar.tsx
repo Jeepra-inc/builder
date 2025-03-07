@@ -60,8 +60,8 @@ export function TopBar({
     }
   };
   return (
-    <div className="flex justify-between items-center px-4 py-2 border-b bg-white shadow-md">
-      <div className="flex items-center space-x-3">
+    <div className="flex justify-between items-center px-4 ps-2 py-2 border-b bg-white shadow-md">
+      <div className="flex items-center space-x-2">
         <Button
           variant="ghost"
           size="sm"
@@ -69,7 +69,6 @@ export function TopBar({
         >
           <LogOut className="scale-[-1]" size={16} />
         </Button>
-        <div className="border-l h-5 mx-1 border-gray-200"></div>
         <ExportTemplateButton sections={sections} />
         <ImportTemplateButton onImportSections={onImportSections} />
       </div>

@@ -9,6 +9,11 @@ import {
   Layers,
   LayoutPanelLeft,
   PanelRight,
+  PanelTop,
+  PanelBottom,
+  SlidersHorizontal,
+  AppWindow,
+  AlignVerticalSpaceBetween,
 } from "lucide-react";
 import { SectionSettingsPanel } from "@/app/builder/components/BuilderLayout/SectionSettingsPanel";
 import { GlobalSettingsPanel } from "@/app/builder/components/BuilderLayout/GlobalSettings/GlobalSettingsPanel";
@@ -16,13 +21,6 @@ import { SortableLayersPanel } from "@/app/builder/components/BuilderLayout/Sort
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import MultiLevelSidebar from "../common/multiLevelSidebar";
-import {
-  GalleryVertical,
-  PanelTop,
-  PanelBottom,
-  SlidersHorizontal,
-  AppWindow,
-} from "lucide-react";
 import { HeaderLayoutsPanel } from "./header/settings/HeaderLayoutsPanel";
 import { TopBarSettingsPanel } from "./header/settings/TopBarSettingsPanel";
 import { HeaderMainSettings } from "./header/settings/HeaderMainSettings";
@@ -37,6 +35,23 @@ import { SidebarLeftProps } from "@/app/builder/types";
 import { HeaderSettingsPanel } from "./header/HeaderSettingsPanel";
 
 const SECTION_SETTINGS_TAB = "Section Settings";
+
+// Create icon components with increased stroke width
+const DesignIcon = (
+  props: React.ComponentProps<typeof AlignVerticalSpaceBetween>
+) => <AlignVerticalSpaceBetween strokeWidth={2} {...props} />;
+
+const HeaderIcon = (props: React.ComponentProps<typeof PanelTop>) => (
+  <PanelTop strokeWidth={2} {...props} />
+);
+
+const FooterIcon = (props: React.ComponentProps<typeof PanelBottom>) => (
+  <PanelBottom strokeWidth={2} {...props} />
+);
+
+const GlobalSettingsIcon = (
+  props: React.ComponentProps<typeof SlidersHorizontal>
+) => <SlidersHorizontal strokeWidth={2} {...props} />;
 
 export function SidebarLeft({
   sections,
@@ -89,14 +104,68 @@ export function SidebarLeft({
 
       switch (event.data.type) {
         case "HEADER_SETTING_SELECTED":
+          // Log for debugging
+          console.log("HEADER_SETTING_SELECTED received:", event.data);
+
           // Prevent any auto-save operations during setting selection
-          event.preventDefault();
+          try {
+            event.preventDefault();
+          } catch (e) {
+            // Ignore if not possible to prevent default
+          }
+
+          // Set the selected setting and open the sidebar
           setSelectedHeaderSetting(event.data.settingId);
           toggleNarrowSidebar("header-settings");
 
           // Find the appropriate submenu for this setting
-          if (event.data.settingId?.startsWith("html_block_")) {
-            setCurrentSubmenu("HTML");
+          let submenuToSelect = event.data.submenu;
+
+          if (!submenuToSelect) {
+            // If no submenu specified, try to determine from settingId
+            const settingId = event.data.settingId;
+
+            // Determine submenu based on settingId patterns
+            if (settingId?.startsWith("html_block_")) {
+              submenuToSelect = "HTML";
+            } else if (settingId === "logo") {
+              submenuToSelect = "Header Main Setting";
+            } else if (settingId === "mainMenu" || settingId === "topBarMenu") {
+              submenuToSelect = "Header Navigation Setting";
+            } else if (settingId === "search") {
+              submenuToSelect = "Header Search Setting";
+            } else if (settingId?.startsWith("button_")) {
+              submenuToSelect = "Buttons";
+            } else if (
+              settingId === "social_icon" ||
+              settingId === "followIcons"
+            ) {
+              submenuToSelect = "Social";
+            } else if (settingId?.includes("top_") || settingId === "contact") {
+              submenuToSelect = "Top Bar Setting";
+            } else if (settingId?.includes("bottom_")) {
+              submenuToSelect = "Header Bottom Setting";
+            } else if (settingId?.includes("divider")) {
+              submenuToSelect = "Header Main Setting";
+            } else if (
+              settingId === "account" ||
+              settingId === "cart" ||
+              settingId === "wishlist"
+            ) {
+              submenuToSelect = "Header Main Setting";
+            }
+          }
+
+          // Set the submenu if we have one
+          if (submenuToSelect) {
+            console.log(
+              `Setting submenu to ${submenuToSelect} for item ${event.data.settingId}`
+            );
+            setCurrentSubmenu(submenuToSelect);
+          } else {
+            console.log(
+              `No submenu identified for ${event.data.settingId}, leaving at current submenu`
+            );
           }
           break;
 
@@ -135,12 +204,67 @@ export function SidebarLeft({
       }
     };
 
+    // Update the headerSettingsRequested event handler to be more robust
+    const handleHeaderSettingsRequested = (event: CustomEvent) => {
+      console.log("headerSettingsRequested event received:", event.detail);
+
+      const { settingId, submenu, itemType } = event.detail;
+
+      // Set the selected setting
+      if (settingId) {
+        setSelectedHeaderSetting(settingId);
+        console.log(`Selected header setting: ${settingId}`);
+      }
+
+      // Open the header settings sidebar
+      toggleNarrowSidebar("header-settings");
+
+      // Determine the submenu to show
+      let submenuToUse = submenu;
+
+      // If no submenu was provided, try to infer from the item type or setting ID
+      if (!submenuToUse) {
+        if (settingId?.startsWith("html_block_")) {
+          submenuToUse = "HTML";
+        } else if (itemType) {
+          // Logic to determine submenu from item type if needed
+          if (itemType.includes("logo")) {
+            submenuToUse = "Header Main Setting";
+          } else if (itemType.includes("menu")) {
+            submenuToUse = "Header Navigation Setting";
+          } else if (itemType.includes("search")) {
+            submenuToUse = "Header Search Setting";
+          } else if (itemType.includes("button")) {
+            submenuToUse = "Buttons";
+          } else if (itemType.includes("social")) {
+            submenuToUse = "Social";
+          }
+        }
+      }
+
+      // Set the submenu if we have one
+      if (submenuToUse) {
+        console.log(`Setting submenu to ${submenuToUse}`);
+        setCurrentSubmenu(submenuToUse);
+      } else if (settingId?.startsWith("html_block_")) {
+        setCurrentSubmenu("HTML");
+      }
+    };
+
     window.addEventListener("switchTab", handleSwitchTab as EventListener);
     window.addEventListener("message", handleHeaderSettingSelected);
+    window.addEventListener(
+      "headerSettingsRequested",
+      handleHeaderSettingsRequested as EventListener
+    );
 
     return () => {
       window.removeEventListener("switchTab", handleSwitchTab as EventListener);
       window.removeEventListener("message", handleHeaderSettingSelected);
+      window.removeEventListener(
+        "headerSettingsRequested",
+        handleHeaderSettingsRequested as EventListener
+      );
     };
   }, [toggleNarrowSidebar, contentRef]);
 
@@ -308,7 +432,7 @@ export function SidebarLeft({
           contentRef,
           setSections: setLocalSections,
         },
-        icon: GalleryVertical,
+        icon: DesignIcon,
         onClick: () => {
           toggleNarrowSidebar("layers");
         },
@@ -316,7 +440,7 @@ export function SidebarLeft({
       {
         title: "Header",
         subMenu: headerMenuItems,
-        icon: PanelTop,
+        icon: HeaderIcon,
         onClick: () => {
           toggleNarrowSidebar("header-settings");
         },
@@ -324,7 +448,7 @@ export function SidebarLeft({
       {
         title: "Footer",
         subMenu: footerMenuItems,
-        icon: PanelBottom,
+        icon: FooterIcon,
         onClick: () => {
           toggleNarrowSidebar("layers");
         },
@@ -332,7 +456,7 @@ export function SidebarLeft({
       {
         title: "Global Settings Panel",
         component: GlobalSettingsPanel,
-        icon: SlidersHorizontal,
+        icon: GlobalSettingsIcon,
         onClick: () => {
           toggleNarrowSidebar("layers");
         },

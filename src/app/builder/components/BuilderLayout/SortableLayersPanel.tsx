@@ -21,9 +21,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { nanoid } from "nanoid";
-import { Button } from "@/components/ui/button";
 import { SortableItem } from "./SortableItem";
-import { TestSortable } from "./TestSortable";
 import { sectionRegistry } from "@/app/builder/elements/sections/section-registry";
 import {
   SortableLayersPanelProps,

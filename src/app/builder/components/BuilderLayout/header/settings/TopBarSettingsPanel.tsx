@@ -6,8 +6,9 @@ import { useBuilder } from "@/app/builder/contexts/BuilderContext";
 import { SettingSection } from "../../GlobalSettings/settings/SettingSection";
 import { Label } from "@/components/ui/label";
 import RangeSlider from "../../GlobalSettings/settings/RangeSlider";
-import { CaseLower, CaseSensitive, CaseUpper } from "lucide-react";
+import { CaseLower, CaseSensitive, CaseUpper, Palette } from "lucide-react";
 import RadioButtonGroup from "./RadioButtonGroup";
+import { ColorSchemeSelector } from "@/app/builder/components/ColorSchemeSelector";
 
 interface TopBarSettingsPanelProps {
   settings?: any;
@@ -51,37 +52,35 @@ export function TopBarSettingsPanel({
         />
       </SettingSection>
 
-      {/* Layout Settings */}
+      {/* Color Scheme Selection */}
       <SettingSection
-        title="Layout"
-        description="Configure the top bar layout settings"
+        title="Color Scheme"
+        description="Choose a color scheme for the top bar"
+        className="pt-4"
       >
-        {/* Height Slider */}
-        <div className="mt-4">
-          <Label>Height</Label>
-          <RangeSlider value={settings.topBarHeight} />
-        </div>
-
-        {/* Color Scheme */}
-        <div className="space-y-2">
-          <Label>Color Scheme</Label>
-          <RadioButtonGroup
-            options={[
-              { id: "light", value: "light", label: "Light" },
-              { id: "dark", value: "dark", label: "Dark" },
-            ]}
-            name="colorScheme"
-            required
+        <div className="flex flex-col space-y-2">
+          <div className="flex items-center gap-2 mb-1">
+            <Palette className="h-4 w-4 text-muted-foreground" />
+            <Label>Visual Theme</Label>
+          </div>
+          <ColorSchemeSelector
+            value={settings.topBarColorScheme || ""}
+            onChange={(value) => {
+              console.log("TopBar: Selected color scheme:", value);
+              handleSettingUpdate("topBarColorScheme")(value);
+            }}
+            width="w-full"
           />
         </div>
       </SettingSection>
 
       {/* Navigation Settings */}
-      <SettingSection
-        title="Navigation"
-        description="Configure the top bar navigation settings"
-      >
+      <SettingSection>
         <div className="space-y-6 mt-4">
+          <div className="mt-4">
+            <Label>Height</Label>
+            <RangeSlider value={settings.topBarHeight} />
+          </div>
           {/* Navigation Style */}
           <div className="space-y-2">
             <Label>Navigation Style</Label>
@@ -111,15 +110,6 @@ export function TopBarSettingsPanel({
               ]}
               name="textTransform"
               required
-            />
-          </div>
-
-          {/* Navigation Height */}
-          <div className="space-y-2">
-            <Label>Navigation Height</Label>
-            <RangeSlider
-              value={settings.topBarNavHeight}
-              onValueChange={(v) => handleSettingUpdate("topBarNavHeight")(v)}
             />
           </div>
         </div>

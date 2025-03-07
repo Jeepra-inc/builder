@@ -9,14 +9,7 @@ import React, {
 } from "react";
 import clsx from "clsx";
 import { getAllHeaderItems } from "../data/headerItems";
-import {
-  Facebook,
-  Instagram,
-  Linkedin,
-  Phone,
-  Twitter,
-  Settings,
-} from "lucide-react";
+import { Facebook, Instagram, Linkedin, Phone, Twitter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,23 +23,6 @@ import {
   fetchColorSchemes,
   getColorSchemeStyles,
 } from "@/app/builder/utils/colorSchemeUtils";
-
-// Add CSS for header item hover effects
-const headerItemStyles = `
-  .header-item-wrapper {
-    position: relative;
-  }
-  
-  .header-item-wrapper:hover {
-    outline: 1px dashed #3b82f6;
-    outline-offset: 2px;
-  }
-  
-  .header-item {
-    height: 100%;
-    width: 100%;
-  }
-`;
 
 // Helper function to check if a custom color scheme is being used
 const isCustomColorScheme = (schemeId?: string) => {
@@ -106,22 +82,22 @@ const HTMLContentMap: Record<string, string> = {
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
       <circle cx="12" cy="7" r="4"></circle>
-             </svg>
-           </div>`,
+    </svg>
+  </div>`,
   cart: `<div class="cart-icon">
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="8" cy="21" r="1"></circle>
       <circle cx="19" cy="21" r="1"></circle>
       <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
-           </svg>
-         </div>`,
+    </svg>
+  </div>`,
   search: `<div class="search-box">
     <input type="text" placeholder="Search..." class="px-3 py-2 border rounded" />
     <button class="search-icon ml-2">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="11" cy="11" r="8"></circle>
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
+      </svg>
     </button>
   </div>`,
   mainMenu: `<nav class="main-menu">
@@ -130,8 +106,8 @@ const HTMLContentMap: Record<string, string> = {
       <li class="hover:text-primary cursor-pointer">Shop</li>
       <li class="hover:text-primary cursor-pointer">About</li>
       <li class="hover:text-primary cursor-pointer">Contact</li>
-              </ul>
-            </nav>`,
+    </ul>
+  </nav>`,
   topBarMenu: `<div class="top-bar-menu">
     <ul class="flex gap-3 text-sm">
       <li class="hover:underline cursor-pointer">Support</li>
@@ -143,7 +119,7 @@ const HTMLContentMap: Record<string, string> = {
     <a href="#" class="hover:text-primary">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-               </svg>
+      </svg>
     </a>
     <a href="#" class="hover:text-primary">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -156,8 +132,8 @@ const HTMLContentMap: Record<string, string> = {
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
       </svg>
-             </a>
-           </div>`,
+    </a>
+  </div>`,
   nav_icon: `<button class="flex items-center">
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -170,32 +146,32 @@ const HTMLContentMap: Record<string, string> = {
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path>
     </svg>
-          </div>`,
+  </div>`,
   contact: `<div class="contact-info flex items-center">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
     </svg>
     <span>+1 234 567 890</span>
-          </div>`,
+  </div>`,
   social_icon: `<div class="social-icon-group flex gap-2">
     <a href="#" class="social-icon hover:text-primary">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-                    </svg>
-                  </a>
+        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+      </svg>
+    </a>
     <a href="#" class="social-icon hover:text-primary">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
-                    </svg>
-                  </a>
+      </svg>
+    </a>
     <a href="#" class="social-icon hover:text-primary">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
         <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
         <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                </svg>
+      </svg>
     </a>
-                </div>`,
+  </div>`,
   button_1: `<button class="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark">Button 1</button>`,
   button_2: `<button class="px-4 py-2 border border-primary text-primary rounded hover:bg-primary hover:text-white">Button 2</button>`,
   divider_1: `<div class="h-6 w-px bg-gray-300"></div>`,
@@ -224,22 +200,6 @@ function debounce<F extends (...args: any[]) => any>(
     }, wait);
   };
 }
-
-// Add a helper function at the top level to ensure messages are properly sent to parent
-const sendMessageToParent = (message: any) => {
-  // Log the message being sent for debugging
-  console.log("Sending message to parent:", message);
-
-  // Send the message to the parent window
-  if (window.parent && window.parent !== window) {
-    window.parent.postMessage(message, "*");
-    return true;
-  } else {
-    console.warn("No parent window found, sending to current window");
-    window.postMessage(message, "*");
-    return false;
-  }
-};
 
 export default function Header({
   settings = {},
@@ -334,10 +294,13 @@ export default function Header({
         // Debounce the notification
         notificationTimeoutRef.current = setTimeout(() => {
           console.log("Sending debounced scheme notification:", notifySchemes);
-          sendMessageToParent({
-            type: "HEADER_SCHEMES_UPDATED",
-            schemes: notifySchemes,
-          });
+          window.parent.postMessage(
+            {
+              type: "HEADER_SCHEMES_UPDATED",
+              schemes: notifySchemes,
+            },
+            "*"
+          );
           notificationTimeoutRef.current = null;
         }, 200);
       }
@@ -410,10 +373,13 @@ export default function Header({
           "Current preset found:",
           headerSettings.layout.currentPreset
         );
-        sendMessageToParent({
-          type: "HEADER_PRESET_LOADED",
-          presetId: headerSettings.layout.currentPreset,
-        });
+        window.parent.postMessage(
+          {
+            type: "HEADER_PRESET_LOADED",
+            presetId: headerSettings.layout.currentPreset,
+          },
+          "*"
+        );
       }
     } else {
       // Set default layout items if no containers in settings
@@ -501,10 +467,13 @@ export default function Header({
             debouncedSetLayoutItems(newLayoutItems);
 
             // Notify parent of the updated layout
-            sendMessageToParent({
-              type: "LAYOUT_ITEMS_UPDATED",
-              layoutItems: newLayoutItems,
-            });
+            window.parent.postMessage(
+              {
+                type: "LAYOUT_ITEMS_UPDATED",
+                layoutItems: newLayoutItems,
+              },
+              "*"
+            );
           } catch (error) {
             console.error("Error in UPDATE_LAYOUT_ITEMS:", error);
           }
@@ -556,17 +525,21 @@ export default function Header({
 
         case "HEADER_GET_STATE":
           console.log("Received HEADER_GET_STATE request");
-          sendMessageToParent({
-            type: "HEADER_STATE",
-            settings: headerSettings,
-            layoutItems,
-            schemes: {
-              topBarColorScheme: headerSettings.topBarColorScheme || "light",
-              mainBarColorScheme: headerSettings.mainBarColorScheme || "light",
-              bottomBarColorScheme:
-                headerSettings.bottomBarColorScheme || "light",
+          window.parent.postMessage(
+            {
+              type: "HEADER_STATE",
+              settings: headerSettings,
+              layoutItems,
+              schemes: {
+                topBarColorScheme: headerSettings.topBarColorScheme || "light",
+                mainBarColorScheme:
+                  headerSettings.mainBarColorScheme || "light",
+                bottomBarColorScheme:
+                  headerSettings.bottomBarColorScheme || "light",
+              },
             },
-          });
+            "*"
+          );
 
           // Update the last notified schemes ref to match what we just sent
           lastNotifiedSchemesRef.current = {
@@ -678,7 +651,385 @@ export default function Header({
     bottomBarStyles,
   ]);
 
-  // Get HTML content for a layout item (MOVE THIS FUNCTION BEFORE renderSection)
+  // Memoize the renderSection function to prevent unnecessary rerenders
+  const renderSection = React.useCallback(
+    (
+      items: string[],
+      sectionName: string = "",
+      textStyle?: React.CSSProperties
+    ) => {
+      // Ensure items is an array
+      if (!Array.isArray(items)) {
+        console.warn(
+          `Items for section ${sectionName} is not an array:`,
+          items
+        );
+        return null;
+      }
+
+      // Return memoized array of items to prevent unnecessary rerenders
+      return items.map((itemId, index) => {
+        // Skip if itemId is not a string
+        if (typeof itemId !== "string") {
+          console.warn(`Invalid item ID in section ${sectionName}:`, itemId);
+          return null;
+        }
+
+        // For HTML blocks, ensure we're using the exact ID to prevent mismatches
+        let renderId = itemId;
+        const htmlBlockMatch = itemId.match(/^html_block_(\d+)$/);
+        if (htmlBlockMatch && htmlBlockMatch[1]) {
+          const blockNumber = htmlBlockMatch[1];
+          renderId = `html_block_${blockNumber}`;
+        }
+
+        const htmlContent = getHtmlContent(renderId);
+
+        const key = `${sectionName}_${renderId}_${index}`;
+
+        // Don't use useMemo here as it violates the Rules of Hooks
+        return (
+          <div
+            key={key}
+            className="header-item"
+            data-item-id={renderId}
+            data-original-id={itemId}
+            dangerouslySetInnerHTML={{ __html: htmlContent }}
+            onClick={() => {
+              if (isEditing) {
+                window.parent.postMessage(
+                  { type: "SELECT_HEADER_SETTING", settingId: renderId },
+                  "*"
+                );
+              }
+            }}
+            style={textStyle}
+          />
+        );
+      });
+    },
+    [getHtmlContent, isEditing]
+  );
+
+  // Function to get direct color values for a scheme
+  const getDirectColorValues = useCallback(
+    (schemeId: string | undefined, section: string) => {
+      if (!schemeId) {
+        console.log(
+          `No scheme ID provided for ${section} section, using default`
+        );
+        return {
+          background:
+            section === "top"
+              ? "#f7fafc"
+              : section === "main"
+              ? "#ffffff"
+              : "#f9fafb",
+          text:
+            section === "top"
+              ? "#4a5568"
+              : section === "main"
+              ? "#1a202c"
+              : "#4a5568",
+          border: section === "bottom" ? "#e2e8f0" : undefined,
+        };
+      }
+
+      if (schemeId === "light") {
+        return {
+          background:
+            section === "top"
+              ? "#f7fafc"
+              : section === "main"
+              ? "#ffffff"
+              : "#f9fafb",
+          text:
+            section === "top"
+              ? "#4a5568"
+              : section === "main"
+              ? "#1a202c"
+              : "#4a5568",
+          border: section === "bottom" ? "#e2e8f0" : undefined,
+        };
+      }
+
+      if (schemeId === "dark") {
+        return {
+          background:
+            section === "top"
+              ? "#2d3748"
+              : section === "main"
+              ? "#1a202c"
+              : "#2d3748",
+          text:
+            section === "top"
+              ? "#e2e8f0"
+              : section === "main"
+              ? "#f7fafc"
+              : "#e2e8f0",
+          border: section === "bottom" ? "#4a5568" : undefined,
+        };
+      }
+
+      // For custom schemes, try to fetch from cache or use default
+      return {
+        isCustom: true,
+        schemeId,
+      };
+    },
+    []
+  );
+
+  // Updated header content with direct style application
+  const headerContent = React.useMemo(() => {
+    // Get color values for each section
+    const topColors = getDirectColorValues(
+      headerSettings.topBarColorScheme,
+      "top"
+    );
+    const mainColors = getDirectColorValues(
+      headerSettings.mainBarColorScheme,
+      "main"
+    );
+    const bottomColors = getDirectColorValues(
+      headerSettings.bottomBarColorScheme,
+      "bottom"
+    );
+
+    // Create direct style objects
+    const topStyle: React.CSSProperties = isCustomColorScheme(
+      headerSettings.topBarColorScheme
+    )
+      ? topBarStyles.background
+      : { backgroundColor: topColors.background, color: topColors.text };
+
+    const mainStyle: React.CSSProperties = isCustomColorScheme(
+      headerSettings.mainBarColorScheme
+    )
+      ? mainBarStyles.background
+      : { backgroundColor: mainColors.background, color: mainColors.text };
+
+    const bottomStyle: React.CSSProperties = isCustomColorScheme(
+      headerSettings.bottomBarColorScheme
+    )
+      ? bottomBarStyles.background
+      : {
+          backgroundColor: bottomColors.background,
+          color: bottomColors.text,
+          borderTopColor: bottomColors.border,
+          borderTopWidth: "1px",
+          borderTopStyle: "solid",
+        };
+
+    // Log all styles being applied
+    console.log("Applying styles:", {
+      top: {
+        schemeId: headerSettings.topBarColorScheme,
+        style: topStyle,
+      },
+      main: {
+        schemeId: headerSettings.mainBarColorScheme,
+        style: mainStyle,
+      },
+      bottom: {
+        schemeId: headerSettings.bottomBarColorScheme,
+        style: bottomStyle,
+      },
+    });
+
+    return (
+      <header
+        className={`relative shadow ${isEditing ? "editing" : ""} ${
+          isSelected ? "selected" : ""
+        }`}
+        onClick={() => {
+          if (isEditing && onSelect) {
+            onSelect();
+          }
+          window.postMessage({ type: "HEADER_SETTING_SELECTED" }, "*");
+        }}
+        data-top-scheme={headerSettings.topBarColorScheme || "light"}
+        data-main-scheme={headerSettings.mainBarColorScheme || "light"}
+        data-bottom-scheme={headerSettings.bottomBarColorScheme || "light"}
+      >
+        {/* Top Bar with direct style application */}
+        <div
+          className="w-full transition-all grid grid-cols-[auto_1fr_auto] justify-between items-center px-8 gap-4 py-2"
+          style={topStyle}
+        >
+          <div className="flex items-center gap-4 justify-self-start flex-shrink-0">
+            {renderSection(
+              layoutItems.top_left,
+              "top_left",
+              isCustomColorScheme(headerSettings.topBarColorScheme)
+                ? topBarStyles.text
+                : { color: topColors.text }
+            )}
+          </div>
+          <div className="flex gap-6 justify-self-center">
+            {renderSection(
+              layoutItems.top_center,
+              "top_center",
+              isCustomColorScheme(headerSettings.topBarColorScheme)
+                ? topBarStyles.text
+                : { color: topColors.text }
+            )}
+          </div>
+          <div className="flex items-center gap-4 justify-self-end flex-shrink-0">
+            {renderSection(
+              layoutItems.top_right,
+              "top_right",
+              isCustomColorScheme(headerSettings.topBarColorScheme)
+                ? topBarStyles.text
+                : { color: topColors.text }
+            )}
+            {headerSettings.showTopBarButton && (
+              <button className="px-4 py-1 bg-primary text-white rounded-md text-sm hover:bg-primary-dark transition-colors">
+                Shop Now
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Main Section with direct style application */}
+        <div
+          className="middle-section w-full transition-all grid grid-cols-[auto_1fr_auto] items-center px-8 gap-4 py-4"
+          style={mainStyle}
+        >
+          <div className="flex items-center gap-4 flex-shrink-0">
+            {renderSection(
+              layoutItems.middle_left,
+              "middle_left",
+              isCustomColorScheme(headerSettings.mainBarColorScheme)
+                ? mainBarStyles.text
+                : { color: mainColors.text }
+            )}
+          </div>
+          <div className="flex gap-6 justify-self-center">
+            {renderSection(
+              layoutItems.middle_center,
+              "middle_center",
+              isCustomColorScheme(headerSettings.mainBarColorScheme)
+                ? mainBarStyles.text
+                : { color: mainColors.text }
+            )}
+          </div>
+          <div className="flex items-center gap-4 justify-self-end flex-shrink-0">
+            {renderSection(
+              layoutItems.middle_right,
+              "middle_right",
+              isCustomColorScheme(headerSettings.mainBarColorScheme)
+                ? mainBarStyles.text
+                : { color: mainColors.text }
+            )}
+          </div>
+        </div>
+
+        {/* Bottom Section with direct style application */}
+        <div
+          className="bottom-section w-full transition-all grid grid-cols-[auto_1fr_auto] items-center px-8 gap-4 py-3"
+          style={bottomStyle}
+        >
+          <div className="flex items-center gap-4 flex-shrink-0">
+            {renderSection(
+              layoutItems.bottom_left,
+              "bottom_left",
+              isCustomColorScheme(headerSettings.bottomBarColorScheme)
+                ? bottomBarStyles.text
+                : { color: bottomColors.text }
+            )}
+          </div>
+          <div className="flex gap-6 justify-self-center">
+            {renderSection(
+              layoutItems.bottom_center,
+              "bottom_center",
+              isCustomColorScheme(headerSettings.bottomBarColorScheme)
+                ? bottomBarStyles.text
+                : { color: bottomColors.text }
+            )}
+          </div>
+          <div className="flex items-center gap-4 justify-self-end flex-shrink-0">
+            {renderSection(
+              layoutItems.bottom_right,
+              "bottom_right",
+              isCustomColorScheme(headerSettings.bottomBarColorScheme)
+                ? bottomBarStyles.text
+                : { color: bottomColors.text }
+            )}
+          </div>
+        </div>
+      </header>
+    );
+  }, [
+    isEditing,
+    isSelected,
+    onSelect,
+    headerSettings.showTopBarButton,
+    headerSettings.topBarColorScheme,
+    headerSettings.mainBarColorScheme,
+    headerSettings.bottomBarColorScheme,
+    renderSection,
+    layoutItems.top_left,
+    layoutItems.top_center,
+    layoutItems.top_right,
+    layoutItems.middle_left,
+    layoutItems.middle_center,
+    layoutItems.middle_right,
+    layoutItems.bottom_left,
+    layoutItems.bottom_center,
+    layoutItems.bottom_right,
+    topBarStyles,
+    mainBarStyles,
+    bottomBarStyles,
+    getDirectColorValues,
+  ]);
+
+  // Add a special handler for direct scheme updates
+  useEffect(() => {
+    // Force a refresh of the iframe when schemes change
+    const refreshIframe = () => {
+      try {
+        const iframe = document.querySelector("iframe");
+        if (iframe && iframe.contentDocument) {
+          console.log("Forcing style refresh in iframe");
+          // Force a repaint by adding and removing a class
+          iframe.contentDocument.body.classList.add("refresh-styles");
+          setTimeout(() => {
+            if (iframe.contentDocument) {
+              iframe.contentDocument.body.classList.remove("refresh-styles");
+            }
+          }, 10);
+        }
+      } catch (e) {
+        console.warn("Could not refresh iframe:", e);
+      }
+    };
+
+    // Send a special message to force a style update
+    if (window.parent) {
+      console.log("Sending FORCE_STYLE_UPDATE to parent");
+      window.parent.postMessage(
+        {
+          type: "FORCE_STYLE_UPDATE",
+          sections: {
+            top: headerSettings.topBarColorScheme,
+            main: headerSettings.mainBarColorScheme,
+            bottom: headerSettings.bottomBarColorScheme,
+          },
+        },
+        "*"
+      );
+
+      // Try to refresh the iframe
+      refreshIframe();
+    }
+  }, [
+    headerSettings.topBarColorScheme,
+    headerSettings.mainBarColorScheme,
+    headerSettings.bottomBarColorScheme,
+  ]);
+
+  // Memozied function to get HTML content for a layout item
   const getHtmlContent = React.useCallback(
     (itemId: string): string => {
       // Special handling for logo
@@ -753,588 +1104,138 @@ export default function Header({
     [headerSettings, customHtml]
   );
 
-  // Memoize the renderSection function to prevent unnecessary rerenders (THIS USES getHtmlContent)
-  const renderSection = React.useCallback(
-    (
-      items: string[],
-      sectionName: string = "",
-      textStyle?: React.CSSProperties
-    ) => {
-      // Ensure items is an array
-      if (!Array.isArray(items)) {
-        console.warn(
-          `Items for section ${sectionName} is not an array:`,
-          items
-        );
-        return null;
-      }
+  // Get top bar classes based on settings
+  const getTopBarClasses = React.useCallback(() => {
+    const classes = [
+      "w-full",
+      "transition-all",
+      "grid grid-cols-[auto_1fr_auto] justify-between items-center px-8 gap-4",
+    ];
 
-      // Return memoized array of items to prevent unnecessary rerenders
-      return items.map((itemId, index) => {
-        // Skip if itemId is not a string
-        if (typeof itemId !== "string") {
-          console.warn(`Invalid item ID in section ${sectionName}:`, itemId);
-          return null;
-        }
-
-        // For HTML blocks, ensure we're using the exact ID to prevent mismatches
-        let renderId = itemId;
-        const htmlBlockMatch = itemId.match(/^html_block_(\d+)$/);
-        if (htmlBlockMatch && htmlBlockMatch[1]) {
-          const blockNumber = htmlBlockMatch[1];
-          renderId = `html_block_${blockNumber}`;
-        }
-
-        const htmlContent = getHtmlContent(renderId);
-
-        const key = `${sectionName}_${renderId}_${index}`;
-
-        // Use a wrapper div with position: relative for the gear icon
-        return (
-          <div
-            key={key}
-            className="header-item-wrapper relative group"
-            data-item-id={renderId}
-            data-original-id={itemId}
-            style={textStyle}
-            onClick={() => {
-              if (isEditing) {
-                sendMessageToParent({
-                  type: "SELECT_HEADER_SETTING",
-                  settingId: renderId,
-                });
-              }
-            }}
-          >
-            {/* Inner div for HTML content */}
-            <div
-              className="header-item"
-              dangerouslySetInnerHTML={{ __html: htmlContent }}
-            />
-
-            {/* Gear icon only shown when editing */}
-            {isEditing && (
-              <div
-                className="absolute opacity-0 group-hover:opacity-100 top-1 right-1 p-1 bg-black bg-opacity-70 rounded-sm cursor-pointer transition-opacity z-10"
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent triggering the parent click
-
-                  // Get the submenu for this item and log the determination process
-                  const targetSubmenu = getSubmenuForHeaderItem(renderId);
-
-                  // Log the action for debugging
-                  console.log(
-                    `Opening settings for: ${renderId} via gear icon (submenu: ${targetSubmenu})`
-                  );
-
-                  // First try our most detailed message format with all information
-                  sendMessageToParent({
-                    type: "HEADER_SETTING_SELECTED",
-                    settingId: renderId,
-                    submenu: targetSubmenu,
-                    itemType: renderId, // Include the item type for better handling
-                    source: "gear-icon",
-                  });
-
-                  // Then try dispatching custom events for extra reliability
-                  try {
-                    // Create and dispatch a switchTab event
-                    const switchTabEvent = new CustomEvent("switchTab", {
-                      detail: {
-                        targetTab: "Header",
-                        targetSubmenu: targetSubmenu,
-                        settingId: renderId,
-                      },
-                      bubbles: true, // Allow event to bubble up to parent window
-                    });
-
-                    window.dispatchEvent(switchTabEvent);
-                    console.log("Dispatched switchTab event for:", renderId);
-
-                    // Also dispatch our custom event
-                    const headerSettingsEvent = new CustomEvent(
-                      "headerSettingsRequested",
-                      {
-                        detail: {
-                          settingId: renderId,
-                          submenu: targetSubmenu,
-                          itemType: renderId,
-                        },
-                        bubbles: true,
-                      }
-                    );
-
-                    window.dispatchEvent(headerSettingsEvent);
-                    console.log(
-                      "Dispatched headerSettingsRequested event for:",
-                      renderId
-                    );
-                  } catch (err) {
-                    console.error("Error dispatching custom events:", err);
-                  }
-                }}
-              >
-                <Settings className="h-4 w-4 text-white" />
-              </div>
-            )}
-          </div>
-        );
-      });
-    },
-    [getHtmlContent, isEditing]
-  );
-
-  // Define our built-in color schemes
-  const BUILT_IN_SCHEMES = {
-    light: {
-      top: {
-        background: "#f7fafc",
-        text: "#4a5568",
-      },
-      main: {
-        background: "#ffffff",
-        text: "#1a202c",
-      },
-      bottom: {
-        background: "#f9fafb",
-        text: "#4a5568",
-        border: "#e2e8f0",
-      },
-    },
-    dark: {
-      top: {
-        background: "#2d3748",
-        text: "#e2e8f0",
-      },
-      main: {
-        background: "#1a202c",
-        text: "#f7fafc",
-      },
-      bottom: {
-        background: "#2d3748",
-        text: "#e2e8f0",
-        border: "#4a5568",
-      },
-    },
-  };
-
-  // Get appropriate styles for a section based on its color scheme
-  const getSectionStyle = useCallback(
-    (
-      section: "top" | "main" | "bottom",
-      schemeId?: string
-    ): React.CSSProperties => {
-      // Handle undefined, light and dark schemes
-      if (!schemeId || schemeId === "light" || schemeId === "dark") {
-        const theme =
-          BUILT_IN_SCHEMES[schemeId as "light" | "dark"] ||
-          BUILT_IN_SCHEMES.light;
-
-        if (section === "top") {
-          return {
-            backgroundColor: theme.top.background,
-            color: theme.top.text,
-          };
-        } else if (section === "main") {
-          return {
-            backgroundColor: theme.main.background,
-            color: theme.main.text,
-          };
-        } else {
-          return {
-            backgroundColor: theme.bottom.background,
-            color: theme.bottom.text,
-            borderTopWidth: "1px",
-            borderTopStyle: "solid",
-            borderTopColor: theme.bottom.border,
-          };
-        }
-      }
-
-      // For custom schemes, we'd need to fetch them from our color scheme utility
-      // For now, just use default light theme
-      return section === "top"
-        ? { backgroundColor: "#f7fafc", color: "#4a5568" }
-        : section === "main"
-        ? { backgroundColor: "#ffffff", color: "#1a202c" }
-        : {
-            backgroundColor: "#f9fafb",
-            color: "#4a5568",
-            borderTopWidth: "1px",
-            borderTopStyle: "solid",
-            borderTopColor: "#e2e8f0",
-          };
-    },
-    []
-  );
-
-  // Get text color for a section based on its color scheme
-  const getSectionTextColor = useCallback(
-    (section: "top" | "main" | "bottom", schemeId?: string): string => {
-      if (!schemeId || schemeId === "light") {
-        return section === "top"
-          ? "#4a5568"
-          : section === "main"
-          ? "#1a202c"
-          : "#4a5568";
-      } else if (schemeId === "dark") {
-        return section === "top"
-          ? "#e2e8f0"
-          : section === "main"
-          ? "#f7fafc"
-          : "#e2e8f0";
-      }
-
-      // For custom schemes, fetch from utility
-      // For now, default text colors
-      return section === "top"
-        ? "#4a5568"
-        : section === "main"
-        ? "#1a202c"
-        : "#4a5568";
-    },
-    []
-  );
-
-  // Log color scheme changes for debugging
-  useEffect(() => {
-    console.log("Current color schemes:", {
-      top: headerSettings.topBarColorScheme,
-      main: headerSettings.mainBarColorScheme,
-      bottom: headerSettings.bottomBarColorScheme,
-    });
-  }, [
-    headerSettings.topBarColorScheme,
-    headerSettings.mainBarColorScheme,
-    headerSettings.bottomBarColorScheme,
-  ]);
-
-  // Special handler to ensure color scheme changes are reflected
-  useEffect(() => {
-    // Force iframe to repaint when color schemes change
-    const forceRepaint = () => {
+    // Add color scheme classes
+    if (headerSettings.topBarColorScheme) {
+      // Try to get color scheme styles
       try {
-        // Try to notify parent about current color schemes
-        sendMessageToParent({
-          type: "HEADER_COLOR_SCHEMES_UPDATE",
-          schemes: {
-            top: headerSettings.topBarColorScheme || "light",
-            main: headerSettings.mainBarColorScheme || "light",
-            bottom: headerSettings.bottomBarColorScheme || "light",
-          },
-        });
-
-        console.log("Forced color scheme update notification");
-
-        // Force a repaint in the iframe if possible
-        try {
-          // Add a dummy class and remove it to force a repaint
-          document.body.classList.add("force-repaint");
-          setTimeout(() => {
-            document.body.classList.remove("force-repaint");
-          }, 10);
-        } catch (e) {
-          console.warn("Could not force repaint:", e);
+        const schemeId = headerSettings.topBarColorScheme;
+        // Default fallback styling
+        if (schemeId === "light" || !schemeId) {
+          classes.push("bg-gray-100 text-gray-600");
+        } else if (schemeId === "dark") {
+          classes.push("bg-gray-800 text-gray-200");
+        } else {
+          // For custom schemes, we'll apply the styles inline in the component
+          // Just add a class to identify it has a custom scheme
+          classes.push("custom-color-scheme");
         }
-      } catch (e) {
-        console.error("Error notifying parent about color schemes:", e);
+      } catch (error) {
+        console.error("Error applying color scheme to top bar:", error);
+        // Fallback to light theme
+        classes.push("bg-gray-100 text-gray-600");
       }
-    };
+    } else {
+      // Default to light theme if no scheme specified
+      classes.push("bg-gray-100 text-gray-600");
+    }
 
-    // Call immediately
-    forceRepaint();
+    switch (headerSettings.topBarNavStyle) {
+      case "style1":
+        classes.push("border-b border-gray-200");
+        break;
+      case "style2":
+        classes.push("shadow-sm");
+        break;
+      case "style3":
+        classes.push("border-b-2 border-primary");
+        break;
+    }
 
-    // Also listen for direct color scheme selection messages
-    const handleColorSchemeSelection = (event: MessageEvent) => {
-      if (!event.data || typeof event.data !== "object") return;
+    if (headerSettings.topBarTextTransform) {
+      classes.push(headerSettings.topBarTextTransform);
+    }
 
-      if (event.data.type === "COLOR_SCHEME_SELECTED") {
-        const { section, schemeId } = event.data;
-
-        // Update the appropriate section's color scheme
-        if (section === "top" || section === "topBar") {
-          setHeaderSettings((prev) => ({
-            ...prev,
-            topBarColorScheme: schemeId,
-          }));
-        } else if (section === "main" || section === "mainBar") {
-          setHeaderSettings((prev) => ({
-            ...prev,
-            mainBarColorScheme: schemeId,
-          }));
-        } else if (section === "bottom" || section === "bottomBar") {
-          setHeaderSettings((prev) => ({
-            ...prev,
-            bottomBarColorScheme: schemeId,
-          }));
-        }
-
-        // Ensure the update is reflected
-        setTimeout(forceRepaint, 50);
-      }
-    };
-
-    window.addEventListener("message", handleColorSchemeSelection);
-
-    return () => {
-      window.removeEventListener("message", handleColorSchemeSelection);
-    };
+    return clsx(classes);
   }, [
     headerSettings.topBarColorScheme,
-    headerSettings.mainBarColorScheme,
-    headerSettings.bottomBarColorScheme,
+    headerSettings.topBarNavStyle,
+    headerSettings.topBarTextTransform,
   ]);
 
-  // Also add a handler specifically for settings changes coming from the parent
-  useEffect(() => {
-    const handleSettingsUpdate = (event: MessageEvent) => {
-      if (!event.data || typeof event.data !== "object") return;
+  // Add getMainBarClasses and getBottomBarClasses functions similar to getTopBarClasses
+  const getMainBarClasses = React.useCallback(() => {
+    const classes = [
+      "middle-section",
+      "w-full",
+      "transition-all",
+      "grid",
+      "grid-cols-[auto_1fr_auto]",
+      "items-center",
+      "px-8",
+      "gap-4",
+      "py-4",
+    ];
 
-      if (event.data.type === "UPDATE_HEADER_SETTINGS" && event.data.settings) {
-        // Check if any color scheme settings are included
-        const updatedSettings = event.data.settings;
-
-        if (
-          updatedSettings.topBarColorScheme !== undefined ||
-          updatedSettings.mainBarColorScheme !== undefined ||
-          updatedSettings.bottomBarColorScheme !== undefined
-        ) {
-          console.log("Color scheme settings update received:", {
-            top: updatedSettings.topBarColorScheme,
-            main: updatedSettings.mainBarColorScheme,
-            bottom: updatedSettings.bottomBarColorScheme,
-          });
-
-          // Apply the settings
-          setHeaderSettings((prev) => ({
-            ...prev,
-            topBarColorScheme:
-              updatedSettings.topBarColorScheme !== undefined
-                ? updatedSettings.topBarColorScheme
-                : prev.topBarColorScheme,
-            mainBarColorScheme:
-              updatedSettings.mainBarColorScheme !== undefined
-                ? updatedSettings.mainBarColorScheme
-                : prev.mainBarColorScheme,
-            bottomBarColorScheme:
-              updatedSettings.bottomBarColorScheme !== undefined
-                ? updatedSettings.bottomBarColorScheme
-                : prev.bottomBarColorScheme,
-          }));
+    // Add color scheme classes
+    if (headerSettings.mainBarColorScheme) {
+      try {
+        const schemeId = headerSettings.mainBarColorScheme;
+        // Default fallback styling
+        if (schemeId === "light" || !schemeId) {
+          classes.push("bg-white text-gray-800");
+        } else if (schemeId === "dark") {
+          classes.push("bg-gray-900 text-gray-100");
+        } else {
+          // For custom schemes, we'll apply the styles inline in the component
+          classes.push("custom-color-scheme");
         }
+      } catch (error) {
+        console.error("Error applying color scheme to main bar:", error);
+        classes.push("bg-white text-gray-800");
       }
-    };
-
-    window.addEventListener("message", handleSettingsUpdate);
-
-    return () => {
-      window.removeEventListener("message", handleSettingsUpdate);
-    };
-  }, []);
-
-  // Add this style element
-  useEffect(() => {
-    // Add the CSS to the document head
-    const styleElement = document.createElement("style");
-    styleElement.innerHTML = headerItemStyles;
-    document.head.appendChild(styleElement);
-
-    // Clean up on unmount
-    return () => {
-      document.head.removeChild(styleElement);
-    };
-  }, []);
-
-  // Enhance the getSubmenuForHeaderItem function to better handle all types of header items
-  const getSubmenuForHeaderItem = (itemId: string): string => {
-    console.log(`Finding submenu for item: ${itemId}`);
-
-    // Map common item prefixes/keywords to their appropriate submenu
-    const submenuMappings: Record<string, string> = {
-      // HTML blocks
-      html_block_: "HTML",
-
-      // Navigation elements
-      mainMenu: "Header Navigation Setting",
-      nav_: "Header Navigation Setting",
-      topBarMenu: "Header Navigation Setting",
-
-      // Logo and main header elements
-      logo: "Header Main Setting",
-      headerMain: "Header Main Setting",
-
-      // Search functionality
-      search: "Header Search Setting",
-
-      // Button elements
-      button_: "Buttons",
-      btn_: "Buttons",
-
-      // Social media elements
-      social: "Social",
-      followIcons: "Social",
-      facebook: "Social",
-      twitter: "Social",
-      instagram: "Social",
-
-      // Top bar elements
-      top_: "Top Bar Setting",
-      topBar: "Top Bar Setting",
-      contact: "Top Bar Setting",
-
-      // Bottom bar elements
-      bottom_: "Header Bottom Setting",
-      headerBottom: "Header Bottom Setting",
-
-      // Other dividers and elements
-      divider: "Header Main Setting",
-      account: "Header Main Setting",
-      cart: "Header Main Setting",
-      wishlist: "Header Main Setting",
-    };
-
-    // Check each mapping to see if the itemId matches or contains the key
-    for (const [key, submenu] of Object.entries(submenuMappings)) {
-      if (
-        itemId === key || // Exact match
-        itemId.startsWith(key) || // Prefix match
-        itemId.includes(key) // Contains match
-      ) {
-        console.log(
-          `✅ Matched item ${itemId} to submenu ${submenu} via key ${key}`
-        );
-        return submenu;
-      }
+    } else {
+      classes.push("bg-white text-gray-800");
     }
 
-    // Special cases for container-based items
-    if (
-      itemId.includes("left") ||
-      itemId.includes("right") ||
-      itemId.includes("center")
-    ) {
-      if (itemId.includes("top")) {
-        console.log(`✅ Container match: ${itemId} -> Top Bar Setting`);
-        return "Top Bar Setting";
-      } else if (itemId.includes("middle")) {
-        console.log(`✅ Container match: ${itemId} -> Header Main Setting`);
-        return "Header Main Setting";
-      } else if (itemId.includes("bottom")) {
-        console.log(`✅ Container match: ${itemId} -> Header Bottom Setting`);
-        return "Header Bottom Setting";
+    return clsx(classes);
+  }, [headerSettings.mainBarColorScheme]);
+
+  // Get bottom bar classes with more distinct styling
+  const getBottomBarClasses = React.useCallback(() => {
+    const classes = [
+      "bottom-section",
+      "w-full",
+      "transition-all",
+      "grid",
+      "grid-cols-[auto_1fr_auto]",
+      "items-center",
+      "px-8",
+      "gap-4",
+      "py-3", // Slightly increased padding
+      "border-t", // Add a top border to make it more distinct
+    ];
+
+    // Add color scheme classes
+    if (headerSettings.bottomBarColorScheme) {
+      try {
+        const schemeId = headerSettings.bottomBarColorScheme;
+        // Default fallback styling with more distinct colors
+        if (schemeId === "light" || !schemeId) {
+          classes.push("bg-gray-50 text-gray-700 border-gray-200");
+        } else if (schemeId === "dark") {
+          classes.push("bg-gray-800 text-gray-200 border-gray-700");
+        } else {
+          // For custom schemes, we'll apply the styles inline in the component
+          classes.push("custom-color-scheme");
+        }
+      } catch (error) {
+        console.error("Error applying color scheme to bottom bar:", error);
+        classes.push("bg-gray-50 text-gray-700 border-gray-200");
       }
+    } else {
+      classes.push("bg-gray-50 text-gray-700 border-gray-200");
     }
 
-    // If no match is found, default to main settings
-    console.log(
-      `⚠️ No submenu match for ${itemId}, defaulting to Header Main Setting`
-    );
-    return "Header Main Setting";
-  };
+    return clsx(classes);
+  }, [headerSettings.bottomBarColorScheme]);
 
-  return (
-    <header
-      className={`relative shadow ${isEditing ? "editing" : ""} ${
-        isSelected ? "selected" : ""
-      }`}
-      onClick={() => {
-        if (isEditing && onSelect) {
-          onSelect();
-        }
-        sendMessageToParent({ type: "HEADER_SETTING_SELECTED" });
-      }}
-      data-top-scheme={headerSettings.topBarColorScheme || "light"}
-      data-main-scheme={headerSettings.mainBarColorScheme || "light"}
-      data-bottom-scheme={headerSettings.bottomBarColorScheme || "light"}
-    >
-      {/* Top Bar */}
-      <div
-        className="w-full transition-all grid grid-cols-[auto_1fr_auto] justify-between items-center px-8 gap-4 py-2"
-        style={getSectionStyle("top", headerSettings.topBarColorScheme)}
-      >
-        <div className="flex items-center gap-4 justify-self-start flex-shrink-0">
-          {renderSection(layoutItems.top_left, "top_left", {
-            color: getSectionTextColor("top", headerSettings.topBarColorScheme),
-          })}
-        </div>
-        <div className="flex gap-6 justify-self-center">
-          {renderSection(layoutItems.top_center, "top_center", {
-            color: getSectionTextColor("top", headerSettings.topBarColorScheme),
-          })}
-        </div>
-        <div className="flex items-center gap-4 justify-self-end flex-shrink-0">
-          {renderSection(layoutItems.top_right, "top_right", {
-            color: getSectionTextColor("top", headerSettings.topBarColorScheme),
-          })}
-          {headerSettings.showTopBarButton && (
-            <button className="px-4 py-1 bg-primary text-white rounded-md text-sm hover:bg-primary-dark transition-colors">
-              Shop Now
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Main Section */}
-      <div
-        className="middle-section w-full transition-all grid grid-cols-[auto_1fr_auto] items-center px-8 gap-4 py-4"
-        style={getSectionStyle("main", headerSettings.mainBarColorScheme)}
-      >
-        <div className="flex items-center gap-4 flex-shrink-0">
-          {renderSection(layoutItems.middle_left, "middle_left", {
-            color: getSectionTextColor(
-              "main",
-              headerSettings.mainBarColorScheme
-            ),
-          })}
-        </div>
-        <div className="flex gap-6 justify-self-center">
-          {renderSection(layoutItems.middle_center, "middle_center", {
-            color: getSectionTextColor(
-              "main",
-              headerSettings.mainBarColorScheme
-            ),
-          })}
-        </div>
-        <div className="flex items-center gap-4 justify-self-end flex-shrink-0">
-          {renderSection(layoutItems.middle_right, "middle_right", {
-            color: getSectionTextColor(
-              "main",
-              headerSettings.mainBarColorScheme
-            ),
-          })}
-        </div>
-      </div>
-
-      {/* Bottom Section */}
-      <div
-        className="bottom-section w-full transition-all grid grid-cols-[auto_1fr_auto] items-center px-8 gap-4 py-3"
-        style={getSectionStyle("bottom", headerSettings.bottomBarColorScheme)}
-      >
-        <div className="flex items-center gap-4 flex-shrink-0">
-          {renderSection(layoutItems.bottom_left, "bottom_left", {
-            color: getSectionTextColor(
-              "bottom",
-              headerSettings.bottomBarColorScheme
-            ),
-          })}
-        </div>
-        <div className="flex gap-6 justify-self-center">
-          {renderSection(layoutItems.bottom_center, "bottom_center", {
-            color: getSectionTextColor(
-              "bottom",
-              headerSettings.bottomBarColorScheme
-            ),
-          })}
-        </div>
-        <div className="flex items-center gap-4 justify-self-end flex-shrink-0">
-          {renderSection(layoutItems.bottom_right, "bottom_right", {
-            color: getSectionTextColor(
-              "bottom",
-              headerSettings.bottomBarColorScheme
-            ),
-          })}
-        </div>
-      </div>
-    </header>
-  );
+  return headerContent;
 }

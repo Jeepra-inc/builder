@@ -67,8 +67,7 @@ const FontSettingBlock = ({
           min={50}
           max={150}
           value={sizeScale}
-          onChange={setSizeScale}
-          label={`${sizeScale}%`}
+          onValueChange={setSizeScale}
         />
       </div>
     </div>
@@ -196,18 +195,125 @@ export function TypographySettings() {
   const systemFonts = ["Arial", "Assistant", "Roboto", "Times New Roman"];
   const batchSize = 10;
 
+  // Allowed Google Fonts list
+  const ALLOWED_GOOGLE_FONTS = [
+    "Roboto",
+    "Open Sans",
+    "Lato",
+    "Montserrat",
+    "Source Sans Pro",
+    "Slabo 27px",
+    "Oswald",
+    "Raleway",
+    "PT Sans",
+    "Merriweather",
+    "Noto Sans",
+    "Ubuntu",
+    "Playfair Display",
+    "Fira Sans",
+    "Droid Sans",
+    "Arimo",
+    "Titillium Web",
+    "Cabin",
+    "Oxygen",
+    "Inconsolata",
+    "Exo 2",
+    "Quicksand",
+    "Hind",
+    "Work Sans",
+    "Heebo",
+    "IBM Plex Sans",
+    "DM Sans",
+    "Nanum Gothic",
+    "Karla",
+    "Rubik",
+    "Poppins",
+    "Mukta",
+    "Muli",
+    "Asap",
+    "Assistant",
+    "Barlow",
+    "Cairo",
+    "Catamaran",
+    "Chakra Petch",
+    "Cuprum",
+    "Dosis",
+    "Eczar",
+    "Jost",
+    "Kanit",
+    "Libre Franklin",
+    "Manrope",
+    "Mulish",
+    "Nunito",
+    "Public Sans",
+    "Red Hat Display",
+    "Inter",
+    "Jost",
+    "Urbanist",
+    "Space Grotesk",
+    "Bebas Neue",
+    "Cinzel",
+    "Cormorant Garamond",
+    "Fjalla One",
+    "Spectral",
+    "Prata",
+    "Domine",
+    "Lora",
+    "Volkhov",
+    "Zilla Slab",
+    "Sen",
+    "Teko",
+    "Anton",
+    "Bitter",
+    "Caveat",
+    "Sarabun",
+    "Overpass",
+    "Lexend",
+    "Alegreya Sans",
+    "Amiko",
+    "Bai Jamjuree",
+    "Chivo",
+    "Gothic A1",
+    "Josefin Sans",
+    "Manjari",
+    "Metrophobic",
+    "Niramit",
+    "Nobile",
+    "Padauk",
+    "Pontano Sans",
+    "Prompt",
+    "Quattrocento Sans",
+    "Rasa",
+    "Rokkitt",
+    "Sanchez",
+    "Saira",
+    "Secular One",
+    "Sora",
+    "Syne",
+    "Tenor Sans",
+    "Trirong",
+    "Varta",
+    "Vesper Libre",
+    "Yanone Kaffeesatz",
+    "Yatra One",
+    "ZCOOL XiaoWei",
+  ];
+
   useEffect(() => {
     fetch(
       "https://www.googleapis.com/webfonts/v1/webfonts?key=AIzaSyATAoke7VEhGCnTBEwQvBHU1Q0uycKtAm4"
     )
       .then((response) => response.json())
       .then((data) => {
-        const fonts = data.items.map((item: any) => ({
-          family: item.family,
-          weights: item.variants
-            .filter((v: string) => !v.includes("italic"))
-            .map((v: string) => v.replace("regular", "400")),
-        }));
+        // Filter fonts to only include allowed ones
+        const fonts = data.items
+          .filter((item: any) => ALLOWED_GOOGLE_FONTS.includes(item.family))
+          .map((item: any) => ({
+            family: item.family,
+            weights: item.variants
+              .filter((v: string) => !v.includes("italic"))
+              .map((v: string) => v.replace("regular", "400")),
+          }));
 
         setGoogleFonts(fonts);
         fontPanel.setFontDetails(
@@ -220,7 +326,9 @@ export function TypographySettings() {
         const initialVisible = fonts.slice(0, batchSize);
         setVisibleFonts(initialVisible);
 
-        initialVisible.forEach(({ family }) => loadFont(family, "400"));
+        initialVisible.forEach(({ family }: { family: string }) =>
+          loadFont(family, "400")
+        );
       });
   }, []);
 

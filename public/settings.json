@@ -1,5 +1,18 @@
 {
-  "sections": [],
+  "sections": [
+    {
+      "id": "section_1741345064489_lq48479q9",
+      "type": "banner",
+      "content": [
+        "Example content"
+      ],
+      "settings": {
+        "paddingTop": 20,
+        "paddingBottom": 20,
+        "colorScheme": "scheme-6"
+      }
+    }
+  ],
   "headerSettings": {
     "logo": {
       "text": "Your Brand",
@@ -27,50 +40,46 @@
     "layout": {
       "sticky": true,
       "maxWidth": "1200px",
-      "currentPreset": "preset2",
+      "currentPreset": "preset1",
       "containers": {
-        "top_left": [],
-        "top_center": [
-          null,
+        "top_left": [
+          "html_block_4"
+        ],
+        "top_center": [],
+        "top_right": [
           "html_block_3"
         ],
-        "top_right": [
-          "topBarMenu",
-          "followIcons"
-        ],
         "middle_left": [
-          "mainMenu"
-        ],
-        "middle_center": [
           "logo"
         ],
+        "middle_center": [
+          "nav_icon",
+          "search"
+        ],
         "middle_right": [
+          "divider_1",
+          "cart",
+          "html_block_2",
+          "divider_4",
+          "followIcons",
+          "topBarMenu",
+          "social_icon",
+          "contact",
+          "button_2",
+          "button_1",
           "account",
-          "cart"
+          "html_block_5"
         ],
         "bottom_left": [],
         "bottom_center": [],
-        "bottom_right": [],
+        "bottom_right": [
+          "mainMenu"
+        ],
         "available": [
-          "search",
           "html_block_1",
-          "html_block_2",
-          "html_block_4",
-          "html_block_5",
-          "news_letter",
-          "top_bar_menu",
-          "nav_icon",
-          "main_menu",
-          "contact",
-          "button_1",
-          "button_2",
-          "checkout",
           "wishlist",
-          "social_icon",
-          "divider_1",
           "divider_2",
-          "divider_3",
-          "divider_4"
+          "divider_3"
         ]
       }
     }
@@ -104,19 +113,90 @@
   },
   "globalStyles": {
     "colors": {
-      "schemes": []
+      "schemes": [
+        {
+          "name": "Scheme 1",
+          "background": "#FFFFFF",
+          "text": "#ffffff",
+          "gradient": "linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(9,9,121,1) 35%, rgba(0,212,255,1) 100%)",
+          "buttonBackground": "#121212",
+          "buttonLabel": "#FFFFFF",
+          "outlineButton": "#121212",
+          "id": "scheme-1"
+        },
+        {
+          "name": "Scheme 2",
+          "background": "#F0F0F0",
+          "text": "#121212",
+          "gradient": "linear-gradient(90deg, RGB(244, 204, 213) 0%, rgba(63,94,251,1) 100%)",
+          "buttonBackground": "#121212",
+          "buttonLabel": "#FFFFFF",
+          "outlineButton": "#121212",
+          "id": "scheme-2"
+        },
+        {
+          "name": "Scheme 3",
+          "background": "#333333",
+          "text": "#FFFFFF",
+          "gradient": "linear-gradient(90deg, #FDBB2D 0%, #22C1C3 100%)",
+          "buttonBackground": "#121212",
+          "buttonLabel": "#FFFFFF",
+          "outlineButton": "#121212",
+          "id": "scheme-3"
+        },
+        {
+          "name": "Scheme 4",
+          "background": "#000000",
+          "text": "#FFFFFF",
+          "gradient": "linear-gradient(90deg, #FF9A8B 0%, #FF6A88 55%, #FF99AC 100%)",
+          "buttonBackground": "#121212",
+          "buttonLabel": "#FFFFFF",
+          "outlineButton": "#121212",
+          "id": "scheme-4"
+        },
+        {
+          "name": "Scheme 5",
+          "background": "#3366FF",
+          "text": "#FFFFFF",
+          "gradient": "linear-gradient(90deg, RGB(17, 17, 17) 0%, rgba(224,195,252,1) 100%)",
+          "buttonBackground": "#121212",
+          "buttonLabel": "#FFFFFF",
+          "outlineButton": "#121212",
+          "id": "scheme-5"
+        },
+        {
+          "id": "scheme-6",
+          "name": "Scheme 6",
+          "background": "#ff0000",
+          "text": "#a3a3a3",
+          "gradient": "",
+          "buttonBackground": "#f5f2f2",
+          "buttonLabel": "#f30707",
+          "outlineButton": "#706969"
+        },
+        {
+          "id": "scheme-7",
+          "name": "Scheme 7",
+          "background": "#141647",
+          "text": "#ffffff",
+          "gradient": "rgba(20, 22, 71, 1)",
+          "buttonBackground": "#fcfafa",
+          "buttonLabel": "#000000",
+          "outlineButton": "#ffffff"
+        }
+      ]
     },
     "typography": {
-      "headingFont": "ADLaM Display:400",
-      "bodyFont": "Assistant",
-      "headingSizeScale": 100,
-      "bodySizeScale": 100,
+      "headingFont": "Amiko:600",
+      "bodyFont": "Caveat:700",
+      "headingSizeScale": 50,
+      "bodySizeScale": 79,
       "headingColor": "#1a1a1a"
     },
     "customCSS": "",
     "branding": {
       "logoUrl": "",
-      "logoWidth": 252,
+      "logoWidth": 68,
       "faviconUrl": "",
       "backgroundColor": "#ffffff"
     }

@@ -254,7 +254,7 @@ export default function MultiLevelSidebar({
       transition={animationConfig}
     >
       {/* Vertical Tabs with Tooltips */}
-      <div className="w-16 border-r border-gray-200 bg-gray-50 flex flex-col items-center py-4">
+      <div className="w-14 border-r border-gray-200 bg-gray-50 flex flex-col items-center py-2">
         <Tooltip.Provider delayDuration={300} skipDelayDuration={100}>
           {(initialMenu.items || [])
             .filter((item) => !item.hidden)
@@ -266,11 +266,11 @@ export default function MultiLevelSidebar({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`h-10 w-10 mb-2 rounded-md transition-all duration-200 ${
+                      className={`h-10 w-10 mb-1 rounded-md transition-all duration-200 ${
                         activeTab === item.title ||
                         (activeTab === "Section Settings" &&
                           item.title === "Design")
-                          ? "bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100"
+                          ? "bg-indigo-50 text-indigo-700 border border-indigo-100"
                           : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
                       }`}
                       onClick={() => handleTabChange(item.title)}

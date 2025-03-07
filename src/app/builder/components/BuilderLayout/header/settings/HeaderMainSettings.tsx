@@ -7,7 +7,8 @@ import { SettingSection } from "../../GlobalSettings/settings/SettingSection";
 import RadioButtonGroup from "./RadioButtonGroup";
 import RangeSlider from "../../GlobalSettings/settings/RangeSlider";
 import CodeEditor from "@uiw/react-textarea-code-editor";
-import { CaseLower, CaseSensitive, CaseUpper } from "lucide-react";
+import { CaseLower, CaseSensitive, CaseUpper, Palette } from "lucide-react";
+import { ColorSchemeSelector } from "@/app/builder/components/ColorSchemeSelector";
 
 interface HeaderMainSettingsProps {
   settings?: any;
@@ -62,23 +63,24 @@ export function HeaderMainSettings({
             <Label>Height</Label>
             <RangeSlider
               value={settings.headerHeight}
-              onValueChange={(v) => handleUpdate("headerHeight")(v)}
+              onValueChange={(v) => handleUpdate("headerHeight", v)}
             />
           </div>
 
           {/* Color Scheme */}
           <div className="space-y-2">
-            <Label>Color Scheme</Label>
-            <RadioButtonGroup
-              options={[
-                { id: "header-light", value: "light", label: "light" },
-                { id: "header-dark", value: "dark", label: "Dark" },
-              ]}
-              name="textTransform"
-              defaultValue={settings.colorScheme || "light"}
-              onValueChange={(value) => handleUpdate("colorScheme", value)}
-              required
+            <div className="flex items-center gap-2">
+              <Palette className="h-4 w-4 text-muted-foreground" />
+              <Label>Color Scheme</Label>
+            </div>
+            <ColorSchemeSelector
+              value={settings.colorScheme || ""}
+              onChange={(value) => handleUpdate("colorScheme", value)}
+              width="w-full"
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              Choose a color scheme that matches your brand identity
+            </p>
           </div>
 
           {/* Background Image */}

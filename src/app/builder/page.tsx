@@ -207,49 +207,133 @@ export default function PageBuilder() {
     );
   }, [backgroundColor]);
 
+  // Track whether we're currently sending settings to avoid loops
+  const isSendingSettingsRef = useRef(false);
+
   // Send the settings to the iframe when the page loads
   useEffect(() => {
-    const sendSettingsToIframe = () => {
-      if (contentRef.current?.contentWindow) {
-        console.log("Sending settings to iframe:", {
-          sections,
-          headerSettings,
-          footerSettings,
-          globalStyles: globalSettings.globalStyles,
-        });
+    // Track the last time we sent settings to avoid flooding
+    let lastSentTime = 0;
+    const COOLDOWN_PERIOD = 2000; // 2 seconds between sends
 
-        contentRef.current.contentWindow.postMessage(
-          {
-            type: "LOAD_SETTINGS",
-            settings: {
-              sections,
-              headerSettings,
-              footerSettings,
-              globalStyles: globalSettings.globalStyles,
-              version: globalSettings.version,
+    // Function to send settings to iframe without debouncing for initial load
+    const sendSettingsImmediately = () => {
+      // Don't send if we're in a sending cycle
+      if (isSendingSettingsRef.current) {
+        return;
+      }
+
+      const now = Date.now();
+
+      // Only send if we haven't sent recently
+      if (now - lastSentTime < COOLDOWN_PERIOD) {
+        // console.log("Skipping settings update due to cooldown period");
+        return;
+      }
+
+      lastSentTime = now;
+      isSendingSettingsRef.current = true;
+
+      try {
+        if (contentRef.current?.contentWindow) {
+          // console.log("Sending initial settings to iframe");
+
+          // Create default header settings if we don't have any
+          const effectiveHeaderSettings = headerSettings || {
+            topBarVisible: true,
+            topBarColorScheme: "light",
+            topBarNavStyle: "style1",
+            layout: {
+              containers: {
+                top_left: ["contact"],
+                top_center: ["top_bar_menu"],
+                top_right: ["social_icon"],
+                middle_left: ["mainMenu"],
+                middle_center: ["logo"],
+                middle_right: ["account", "cart"],
+                bottom_left: ["search"],
+                bottom_center: [],
+                bottom_right: [],
+                available: [
+                  "html_block_1",
+                  "html_block_2",
+                  "html_block_3",
+                  "html_block_4",
+                  "html_block_5",
+                ],
+              },
             },
-          },
-          "*"
-        );
+            logo: {
+              text: "Your Brand",
+              showText: true,
+            },
+          };
+
+          contentRef.current.contentWindow.postMessage(
+            {
+              type: "LOAD_SETTINGS",
+              settings: {
+                sections,
+                headerSettings: effectiveHeaderSettings,
+                footerSettings,
+                globalStyles: globalSettings.globalStyles,
+              },
+            },
+            "*"
+          );
+        }
+      } finally {
+        // Reset the sending flag after a delay to allow for processing
+        setTimeout(() => {
+          isSendingSettingsRef.current = false;
+        }, 1000);
       }
     };
 
-    // Wait for iframe to load
+    // Add debouncing to prevent rapid updates after initial load
+    const debouncedSendSettingsToIframe = debounce(() => {
+      sendSettingsImmediately();
+    }, 1000); // 1 second delay to prevent too many updates
+
+    // Handle iframe load event to send settings immediately
     const handleIframeLoad = () => {
-      sendSettingsToIframe();
+      // console.log("Iframe loaded, sending settings immediately");
+      sendSettingsImmediately();
     };
 
+    // Set up load event listener
     if (contentRef.current) {
       contentRef.current.addEventListener("load", handleIframeLoad);
 
-      // Also try to send immediately in case iframe is already loaded
-      sendSettingsToIframe();
+      // Also try immediately in case the iframe is already loaded
+      sendSettingsImmediately();
     }
 
+    // For subsequent updates, use the debounced version
+    const updateTimer = setTimeout(() => {
+      debouncedSendSettingsToIframe();
+    }, 500);
+
     return () => {
-      contentRef.current?.removeEventListener("load", handleIframeLoad);
+      if (contentRef.current) {
+        contentRef.current.removeEventListener("load", handleIframeLoad);
+      }
+      clearTimeout(updateTimer);
     };
-  }, [sections, headerSettings, footerSettings, globalSettings]);
+  }, [sections, headerSettings, footerSettings, globalSettings.globalStyles]);
+
+  // Function to debounce calls
+  function debounce(func: Function, wait: number) {
+    let timeout: NodeJS.Timeout;
+    return function executedFunction(...args: any[]) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -257,9 +341,18 @@ export default function PageBuilder() {
         setActiveNarrowSidebar("header-settings");
         setActiveSubmenu("HTML");
       } else if (event.data.type === "SECTIONS_UPDATED") {
+        // Don't update sections if we're in the middle of sending settings
+        // This prevents loops where updates from iframe trigger new settings to be sent
+        if (isSendingSettingsRef.current) {
+          return;
+        }
+
         // Update the sections state when receiving updates from the iframe
         if (Array.isArray(event.data.sections)) {
           setSections(event.data.sections);
+
+          // Don't automatically send settings back after receiving section updates
+          // This helps break the feedback loop
         }
       } else if (event.data.type === "SECTION_SELECTED") {
         // Update the selected section ID and open the settings panel
@@ -696,6 +789,13 @@ export default function PageBuilder() {
   const handleSave = useCallback((): Promise<void> => {
     return new Promise(async (resolve, reject) => {
       try {
+        // Trigger saving of header layout before continuing
+        const saveEvent = new CustomEvent("requestSaveHeaderLayout");
+        window.dispatchEvent(saveEvent);
+
+        // Short delay to ensure the headerSettings state is updated with the latest layout
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
         // Update global settings with current state
         const updatedSettings: GlobalSettings = {
           ...globalSettings,
@@ -825,6 +925,69 @@ export default function PageBuilder() {
     );
 
     console.log("Sections imported successfully", importedSections);
+  }, []);
+
+  // Add an event listener for headerLayoutChanged to update the state without saving
+  useEffect(() => {
+    const handleHeaderLayoutChanged = (event: CustomEvent) => {
+      console.log("Header layout changed but not saved:", event.detail);
+      // Update the state without saving to persistent storage
+      if (event.detail.layout && event.detail.presetId) {
+        setHeaderSettings((prev) => ({
+          ...prev,
+          layout: {
+            ...prev.layout,
+            currentPreset: event.detail.presetId,
+            containers: event.detail.layout,
+          },
+        }));
+      }
+    };
+
+    window.addEventListener(
+      "headerLayoutChanged",
+      handleHeaderLayoutChanged as EventListener
+    );
+
+    return () => {
+      window.removeEventListener(
+        "headerLayoutChanged",
+        handleHeaderLayoutChanged as EventListener
+      );
+    };
+  }, []);
+
+  // Add an event listener for saveHeaderLayout to handle saving layout changes
+  useEffect(() => {
+    const handleSaveHeaderLayout = (event: CustomEvent) => {
+      console.log("Saving header layout:", event.detail);
+      // Update the state
+      if (event.detail.layout && event.detail.presetId) {
+        setHeaderSettings((prev) => ({
+          ...prev,
+          layout: {
+            ...prev.layout,
+            currentPreset: event.detail.presetId,
+            containers: event.detail.layout,
+          },
+        }));
+
+        // Note: We don't need to call saveSettings here as it will be done
+        // when the user clicks the Save button, which calls handleSave
+      }
+    };
+
+    window.addEventListener(
+      "saveHeaderLayout",
+      handleSaveHeaderLayout as EventListener
+    );
+
+    return () => {
+      window.removeEventListener(
+        "saveHeaderLayout",
+        handleSaveHeaderLayout as EventListener
+      );
+    };
   }, []);
 
   return (

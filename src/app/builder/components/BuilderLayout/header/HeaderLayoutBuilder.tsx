@@ -6,6 +6,7 @@ import React, {
   useState,
   useRef,
   createContext,
+  useMemo,
 } from "react";
 import "./HeaderLayoutBuilder.css";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { presetLayouts } from "../data/headerPresets";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { Info, Settings } from "lucide-react";
+import { HeaderItem } from "../data/headerItems";
 
 // Define the layout context type
 interface LayoutContextType {
@@ -26,6 +28,64 @@ const LayoutContext = createContext<LayoutContextType>({
   layout: presetLayouts.preset1,
   setLayout: () => {},
 });
+
+// Utility function to sanitize a layout and ensure no duplicates
+const sanitizeLayout = (layout: HeaderLayout): HeaderLayout => {
+  // Deep clone the layout to avoid reference issues
+  const newLayout: HeaderLayout = JSON.parse(JSON.stringify(layout));
+
+  // Define layout container IDs for reuse
+  const containerIds = [
+    "top_left",
+    "top_center",
+    "top_right",
+    "middle_left",
+    "middle_center",
+    "middle_right",
+    "bottom_left",
+    "bottom_center",
+    "bottom_right",
+  ];
+
+  // Remove duplicates within each container
+  containerIds.forEach((containerId) => {
+    const container = newLayout[containerId as keyof HeaderLayout] as string[];
+    const uniqueItems = Array.from(new Set(container));
+    newLayout[containerId as keyof HeaderLayout] = uniqueItems;
+  });
+
+  // Check for items that exist in multiple containers and keep only the first occurrence
+  const itemLocations = new Map<string, string>();
+
+  containerIds.forEach((containerId) => {
+    const container = [
+      ...(newLayout[containerId as keyof HeaderLayout] as string[]),
+    ];
+
+    // Filter the container to keep only items that haven't been seen before
+    // or items that are in this container first
+    newLayout[containerId as keyof HeaderLayout] = container.filter((item) => {
+      if (!itemLocations.has(item)) {
+        // First time seeing this item, keep it and record its location
+        itemLocations.set(item, containerId);
+        return true;
+      }
+      // Item already exists elsewhere, remove it from here
+      return false;
+    });
+  });
+
+  // Rebuild the available items list
+  const allPossibleItems = getAllHeaderItems().map((item) => item.id);
+  const usedItems = Array.from(itemLocations.keys());
+
+  // Set available items to all possible items minus those in use
+  newLayout.available = allPossibleItems.filter(
+    (item) => !usedItems.includes(item)
+  );
+
+  return newLayout;
+};
 
 interface HeaderLayoutBuilderProps {
   onShowPresets?: () => void;
@@ -241,7 +301,7 @@ const DraggableItem = ({
           isLogo ? "cursor-default w-auto inline-block" : "cursor-move"
         } select-none whitespace-nowrap 
         ${isDragging ? "opacity-50" : ""} flex items-center gap-1 shrink-0
-        h-[32px] my-1`}
+        h-[28px] my-1`}
       onClick={() => {
         // Only allow click to open settings if not in available items
         if (!isInAvailableItems && onItemClick) {
@@ -399,7 +459,7 @@ const DroppableZone = ({
   if (id === "available") {
     containerStyle.width = "100%";
     containerStyle.background = "rgba(0, 0, 0, 0.2)";
-    containerStyle.border = "1px dashed rgba(255, 255, 255, 0.2)";
+    containerStyle.border = "none";
     containerStyle.minHeight = "60px";
     containerStyle.justifySelf = "stretch";
     // Allow wrapping for the available items section
@@ -433,7 +493,7 @@ const DroppableZone = ({
   return (
     <div
       ref={mergedRef}
-      className={`drop-target px-2 relative
+      className={`drop-target px-1 relative
                  ${
                    isOver && canDrop
                      ? "bg-zinc-800"
@@ -441,14 +501,18 @@ const DroppableZone = ({
                      ? "bg-zinc-700"
                      : "bg-zinc-900"
                  } 
-                 border ${
-                   isOver && canDrop
-                     ? "border-blue-500"
-                     : hasLogo
-                     ? "border-yellow-500"
-                     : "border-dashed border-gray-300"
-                 } 
-                 rounded shadow-sm min-h-[50px] flex gap-2 items-center ${justifyClass}
+                  ${
+                    id === "available"
+                      ? ""
+                      : `border ${
+                          isOver && canDrop
+                            ? "border-blue-500"
+                            : hasLogo
+                            ? "border-yellow-500"
+                            : "border-dashed border-gray-300"
+                        }`
+                  } 
+                 rounded shadow-sm min-h-[40px] flex gap-2 items-center ${justifyClass}
                  ${hasLogo ? "cursor-not-allowed" : ""}
                  whitespace-nowrap
                  ${className}`}
@@ -513,12 +577,15 @@ export function HeaderLayoutBuilder({
   isOpen,
   onClose,
   contentRef,
-  currentPreset = "preset1",
+  currentPreset: initialPreset = "preset1",
   onOpenLayoutPanel,
   onSelectPreset,
 }: HeaderLayoutBuilderProps) {
   // Use a ref to track if this is the initial render
   const isInitialMount = useRef(true);
+
+  // Add local state for current preset
+  const [currentPreset, setCurrentPreset] = useState(initialPreset);
 
   // Function to check if localStorage has saved header layout settings
   const getSavedLayout = () => {
@@ -539,29 +606,60 @@ export function HeaderLayoutBuilder({
   };
 
   // Initialize layout state with saved layout if available, otherwise use preset
-  const [layout, setLayout] = useState<HeaderLayout>(() => {
+  const [layoutState, setLayoutState] = useState<HeaderLayout>(() => {
     const savedLayout = getSavedLayout();
     if (savedLayout) {
-      return savedLayout;
+      return sanitizeLayout(savedLayout);
     }
-    return {
+    return sanitizeLayout({
       ...(presetLayouts[currentPreset as keyof typeof presetLayouts] ||
         presetLayouts.preset1),
       available: getAllHeaderItems().map((item) => item.id), // Initialize available items
-    };
+    });
   });
+
+  // Create a safe setter for layout that always sanitizes the data
+  const setLayout = useCallback(
+    (
+      layoutOrFunction: HeaderLayout | ((prev: HeaderLayout) => HeaderLayout)
+    ) => {
+      setLayoutState((prevLayout) => {
+        // If layoutOrFunction is a function, call it with the previous layout
+        const newLayoutBeforeSanitize =
+          typeof layoutOrFunction === "function"
+            ? layoutOrFunction(prevLayout)
+            : layoutOrFunction;
+
+        // Always sanitize the layout before setting it
+        return sanitizeLayout(newLayoutBeforeSanitize);
+      });
+    },
+    []
+  );
+
+  // Create a combined layout state for use in the component
+  const layout = useMemo(() => sanitizeLayout(layoutState), [layoutState]);
 
   // Store the current preset to use for comparison
   const lastPresetRef = useRef<string>(currentPreset);
 
   // Consolidate logging for layout changes
   const logLayoutChange = (presetId: string, layout: HeaderLayout) => {
-    console.log(`HeaderLayoutBuilder: Layout changed to preset ${presetId}`, layout);
+    console.log(
+      `HeaderLayoutBuilder: Layout changed to preset ${presetId}`,
+      layout
+    );
   };
 
-  // Function to apply the current layout to the iframe - defined before it's used in useEffect
+  // Modify the applyLayoutToIframe function to only update the iframe without triggering a save
   const applyLayoutToIframe = useCallback(() => {
     if (currentPreset) {
+      console.log("Sending layout update to iframe:", {
+        type: "UPDATE_HEADER_LAYOUT",
+        presetId: currentPreset,
+        ...layout,
+      });
+
       // Send message to iframe to update the header layout using the current layout state
       contentRef.current?.contentWindow?.postMessage(
         {
@@ -572,17 +670,51 @@ export function HeaderLayoutBuilder({
         "*"
       );
 
-      // Also save the current layout to the parent component's headerSettings
+      // DO NOT trigger save event here - this will happen only when Save button is clicked
+      // Instead, we'll dispatch an event to let the parent know about the layout change
+      // but explicitly mention it's not saved yet
       window.dispatchEvent(
-        new CustomEvent("updateHeaderLayout", {
+        new CustomEvent("headerLayoutChanged", {
           detail: {
-            layout: layout, // Use the current layout state
+            layout: layout,
             presetId: currentPreset,
+            unsaved: true, // Flag to indicate these changes aren't saved yet
           },
         })
       );
     }
   }, [contentRef, currentPreset, layout]);
+
+  // Add a function to save the current layout when triggered by Save button
+  const saveCurrentLayout = useCallback(() => {
+    if (currentPreset) {
+      // Dispatch an event to parent to save these changes
+      window.dispatchEvent(
+        new CustomEvent("saveHeaderLayout", {
+          detail: {
+            layout: layout,
+            presetId: currentPreset,
+          },
+        })
+      );
+      console.log("Layout changes ready to be saved:", layout);
+    }
+  }, [currentPreset, layout]);
+
+  // Expose the saveCurrentLayout function to the parent component
+  // This allows the save button to trigger the save action
+  useEffect(() => {
+    // Listen for save events from the parent
+    const handleSaveRequest = () => {
+      saveCurrentLayout();
+    };
+
+    window.addEventListener("requestSaveHeaderLayout", handleSaveRequest);
+
+    return () => {
+      window.removeEventListener("requestSaveHeaderLayout", handleSaveRequest);
+    };
+  }, [saveCurrentLayout]);
 
   // Update local layout state when currentPreset changes, but handle with care
   useEffect(() => {
@@ -591,7 +723,7 @@ export function HeaderLayoutBuilder({
       // Try to get saved layout again to double-check it's loaded
       const savedLayout = getSavedLayout();
       if (savedLayout) {
-        setLayout(savedLayout);
+        setLayout(sanitizeLayout(savedLayout));
       }
 
       isInitialMount.current = false;
@@ -604,17 +736,26 @@ export function HeaderLayoutBuilder({
     if (currentPreset !== lastPresetRef.current) {
       if (presetLayouts[currentPreset as keyof typeof presetLayouts]) {
         // Record that user explicitly chose a preset, then apply it
-        setLayout(presetLayouts[currentPreset as keyof typeof presetLayouts]);
+        setLayout(
+          sanitizeLayout(
+            presetLayouts[currentPreset as keyof typeof presetLayouts]
+          )
+        );
 
         // Immediately apply this layout to the iframe and save it
         // This ensures the new preset is saved and persists on reload
         setTimeout(() => applyLayoutToIframe(), 0);
+
+        // If onSelectPreset callback exists, call it
+        if (onSelectPreset) {
+          onSelectPreset(currentPreset);
+        }
       }
 
       // Update ref for next comparison
       lastPresetRef.current = currentPreset;
     }
-  }, [currentPreset, applyLayoutToIframe]);
+  }, [currentPreset, applyLayoutToIframe, setLayout, onSelectPreset]);
 
   // Apply the layout to the iframe whenever it changes
   useEffect(() => {
@@ -634,12 +775,13 @@ export function HeaderLayoutBuilder({
           presetLayouts[presetId as keyof typeof presetLayouts] &&
           presetId !== currentPreset
         ) {
-          setLayout(presetLayouts[presetId as keyof typeof presetLayouts]);
-
-          // Notify parent that we've updated the layout (if onSelectPreset callback is provided)
-          if (onSelectPreset) {
-            onSelectPreset(presetId);
-          }
+          // Update both currentPreset and layout
+          setCurrentPreset(presetId);
+          setLayout(
+            sanitizeLayout(
+              presetLayouts[presetId as keyof typeof presetLayouts]
+            )
+          );
         }
       }
     };
@@ -648,7 +790,7 @@ export function HeaderLayoutBuilder({
     return () => {
       window.removeEventListener("message", handleMessage);
     };
-  }, [currentPreset, onSelectPreset, applyLayoutToIframe]);
+  }, [currentPreset, setLayout]);
 
   const handleItemClick = useCallback((itemId: string) => {
     // Find the appropriate settings panel for this item
@@ -689,41 +831,151 @@ export function HeaderLayoutBuilder({
       targetContainerId: string
     ) => {
       setLayout((prevLayout: HeaderLayout) => {
-        const newLayout: HeaderLayout = { ...prevLayout };
-
+        // Get a reference to the source container
         const sourceContainer =
           prevLayout[sourceContainerId as keyof HeaderLayout] || [];
+
+        // Get the item being moved
         const itemToMove = sourceContainer[sourceIndex];
 
-        // Check if moving from available items
-        if (sourceContainerId === "available") {
-          const availableItems = [...prevLayout.available];
-          const itemIndex = availableItems.indexOf(itemToMove);
-          if (itemIndex > -1) {
-            availableItems.splice(itemIndex, 1); // Remove from available
-            newLayout.available = availableItems;
-          }
+        // If item doesn't exist, don't proceed
+        if (!itemToMove) return prevLayout;
+
+        // Create a new layout with initial changes
+        const newLayout: HeaderLayout = JSON.parse(JSON.stringify(prevLayout));
+
+        // Define layout container IDs for reuse
+        const containerIds = [
+          "top_left",
+          "top_center",
+          "top_right",
+          "middle_left",
+          "middle_center",
+          "middle_right",
+          "bottom_left",
+          "bottom_center",
+          "bottom_right",
+        ];
+
+        // SPECIAL CASE: If moving within the same container, just reorder the items
+        if (
+          sourceContainerId === targetContainerId &&
+          sourceContainerId !== "available"
+        ) {
+          const container = [
+            ...(newLayout[sourceContainerId as keyof HeaderLayout] as string[]),
+          ];
+
+          // Remove from original position
+          container.splice(sourceIndex, 1);
+
+          // Add at new position
+          container.splice(targetIndex, 0, itemToMove);
+
+          // Update the container
+          newLayout[sourceContainerId as keyof HeaderLayout] = container;
+
+          // No need to update available items when just reordering
+          return newLayout;
         }
 
-        // Add the item to the target container
-        const targetContainer = [
-          ...prevLayout[targetContainerId as keyof HeaderLayout],
-        ];
-        targetContainer.splice(targetIndex, 0, itemToMove);
-        newLayout[targetContainerId as keyof HeaderLayout] = targetContainer;
+        // SPECIAL CASE: If moving from a layout container to another layout container
+        // (not involving the available items container)
+        if (
+          containerIds.includes(sourceContainerId) &&
+          containerIds.includes(targetContainerId)
+        ) {
+          // Remove the item from ALL containers except the source to prevent duplicates
+          containerIds.forEach((containerId) => {
+            if (containerId !== sourceContainerId) {
+              newLayout[containerId as keyof HeaderLayout] = (
+                newLayout[containerId as keyof HeaderLayout] as string[]
+              ).filter((item) => item !== itemToMove);
+            }
+          });
 
-        // Remove the item from the source container
-        const sourceContainerUpdated = [
-          ...prevLayout[sourceContainerId as keyof HeaderLayout],
-        ];
-        sourceContainerUpdated.splice(sourceIndex, 1);
-        newLayout[sourceContainerId as keyof HeaderLayout] =
-          sourceContainerUpdated;
+          // Remove from source container
+          const sourceContainerUpdated = [
+            ...(newLayout[sourceContainerId as keyof HeaderLayout] as string[]),
+          ];
+          sourceContainerUpdated.splice(sourceIndex, 1);
+          newLayout[sourceContainerId as keyof HeaderLayout] =
+            sourceContainerUpdated;
+
+          // Add to target container
+          const targetContainer = [
+            ...(newLayout[targetContainerId as keyof HeaderLayout] as string[]),
+          ];
+          targetContainer.splice(targetIndex, 0, itemToMove);
+          newLayout[targetContainerId as keyof HeaderLayout] = targetContainer;
+
+          // Keep the available items unchanged in this case
+          return newLayout;
+        }
+
+        // CASE: Moving from available to a layout container
+        if (sourceContainerId === "available") {
+          // Remove from all layout containers to prevent duplicates
+          containerIds.forEach((containerId) => {
+            newLayout[containerId as keyof HeaderLayout] = (
+              newLayout[containerId as keyof HeaderLayout] as string[]
+            ).filter((item) => item !== itemToMove);
+          });
+
+          // Add to target container
+          const targetContainer = [
+            ...(newLayout[targetContainerId as keyof HeaderLayout] as string[]),
+          ];
+          targetContainer.splice(targetIndex, 0, itemToMove);
+          newLayout[targetContainerId as keyof HeaderLayout] = targetContainer;
+
+          // Remove from available
+          newLayout.available = newLayout.available.filter(
+            (item) => item !== itemToMove
+          );
+
+          return newLayout;
+        }
+
+        // CASE: Moving from a layout container to available
+        if (targetContainerId === "available") {
+          // Remove from all layout containers
+          containerIds.forEach((containerId) => {
+            newLayout[containerId as keyof HeaderLayout] = (
+              newLayout[containerId as keyof HeaderLayout] as string[]
+            ).filter((item) => item !== itemToMove);
+          });
+
+          // Add to available if not already there
+          if (!newLayout.available.includes(itemToMove)) {
+            newLayout.available.push(itemToMove);
+          }
+
+          return newLayout;
+        }
+
+        // If we get here, something unexpected happened - fall back to sanitization
+        // to ensure the layout is consistent
+        const allPossibleItems = getAllHeaderItems().map((item) => item.id);
+        const usedItems = new Set<string>();
+
+        // Collect all items currently in use in any layout container
+        containerIds.forEach((containerId) => {
+          const containerItems = newLayout[
+            containerId as keyof HeaderLayout
+          ] as string[];
+          containerItems.forEach((item) => usedItems.add(item));
+        });
+
+        // Set available items to all possible items minus those in use
+        newLayout.available = allPossibleItems.filter(
+          (item) => !usedItems.has(item)
+        );
 
         return newLayout;
       });
     },
-    [contentRef, currentPreset]
+    [setLayout]
   );
 
   // Add debug logging when component is opened
@@ -746,7 +998,23 @@ export function HeaderLayoutBuilder({
             "to",
             event.detail.currentPreset
           );
+          // Update currentPreset state
           setCurrentPreset(event.detail.currentPreset);
+
+          // Update layout with the new preset
+          if (
+            presetLayouts[
+              event.detail.currentPreset as keyof typeof presetLayouts
+            ]
+          ) {
+            setLayout(
+              sanitizeLayout(
+                presetLayouts[
+                  event.detail.currentPreset as keyof typeof presetLayouts
+                ]
+              )
+            );
+          }
         }
 
         // Check if we have layout containers in the response
@@ -764,7 +1032,9 @@ export function HeaderLayoutBuilder({
               "Layout MISMATCH between builder and live settings - updating builder"
             );
             // Update layout with the current settings
-            setLayout(event.detail.headerSettings.layout.containers);
+            setLayout(
+              sanitizeLayout(event.detail.headerSettings.layout.containers)
+            );
           } else {
             console.log("Layout MATCHES between builder and live settings");
           }
@@ -805,32 +1075,46 @@ export function HeaderLayoutBuilder({
     }
   }, [isOpen, currentPreset, layout]);
 
+  // Ensure layout state is ready to be saved when the save button is clicked
+  const handleSave = useCallback(() => {
+    // Logic to save the current layout state
+    const layoutToSave = sanitizeLayout(layoutState);
+    localStorage.setItem(
+      "visual-builder-settings",
+      JSON.stringify({
+        headerSettings: {
+          layout: {
+            containers: layoutToSave,
+          },
+        },
+      })
+    );
+    console.log("Layout saved successfully:", layoutToSave);
+  }, [layoutState]);
+
   if (!isOpen) return null;
 
   return (
     <DndProvider backend={HTML5Backend}>
       <LayoutContext.Provider value={{ layout, setLayout }}>
         <div
-          className="bg-gray-100 z-50 absolute bottom-0 w-full bg-zinc-700"
+          className="z-50 absolute bottom-0 w-full bg-zinc-700"
           style={{ maxHeight: "60vh", overflowY: "auto", overflowX: "hidden" }}
         >
-          <div className="flex align-center justify-between p-3 bg-white border-b border-t mb-2">
+          <div className="flex items-center justify-between p-3 py-2 bg-white border-b border-t mb-2">
             <div>
-              <h3>Header Builder</h3>
-              <p className="text-xs text-gray-500 mt-1">
-                Note: Logo positions are locked by the preset layout and cannot
-                be modified.
-              </p>
-              <p className="text-xs text-blue-500 mt-1">
-                Current preset: <strong>{currentPreset}</strong>
+              <h3 className="font-bold">Header Builder</h3>
+              <p className="text-xs text-blue-500 capitalize">
+                <strong>{currentPreset}</strong> is selected
               </p>
             </div>
-            <div className="flex align-center justify-between gap-2">
-              <Button size="sm" onClick={onOpenLayoutPanel}>
+            <div className="flex items-center justify-between gap-2">
+              <Button size="sm" className="h-8" onClick={onOpenLayoutPanel}>
                 Preset
               </Button>
               <Button
                 size="sm"
+                className="h-8"
                 onClick={() => {
                   // Apply the current layout to the iframe
                   applyLayoutToIframe();
@@ -839,7 +1123,7 @@ export function HeaderLayoutBuilder({
               >
                 Apply Layout
               </Button>
-              <Button size="sm" onClick={onClose}>
+              <Button size="sm" className="h-8" onClick={onClose}>
                 Close
               </Button>
             </div>
@@ -1060,9 +1344,11 @@ export function HeaderLayoutBuilder({
             </div>
 
             {/* Available Items */}
-            <div className="flex mt-4 w-full">
-              <div className="w-full p-2 bg-zinc-950 border-t border-zinc-700">
-                <p className="text-xs text-white mb-2">Available Items:</p>
+            <div className="flex w-full">
+              <div className="w-full">
+                <p className="text-xs text-white mb-2 sr-only">
+                  Available Items:
+                </p>
                 <DroppableZone
                   id="available"
                   items={layout.available}

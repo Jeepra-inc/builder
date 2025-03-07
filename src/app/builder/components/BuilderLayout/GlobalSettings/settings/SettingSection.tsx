@@ -2,7 +2,7 @@ import { Separator } from "@/components/ui/separator";
 import React from "react";
 
 interface SettingSectionProps {
-  title: string;
+  title?: string;
   description?: string;
   children: React.ReactNode;
   className?: string; // Add className prop

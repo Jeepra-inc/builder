@@ -1,28 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
-import { Section, SettingField } from "@/app/builder/types";
+import React, { useEffect } from "react";
+import { SettingField } from "@/app/builder/types";
 import { sections } from "@/app/builder/elements/sections";
 import { SectionSettingsRendererProps } from "@/app/builder/types";
 import { useSettingsManager } from "../../hooks/useSettingsManager";
-import {
-  FieldWrapper,
-  TextInput,
-  TextArea,
-  NumberInput,
-  SelectInput,
-  ColorInput,
-  RangeInput,
-} from "./SettingsInputs";
-
-const InputComponents = {
-  text: TextInput,
-  textarea: TextArea,
-  number: NumberInput,
-  select: SelectInput,
-  color: ColorInput,
-  range: RangeInput,
-};
+import { FieldWrapper, NumberInput, InputComponent } from "./SettingsInputs";
 
 export function SectionSettingsRenderer({
   section,
@@ -34,6 +17,16 @@ export function SectionSettingsRenderer({
   const getCorrectSectionConfig = () => sections.sections[section.type] || null;
   const correctSectionConfig = getCorrectSectionConfig();
 
+  // Debug log when the renderer is mounted or section changes
+  useEffect(() => {
+    console.log(
+      "🛠️ SectionSettingsRenderer mounted for section type:",
+      section.type
+    );
+    console.log("🛠️ Section config:", correctSectionConfig);
+    console.log("🛠️ Current section settings:", localSettings);
+  }, [section.type]);
+
   if (!correctSectionConfig) {
     return (
       <div>
@@ -43,6 +36,14 @@ export function SectionSettingsRenderer({
   }
 
   const schemaFields = correctSectionConfig.settings || [];
+
+  // Debug log the schema fields
+  console.log("🛠️ Schema fields:", schemaFields);
+  // Check specifically for colorScheme fields
+  const colorSchemeFields = schemaFields.filter(
+    (field: SettingField) => field.id === "colorScheme"
+  );
+  console.log("🛠️ ColorScheme fields found:", colorSchemeFields);
 
   return (
     <div className="space-y-4">
@@ -69,28 +70,28 @@ export function SectionSettingsRenderer({
       </FieldWrapper>
 
       {schemaFields.map((field: SettingField) => {
-        const [value, setValue] = useState<Field['default']>(field.default);
         const currentValue = localSettings?.[field.id];
-        const Component =
-          InputComponents[field.type as keyof typeof InputComponents];
 
-        if (!Component) {
-          return <div key={field.id}>Unsupported field type: {field.type}</div>;
-        }
+        // Debug log for each field being rendered
+        console.log(
+          `🛠️ Rendering field: ${field.id}, type: ${field.type}, value:`,
+          currentValue
+        );
 
-        const fieldProps = {
-          value: currentValue ?? value,
-          onChange: (val: any) => {
-            setValue(val);
-            handleSettingChange(field.id, val);
-          },
-          ...field,
-        };
-
+        // Use our InputComponent which handles custom input types
         return (
-          <FieldWrapper key={field.id} id={field.id} label={field.label}>
-            <Component {...fieldProps} />
-          </FieldWrapper>
+          <InputComponent
+            key={field.id}
+            id={field.id}
+            type={field.type}
+            value={currentValue !== undefined ? currentValue : field.default}
+            onChange={(val: any) => handleSettingChange(field.id, val)}
+            options={field.options}
+            min={field.min}
+            max={field.max}
+            step={field.step}
+            setting={field}
+          />
         );
       })}
     </div>

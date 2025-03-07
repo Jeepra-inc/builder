@@ -7,7 +7,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { SettingSection } from "../../GlobalSettings/settings/SettingSection";
 import RadioButtonGroup from "./RadioButtonGroup";
 import RangeSlider from "../../GlobalSettings/settings/RangeSlider";
-import { CaseLower, CaseSensitive, CaseUpper } from "lucide-react";
+import { CaseLower, CaseSensitive, CaseUpper, Palette } from "lucide-react";
+import { ColorSchemeSelector } from "@/app/builder/components/ColorSchemeSelector";
 
 interface HeaderBottomSettingsProps {
   settings?: any;
@@ -37,27 +38,49 @@ export function HeaderBottomSettings({
   };
 
   return (
-    <div className="">
-      {/* Enable Bottom Header */}
-      <SettingSection
-        title="Bottom Header"
-        description="Toggle and configure bottom header section"
-        className="flex items-center justify-between gap-2"
-      >
-        <Switch
-          checked={settings.showHeaderBottom}
-          onCheckedChange={(checked) =>
-            handleUpdate("showHeaderBottom", checked)
-          }
-        />
-      </SettingSection>
-
+    <div className="space-y-6">
       {/* Layout Settings */}
       <SettingSection
         title="Layout"
-        description="Configure bottom header layout settings"
+        description="Configure bottom header section layout"
       >
         <div className="space-y-6">
+          {/* Enable Bottom Section */}
+          <div className="flex items-center justify-between">
+            <Label>Enable Bottom Section</Label>
+            <Switch
+              checked={settings.bottomEnabled}
+              onCheckedChange={(checked) =>
+                handleUpdate("bottomEnabled", checked)
+              }
+            />
+          </div>
+
+          {/* Height Slider */}
+          <div className="space-y-2">
+            <Label>Height</Label>
+            <RangeSlider
+              value={settings.bottomHeight || 80}
+              onValueChange={(value) => handleUpdate("bottomHeight", value)}
+            />
+          </div>
+
+          {/* Color Scheme */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Palette className="h-4 w-4 text-muted-foreground" />
+              <Label>Color Scheme</Label>
+            </div>
+            <ColorSchemeSelector
+              value={settings.bottomColorScheme || ""}
+              onChange={(value) => handleUpdate("bottomColorScheme", value)}
+              width="w-full"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Choose a color scheme for the bottom header section
+            </p>
+          </div>
+
           {/* Header Width */}
           <div className="space-y-4">
             <Label>Header Width</Label>
@@ -71,38 +94,12 @@ export function HeaderBottomSettings({
             />
           </div>
 
-          {/* Height Slider */}
-          <div className="space-y-4">
-            <Label>Height</Label>
-            <RangeSlider
-              value={settings.bottomHeight}
-              onValueChange={(value) => handleUpdate("bottomHeight", value[0])}
-            />
-          </div>
-
-          {/* Color Scheme */}
-          <div className="space-y-4">
-            <Label>Color Scheme</Label>
-            <RadioButtonGroup
-              options={[
-                { id: "header-light", value: "light", label: "light" },
-                { id: "header-dark", value: "dark", label: "Dark" },
-              ]}
-              name="bottomColorScheme"
-              defaultValue={settings.bottomColorScheme || "light"}
-              onValueChange={(value) =>
-                handleUpdate("bottomColorScheme", value)
-              }
-              required
-            />
-          </div>
-
           {/* Background Image */}
           <div className="space-y-4">
             <Label>Background Image</Label>
             <div className="flex items-center justify-center w-full">
               <label
-                for="dropzone-file"
+                htmlFor="dropzone-file"
                 className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600"
               >
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
