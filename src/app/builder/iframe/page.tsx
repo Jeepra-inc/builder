@@ -836,28 +836,62 @@ export default function IframeContent() {
                 onMouseLeave={() => setHoveredSection(null)}
               >
                 {hoveredSection === section.id && (
-                  <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-10">
-                    <AddSectionModal
-                      open={activeInsertIndex === index}
-                      onOpenChange={(open: boolean) =>
-                        setActiveInsertIndex(open ? index : null)
-                      }
-                      onAddSection={(type) => handleAddSection(type, index)}
-                      buttonVariant="outline"
-                      buttonSize="icon"
-                      buttonClassName="bg-blue-500 text-white rounded-full w-6 h-6"
-                    />
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+                    <div className="group/add-btn relative">
+                      {/* Line that appears when hovering over the plus button - grows from center */}
+                      <div className="absolute top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2 h-[3px] bg-blue-500 w-0 group-hover/add-btn:w-screen transition-all duration-300 -z-10 origin-center"></div>
+
+                      {/* Plus button visible on section hover */}
+                      <button
+                        onClick={() => setActiveInsertIndex(index)}
+                        className="flex items-center justify-center bg-blue-500 text-white rounded-full w-6 h-6 group-hover/add-btn:opacity-0 transition-opacity"
+                      >
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 12 12"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M6 1.5V10.5M1.5 6H10.5"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+
+                      {/* Text button only shown when hovering over the plus button */}
+                      <button
+                        onClick={() => setActiveInsertIndex(index)}
+                        className="absolute top-0 left-1/2 transform -translate-x-1/2 opacity-0 group-hover/add-btn:opacity-100 whitespace-nowrap transition-opacity bg-blue-500 text-white hover:bg-blue-600 text-xs py-1 px-3 rounded-md shadow-sm font-medium"
+                      >
+                        Add Section
+                      </button>
+                    </div>
+
+                    {/* Modal that opens when clicking either button */}
+                    {activeInsertIndex === index && (
+                      <AddSectionModal
+                        open={true}
+                        onOpenChange={(open: boolean) =>
+                          setActiveInsertIndex(open ? index : null)
+                        }
+                        onAddSection={(type) => handleAddSection(type, index)}
+                        buttonVariant="outline"
+                        buttonSize="icon"
+                        buttonClassName="hidden" // Hide the default button
+                      />
+                    )}
                   </div>
                 )}
 
                 <div
                   ref={getSectionRef(section.id)}
                   onClick={() => handleSectionClick(section.id)}
-                  className={`cursor-pointer ${
-                    selectedSectionId === section.id
-                      ? "ring-2 ring-blue-500"
-                      : ""
-                  }`}
+                  className="cursor-pointer"
                 >
                   {hoveredSection === section.id && (
                     <SectionControls
@@ -893,17 +927,57 @@ export default function IframeContent() {
                 </div>
 
                 {hoveredSection === section.id && (
-                  <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 z-10">
-                    <AddSectionModal
-                      open={activeInsertIndex === index + 1}
-                      onOpenChange={(open: boolean) =>
-                        setActiveInsertIndex(open ? index + 1 : null)
-                      }
-                      onAddSection={(type) => handleAddSection(type, index + 1)}
-                      buttonVariant="outline"
-                      buttonSize="icon"
-                      buttonClassName="bg-blue-500 text-white rounded-full w-6 h-6"
-                    />
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-10">
+                    <div className="group/add-btn relative">
+                      {/* Line that appears when hovering over the plus button - grows from center */}
+                      <div className="absolute top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2 h-[3px] bg-blue-500 w-0 group-hover/add-btn:w-screen transition-all duration-300 -z-10 origin-center"></div>
+
+                      {/* Plus button visible on section hover */}
+                      <button
+                        onClick={() => setActiveInsertIndex(index + 1)}
+                        className="flex items-center justify-center bg-blue-500 text-white rounded-full w-6 h-6 group-hover/add-btn:opacity-0 transition-opacity"
+                      >
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 12 12"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M6 1.5V10.5M1.5 6H10.5"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+
+                      {/* Text button only shown when hovering over the plus button */}
+                      <button
+                        onClick={() => setActiveInsertIndex(index + 1)}
+                        className="absolute top-0 left-1/2 transform -translate-x-1/2 opacity-0 group-hover/add-btn:opacity-100 whitespace-nowrap transition-opacity bg-blue-500 text-white hover:bg-blue-600 text-xs py-1 px-3 rounded-md shadow-sm font-medium"
+                      >
+                        Add Section
+                      </button>
+                    </div>
+
+                    {/* Modal that opens when clicking either button */}
+                    {activeInsertIndex === index + 1 && (
+                      <AddSectionModal
+                        open={true}
+                        onOpenChange={(open: boolean) =>
+                          setActiveInsertIndex(open ? index + 1 : null)
+                        }
+                        onAddSection={(type) =>
+                          handleAddSection(type, index + 1)
+                        }
+                        buttonVariant="outline"
+                        buttonSize="icon"
+                        buttonClassName="hidden" // Hide the default button
+                      />
+                    )}
                   </div>
                 )}
               </div>

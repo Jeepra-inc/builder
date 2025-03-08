@@ -76,9 +76,14 @@ export default function PageBuilder() {
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
   const [globalSettings, setGlobalSettings] =
     useState<GlobalSettings>(defaultSettings);
-  const [headerSettings, setHeaderSettings] = useState(
-    defaultSettings.headerSettings
-  );
+  const [headerSettings, setHeaderSettings] = useState<any>({
+    // Initialize with default values
+    layout: {
+      currentPreset: "preset1",
+    },
+    lastSelectedSetting: null, // Add this to track the last selected setting
+    lastSelectedSubmenu: null, // Add this to track the last selected submenu
+  });
   const [footerSettings, setFooterSettings] = useState(
     defaultSettings.footerSettings
   );
@@ -88,10 +93,30 @@ export default function PageBuilder() {
       setActiveNarrowSidebar((prevState) => {
         const nextState =
           typeof newState === "function" ? newState(prevState) : newState;
+
+        console.log(`Sidebar toggle requested: ${prevState} -> ${nextState}`);
+
+        // If trying to open header-settings but it's already open, don't toggle
+        if (
+          prevState === "header-settings" &&
+          nextState === "header-settings"
+        ) {
+          console.log("Header settings already open, skipping toggle");
+          return prevState; // Keep the current state, don't reopen
+        }
+
+        // If trying to open settings but it's already open, don't toggle
+        if (prevState === "settings" && nextState === "settings") {
+          console.log("Settings already open, skipping toggle");
+          return prevState; // Keep the current state, don't reopen
+        }
+
         if (nextState !== "header-settings") {
           setActiveSubmenu(null);
           setShowLayoutPanel(false);
         }
+
+        console.log(`Sidebar toggled: ${prevState} -> ${nextState}`);
         return nextState;
       });
     },
@@ -337,9 +362,84 @@ export default function PageBuilder() {
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === "HEADER_SETTING_SELECTED") {
-        setActiveNarrowSidebar("header-settings");
-        setActiveSubmenu("HTML");
+      if (!event.data || typeof event.data !== "object") return;
+
+      if (event.data.type === "SAVE_HEADER_SETTINGS") {
+        // Handle header settings saving
+        // ... existing code ...
+      } else if (event.data.type === "HEADER_SETTING_SELECTED") {
+        const { settingId, submenu, directNav } = event.data;
+
+        console.log("HEADER_SETTING_SELECTED received:", {
+          settingId,
+          submenu,
+          directNav,
+        });
+
+        // If directNav is true, we want to update state before toggling the sidebar
+        // to prevent the glitch/flicker effect
+        if (directNav) {
+          // First update all state values
+          if (submenu) {
+            setActiveSubmenu(submenu);
+          }
+
+          // Track in headerSettings for later reference
+          setHeaderSettings((prev) => ({
+            ...prev,
+            lastSelectedSubmenu: submenu,
+            lastSelectedSetting: settingId || prev.lastSelectedSetting,
+          }));
+
+          // Then open the sidebar with state already set
+          setActiveNarrowSidebar("header-settings");
+        } else {
+          // Legacy behavior (might cause flickering)
+          // Open the header settings panel
+          setActiveNarrowSidebar("header-settings");
+
+          // Set the active submenu if provided
+          if (submenu) {
+            setActiveSubmenu(submenu);
+
+            // Track this in headerSettings for later reference
+            setHeaderSettings((prev) => ({
+              ...prev,
+              lastSelectedSubmenu: submenu,
+              lastSelectedSetting: settingId || prev.lastSelectedSetting,
+            }));
+          }
+        }
+      } else if (event.data.type === "CHECK_ACTIVE_SETTING") {
+        // This is a new message type to check if a setting is already active
+        const isSettingActive =
+          // Check if the right sidebar is open
+          activeNarrowSidebar === "header-settings" &&
+          // Check if we're on the right submenu
+          activeSubmenu === event.data.submenu &&
+          // Check if the specific setting is selected
+          (headerSettings as any)?.lastSelectedSetting === event.data.settingId;
+
+        // Log for debugging
+        console.log("Page checking if setting is active:", {
+          requestedSetting: event.data.settingId,
+          requestedSubmenu: event.data.submenu,
+          currentSubmenu: activeSubmenu,
+          currentSidebar: activeNarrowSidebar,
+          isActive: isSettingActive,
+        });
+
+        // Send response back to iframe
+        const iframe = document.querySelector("iframe");
+        iframe?.contentWindow?.postMessage(
+          {
+            type: "SETTING_STATE_RESPONSE",
+            settingId: event.data.settingId,
+            submenu: event.data.submenu,
+            isActive: isSettingActive,
+          },
+          "*"
+        );
       } else if (event.data.type === "SECTIONS_UPDATED") {
         // Don't update sections if we're in the middle of sending settings
         // This prevents loops where updates from iframe trigger new settings to be sent

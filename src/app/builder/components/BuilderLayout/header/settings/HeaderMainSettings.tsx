@@ -7,7 +7,7 @@ import { SettingSection } from "../../GlobalSettings/settings/SettingSection";
 import RadioButtonGroup from "./RadioButtonGroup";
 import RangeSlider from "../../GlobalSettings/settings/RangeSlider";
 import CodeEditor from "@uiw/react-textarea-code-editor";
-import { CaseLower, CaseSensitive, CaseUpper, Palette } from "lucide-react";
+import { CaseLower, CaseSensitive, CaseUpper } from "lucide-react";
 import { ColorSchemeSelector } from "@/app/builder/components/ColorSchemeSelector";
 
 interface HeaderMainSettingsProps {
@@ -70,7 +70,6 @@ export function HeaderMainSettings({
           {/* Color Scheme */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Palette className="h-4 w-4 text-muted-foreground" />
               <Label>Color Scheme</Label>
             </div>
             <ColorSchemeSelector

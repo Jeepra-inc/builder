@@ -76,6 +76,9 @@ export function SortableItem({
   const isSelected = selectedSectionId === section.id;
   const isOver = over?.id === section.id;
 
+  // Safely check if the section is visible (undefined should be treated as visible)
+  const isVisible = section.isVisible !== false;
+
   // Enhanced style with better visual feedback
   const style = {
     transform: CSS.Transform.toString(
@@ -84,8 +87,12 @@ export function SortableItem({
     transition,
     zIndex: isActive ? 999 : isOver ? 100 : 1,
     opacity: isActive ? 0.8 : 1,
-    position: isActive ? "relative" : ("static" as any),
-    pointerEvents: isActive ? "none" : "auto",
+    position: isActive
+      ? "relative"
+      : ("static" as React.CSSProperties["position"]),
+    pointerEvents: isActive
+      ? "none"
+      : ("auto" as React.CSSProperties["pointerEvents"]),
   };
 
   const handleMouseEnter = () => {
@@ -106,6 +113,14 @@ export function SortableItem({
     onSelectSection?.(section.id);
   };
 
+  const handleToggleVisibility = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onToggleVisibility) {
+      // Apply visibility toggle safely
+      onToggleVisibility(section);
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -115,6 +130,7 @@ export function SortableItem({
         ${isHovered && !isActive ? "bg-blue-50" : "bg-gray-100/50"}
         ${isSelected ? "border-l-2 border-blue-500" : ""}
         ${isOver && !isActive ? "border border-blue-500 bg-blue-50" : ""}
+        ${!isVisible ? "opacity-60" : ""} 
         ${className}
       `}
       onClick={handleSectionClick}
@@ -131,18 +147,25 @@ export function SortableItem({
           >
             <GripVertical className="w-4 h-4" />
           </div>
-          <span className="text-sm font-medium flex-grow">{section.type}</span>
+          <span
+            className={`text-sm font-medium flex-grow ${
+              !isVisible ? "text-gray-400" : ""
+            }`}
+          >
+            {section.type}
+            {!isVisible && (
+              <span className="ml-2 text-xs text-gray-400">(Hidden)</span>
+            )}
+          </span>
         </div>
 
         {isHovered && !isActive && (
           <div className="flex ml-auto">
             <ActionButton
-              icon={section.isVisible ? Eye : EyeOff}
-              tooltip={section.isVisible ? "Hide" : "Show"}
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleVisibility?.(section);
-              }}
+              icon={isVisible ? Eye : EyeOff}
+              tooltip={isVisible ? "Hide" : "Show"}
+              onClick={handleToggleVisibility}
+              className={!isVisible ? "text-gray-400" : ""}
             />
             <ActionButton
               icon={Copy}

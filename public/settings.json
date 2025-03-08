@@ -1,7 +1,7 @@
 {
   "sections": [
     {
-      "id": "section_1741345064489_lq48479q9",
+      "id": "PyGXekni06pZIPcHSR2W6",
       "type": "banner",
       "content": [
         "Example content"
@@ -9,7 +9,35 @@
       "settings": {
         "paddingTop": 20,
         "paddingBottom": 20,
-        "colorScheme": "scheme-6"
+        "colorScheme": "scheme-2",
+        "textAlignment": "right",
+        "buttonStyle": "secondary"
+      }
+    },
+    {
+      "id": "DWyz0L5-y_qzvESRjU-q6",
+      "type": "banner",
+      "content": [
+        "Example content"
+      ],
+      "settings": {
+        "paddingTop": 20,
+        "paddingBottom": 20,
+        "colorScheme": "scheme-5",
+        "textAlignment": "left"
+      }
+    },
+    {
+      "id": "TaqHnzkFvaAJ4gZM8WMr5",
+      "type": "banner",
+      "content": [
+        "Example content"
+      ],
+      "settings": {
+        "paddingTop": 20,
+        "paddingBottom": 20,
+        "colorScheme": "scheme-1",
+        "buttonStyle": "outline"
       }
     }
   ],
@@ -59,12 +87,7 @@
         "middle_right": [
           "divider_1",
           "cart",
-          "html_block_2",
           "divider_4",
-          "followIcons",
-          "topBarMenu",
-          "social_icon",
-          "contact",
           "button_2",
           "button_1",
           "account",
@@ -77,12 +100,19 @@
         ],
         "available": [
           "html_block_1",
+          "html_block_2",
+          "topBarMenu",
+          "contact",
           "wishlist",
+          "social_icon",
+          "followIcons",
           "divider_2",
           "divider_3"
         ]
       }
-    }
+    },
+    "lastSelectedSubmenu": "Header Navigation Setting",
+    "lastSelectedSetting": "nav_icon"
   },
   "footerSettings": {
     "content": {

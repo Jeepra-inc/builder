@@ -225,22 +225,31 @@ export function HeaderSettingsPanel({
   return (
     <ScrollArea className="h-full w-full rounded-md">
       <>
-        {currentView !== "main" && (
-          <>
-            <div className="p-3 flex text-sm font-semibold items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={handleBackClick}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              {panelTitle}
-            </div>
-            <Separator />
-          </>
-        )}
+        {/* Main Panel Heading with increased specificity and z-index */}
+        <div
+          className="bg-white sticky top-0 z-50 border-b border-gray-200 !mb-2"
+          style={{ position: "sticky" }}
+        >
+          <h2 className="px-4 py-3 text-lg font-semibold text-gray-800 bg-white">
+            Header Settings
+          </h2>
+          {currentView !== "main" && (
+            <>
+              <div className="px-4 py-2 flex text-sm font-medium items-center gap-2 bg-gray-50">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={handleBackClick}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                {panelTitle}
+              </div>
+              <Separator />
+            </>
+          )}
+        </div>
         {renderSettingsPanel()}
       </>
     </ScrollArea>

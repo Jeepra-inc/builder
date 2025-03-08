@@ -21,8 +21,7 @@ export default function Footer({
     "relative",
     "bg-white dark:bg-gray-800",
     "border-t border-gray-200",
-    isSelected ? "ring-2 ring-blue-500" : "",
-    isEditing ? "cursor-pointer hover:ring-2 hover:ring-blue-200" : "",
+    isEditing ? "cursor-pointer" : "",
   ]
     .filter(Boolean)
     .join(" ");

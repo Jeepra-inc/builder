@@ -651,13 +651,14 @@ export function HeaderLayoutBuilder({
     );
   };
 
-  // Modify the applyLayoutToIframe function to only update the iframe without triggering a save
+  // Helper function to update the iframe layout without user interaction
+  // This now runs automatically whenever the layout changes or when changing presets
+  // The Apply Layout button has been removed to simplify the user experience
   const applyLayoutToIframe = useCallback(() => {
     if (currentPreset) {
-      console.log("Sending layout update to iframe:", {
+      console.log("Updating header layout in iframe:", {
         type: "UPDATE_HEADER_LAYOUT",
         presetId: currentPreset,
-        ...layout,
       });
 
       // Send message to iframe to update the header layout using the current layout state
@@ -665,20 +666,18 @@ export function HeaderLayoutBuilder({
         {
           type: "UPDATE_HEADER_LAYOUT",
           presetId: currentPreset,
-          ...layout, // Use the current layout state instead of preset layout
+          ...layout, // Use the current layout state
         },
         "*"
       );
 
-      // DO NOT trigger save event here - this will happen only when Save button is clicked
-      // Instead, we'll dispatch an event to let the parent know about the layout change
-      // but explicitly mention it's not saved yet
+      // Dispatch an event to notify about the layout change (but not saved)
       window.dispatchEvent(
         new CustomEvent("headerLayoutChanged", {
           detail: {
             layout: layout,
             presetId: currentPreset,
-            unsaved: true, // Flag to indicate these changes aren't saved yet
+            unsaved: true,
           },
         })
       );
@@ -1110,19 +1109,9 @@ export function HeaderLayoutBuilder({
             </div>
             <div className="flex items-center justify-between gap-2">
               <Button size="sm" className="h-8" onClick={onOpenLayoutPanel}>
-                Preset
+                Choose Preset
               </Button>
-              <Button
-                size="sm"
-                className="h-8"
-                onClick={() => {
-                  // Apply the current layout to the iframe
-                  applyLayoutToIframe();
-                  alert(`Current preset applied to header: ${currentPreset}`);
-                }}
-              >
-                Apply Layout
-              </Button>
+              <span className="flex-grow"></span>
               <Button size="sm" className="h-8" onClick={onClose}>
                 Close
               </Button>

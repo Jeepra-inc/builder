@@ -1,18 +1,21 @@
-import { useState, useCallback } from 'react';
-import { OutlineState, OUTLINE_CONSTANTS } from '@/app/builder/types';
+import { useState, useCallback, useEffect } from "react";
+import { OutlineState, OUTLINE_CONSTANTS } from "@/app/builder/types";
 
 export const useOutlineManager = (enabled: boolean = true) => {
   const [hovered, setHovered] = useState<OutlineState>({
     element: null,
     rect: null,
-    sectionType: '',
+    sectionType: "",
   });
-  
+
   const [selected, setSelected] = useState<OutlineState>({
     element: null,
     rect: null,
-    sectionType: '',
+    sectionType: "",
   });
+
+  // Single instance flag to track if we're handling a click
+  const [isProcessingClick, setIsProcessingClick] = useState(false);
 
   const getRect = (el: HTMLElement) => el.getBoundingClientRect();
 
@@ -20,48 +23,87 @@ export const useOutlineManager = (enabled: boolean = true) => {
     return rect.top <= OUTLINE_CONSTANTS.TOP_THRESHOLD;
   }, []);
 
-  const updateOutlineState = useCallback((
-    element: HTMLElement | null,
-    setState: React.Dispatch<React.SetStateAction<OutlineState>>
-  ) => {
-    if (!element) {
-      setState({ element: null, rect: null, sectionType: '' });
-      return;
-    }
-    setState({
-      element,
-      rect: getRect(element),
-      sectionType: element.getAttribute('data-section-type') || OUTLINE_CONSTANTS.DEFAULT_SECTION_TEXT,
-    });
-  }, []);
+  const updateOutlineState = useCallback(
+    (
+      element: HTMLElement | null,
+      setState: React.Dispatch<React.SetStateAction<OutlineState>>
+    ) => {
+      if (!element) {
+        setState({ element: null, rect: null, sectionType: "" });
+        return;
+      }
+      setState({
+        element,
+        rect: getRect(element),
+        sectionType:
+          element.getAttribute("data-section-type") ||
+          OUTLINE_CONSTANTS.DEFAULT_SECTION_TEXT,
+      });
+    },
+    []
+  );
 
-  const handleMouseMove = useCallback((event: MouseEvent) => {
-    if (!enabled) return;
+  const handleMouseMove = useCallback(
+    (event: MouseEvent) => {
+      if (!enabled || isProcessingClick) return;
 
-    const target = event.target as HTMLElement;
-    const sectionElement = target.closest('[data-section-type]') as HTMLElement | null;
+      const target = event.target as HTMLElement;
+      const sectionElement = target.closest(
+        "[data-section-type]"
+      ) as HTMLElement | null;
 
-    if (sectionElement && sectionElement !== hovered.element) {
-      updateOutlineState(sectionElement, setHovered);
-    } else if (!sectionElement) {
+      if (sectionElement && sectionElement !== hovered.element) {
+        updateOutlineState(sectionElement, setHovered);
+      } else if (!sectionElement) {
+        updateOutlineState(null, setHovered);
+      }
+    },
+    [enabled, hovered.element, updateOutlineState, isProcessingClick]
+  );
+
+  const handleClick = useCallback(
+    (event: MouseEvent) => {
+      if (!enabled) return;
+
+      // Set processing flag to prevent concurrent events
+      setIsProcessingClick(true);
+
+      const target = event.target as HTMLElement;
+      const sectionElement = target.closest(
+        "[data-section-type]"
+      ) as HTMLElement | null;
+
+      if (!sectionElement) {
+        // Clear selection if clicking outside sections
+        updateOutlineState(null, setSelected);
+      } else if (selected.element === sectionElement) {
+        // Toggle selection off if clicking the same element
+        updateOutlineState(null, setSelected);
+      } else {
+        // Set new selection immediately
+        updateOutlineState(sectionElement, setSelected);
+
+        // Dispatch a custom event to notify other components about section selection
+        window.dispatchEvent(
+          new CustomEvent("section-selected", {
+            detail: {
+              sectionId: sectionElement.getAttribute("data-section-id"),
+              sectionType: sectionElement.getAttribute("data-section-type"),
+            },
+          })
+        );
+      }
+
+      // Clear hover state to avoid competing with selection
       updateOutlineState(null, setHovered);
-    }
-  }, [enabled, hovered.element, updateOutlineState]);
 
-  const handleClick = useCallback((event: MouseEvent) => {
-    if (!enabled) return;
-
-    const target = event.target as HTMLElement;
-    const sectionElement = target.closest('[data-section-type]') as HTMLElement | null;
-
-    if (!sectionElement) return;
-
-    if (selected.element === sectionElement) {
-      updateOutlineState(null, setSelected);
-    } else {
-      updateOutlineState(sectionElement, setSelected);
-    }
-  }, [enabled, selected.element, updateOutlineState]);
+      // Reset processing flag after a short delay
+      setTimeout(() => {
+        setIsProcessingClick(false);
+      }, 50);
+    },
+    [enabled, selected.element, updateOutlineState]
+  );
 
   const handleScrollOrResize = useCallback(() => {
     if (selected.element) {
@@ -72,6 +114,22 @@ export const useOutlineManager = (enabled: boolean = true) => {
     }
   }, [selected.element, hovered.element, updateOutlineState]);
 
+  const handleMouseLeave = useCallback(() => {
+    if (!isProcessingClick) {
+      updateOutlineState(null, setHovered);
+    }
+  }, [updateOutlineState, isProcessingClick]);
+
+  // Clear processing flag after timeout as a safety measure
+  useEffect(() => {
+    if (isProcessingClick) {
+      const timer = setTimeout(() => {
+        setIsProcessingClick(false);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isProcessingClick]);
+
   return {
     hovered,
     selected,
@@ -80,7 +138,7 @@ export const useOutlineManager = (enabled: boolean = true) => {
       handleMouseMove,
       handleClick,
       handleScrollOrResize,
-      handleMouseLeave: () => updateOutlineState(null, setHovered),
+      handleMouseLeave,
     },
   };
 };

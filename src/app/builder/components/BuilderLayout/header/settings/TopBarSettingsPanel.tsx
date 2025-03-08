@@ -6,7 +6,7 @@ import { useBuilder } from "@/app/builder/contexts/BuilderContext";
 import { SettingSection } from "../../GlobalSettings/settings/SettingSection";
 import { Label } from "@/components/ui/label";
 import RangeSlider from "../../GlobalSettings/settings/RangeSlider";
-import { CaseLower, CaseSensitive, CaseUpper, Palette } from "lucide-react";
+import { CaseLower, CaseSensitive, CaseUpper } from "lucide-react";
 import RadioButtonGroup from "./RadioButtonGroup";
 import { ColorSchemeSelector } from "@/app/builder/components/ColorSchemeSelector";
 
@@ -60,7 +60,6 @@ export function TopBarSettingsPanel({
       >
         <div className="flex flex-col space-y-2">
           <div className="flex items-center gap-2 mb-1">
-            <Palette className="h-4 w-4 text-muted-foreground" />
             <Label>Visual Theme</Label>
           </div>
           <ColorSchemeSelector

@@ -90,6 +90,8 @@ interface HeaderSettings {
   topBarNavStyle?: "style1" | "style2" | "style3";
   topBarTextTransform?: "uppercase" | "capitalize" | "lowercase";
   logo?: { text?: string; showText?: boolean };
+  lastSelectedSetting?: string | null; // Track the last selected setting
+  lastSelectedSubmenu?: string | null; // Track the last selected submenu
 }
 
 interface HeaderProps {
@@ -815,66 +817,110 @@ export default function Header({
             {/* Gear icon only shown when editing */}
             {isEditing && (
               <div
-                className="absolute opacity-0 group-hover:opacity-100 top-1 right-1 p-1 bg-black bg-opacity-70 rounded-sm cursor-pointer transition-opacity z-10"
+                className="absolute opacity-0 group-hover:opacity-100 top-1 right-1 p-1.5 bg-black bg-opacity-80 rounded-sm cursor-pointer transition-opacity z-10 hover:bg-opacity-100"
                 onClick={(e) => {
                   e.stopPropagation(); // Prevent triggering the parent click
+
+                  // Set a data attribute for tracking last click time
+                  const target = e.currentTarget;
+                  const now = Date.now();
+                  const lastClick = parseInt(
+                    target.getAttribute("data-last-click") || "0",
+                    10
+                  );
+
+                  // Prevent multiple clicks within 500ms
+                  if (now - lastClick < 500) {
+                    console.log("Prevented rapid re-click on gear icon");
+                    return;
+                  }
+
+                  // Update the last click time
+                  target.setAttribute("data-last-click", now.toString());
 
                   // Get the submenu for this item and log the determination process
                   const targetSubmenu = getSubmenuForHeaderItem(renderId);
 
-                  // Log the action for debugging
-                  console.log(
-                    `Opening settings for: ${renderId} via gear icon (submenu: ${targetSubmenu})`
-                  );
-
-                  // First try our most detailed message format with all information
+                  // First, check if this setting is already open
+                  // We'll send a special message to check the current state
                   sendMessageToParent({
-                    type: "HEADER_SETTING_SELECTED",
+                    type: "CHECK_ACTIVE_SETTING",
                     settingId: renderId,
                     submenu: targetSubmenu,
-                    itemType: renderId, // Include the item type for better handling
-                    source: "gear-icon",
                   });
 
-                  // Then try dispatching custom events for extra reliability
-                  try {
-                    // Create and dispatch a switchTab event
-                    const switchTabEvent = new CustomEvent("switchTab", {
-                      detail: {
-                        targetTab: "Header",
-                        targetSubmenu: targetSubmenu,
-                        settingId: renderId,
-                      },
-                      bubbles: true, // Allow event to bubble up to parent window
-                    });
-
-                    window.dispatchEvent(switchTabEvent);
-                    console.log("Dispatched switchTab event for:", renderId);
-
-                    // Also dispatch our custom event
-                    const headerSettingsEvent = new CustomEvent(
-                      "headerSettingsRequested",
-                      {
-                        detail: {
-                          settingId: renderId,
-                          submenu: targetSubmenu,
-                          itemType: renderId,
-                        },
-                        bubbles: true,
+                  // Set up a one-time listener for the response
+                  const checkSettingListener = (response: MessageEvent) => {
+                    if (
+                      response.data &&
+                      response.data.type === "SETTING_STATE_RESPONSE"
+                    ) {
+                      // If the response says the setting is already active, do nothing
+                      if (response.data.isActive) {
+                        console.log(
+                          `Setting ${renderId} is already active, ignoring click`
+                        );
+                        window.removeEventListener(
+                          "message",
+                          checkSettingListener
+                        );
+                        return;
                       }
-                    );
 
-                    window.dispatchEvent(headerSettingsEvent);
-                    console.log(
-                      "Dispatched headerSettingsRequested event for:",
-                      renderId
-                    );
-                  } catch (err) {
-                    console.error("Error dispatching custom events:", err);
-                  }
+                      // Otherwise, proceed with opening the setting
+                      console.log(
+                        `Opening settings for: ${renderId} via gear icon (submenu: ${targetSubmenu})`
+                      );
+
+                      // Send the message to open settings directly targeting the specific submenu
+                      // and including the setting ID to allow direct navigation
+                      sendMessageToParent({
+                        type: "HEADER_SETTING_SELECTED",
+                        settingId: renderId,
+                        submenu: targetSubmenu,
+                        itemType: renderId,
+                        source: "gear-icon",
+                        timestamp: Date.now(),
+                        directNav: true, // Flag to indicate we want direct navigation
+                      });
+
+                      // Create and dispatch a switchTab event with all necessary information
+                      // for direct navigation without intermediate steps
+                      try {
+                        const switchTabEvent = new CustomEvent("switchTab", {
+                          detail: {
+                            targetTab: "Header",
+                            targetSubmenu: targetSubmenu,
+                            settingId: renderId,
+                            timestamp: Date.now(),
+                            directNav: true, // Flag to indicate we want direct navigation
+                          },
+                          bubbles: true,
+                        });
+
+                        window.dispatchEvent(switchTabEvent);
+                      } catch (e) {
+                        console.error("Error dispatching events:", e);
+                      }
+
+                      // Remove the listener after processing
+                      window.removeEventListener(
+                        "message",
+                        checkSettingListener
+                      );
+                    }
+                  };
+
+                  // Add the listener
+                  window.addEventListener("message", checkSettingListener);
+
+                  // Set a timeout to remove the listener if no response comes back
+                  setTimeout(() => {
+                    window.removeEventListener("message", checkSettingListener);
+                  }, 500);
                 }}
               >
-                <Settings className="h-4 w-4 text-white" />
+                <Settings className="h-3.5 w-3.5 text-white" />
               </div>
             )}
           </div>

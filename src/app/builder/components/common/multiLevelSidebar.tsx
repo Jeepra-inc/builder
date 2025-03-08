@@ -1,7 +1,6 @@
 // MultiLevelSidebar.tsx
 "use client";
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { ChevronRight, ChevronLeft, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,27 +44,44 @@ const MenuItemList = ({
   items: MenuItem[];
   onItemClick: (item: MenuItem) => void;
 }) => (
-  <ul>
-    {items.map((item, index) => (
-      <li key={index} className="border-b">
-        {item.subMenu || item.component ? (
-          <Button
-            className="w-full rounded-none justify-between text-sm font-medium px-3 py-2.5 h-auto hover:bg-zinc-100 hover:text-indigo-700 transition-colors"
-            variant="ghost"
-            onClick={() => onItemClick(item)}
-          >
-            <span className="flex items-center">
-              {item.icon && (
-                <item.icon className="h-4 w-4 mr-2.5 text-gray-500" />
-              )}
-              <span className="text-gray-700">{item.title}</span>
-            </span>
-            <ChevronRight size={16} className="text-gray-400" />
-          </Button>
-        ) : null}
-      </li>
-    ))}
-  </ul>
+  <div>
+    <ul>
+      {items.map((item, index) => (
+        <li key={index} className="border-b">
+          {item.subMenu || item.component ? (
+            <Button
+              className="w-full rounded-none justify-between text-sm font-semibold px-4 py-3 h-auto hover:bg-gray-50 text-gray-700 text-left"
+              variant="ghost"
+              onClick={() => onItemClick(item)}
+            >
+              <span className="flex items-center">
+                <span>{item.title}</span>
+              </span>
+              <ChevronRight
+                size={16}
+                className="text-gray-400 ml-2 flex-shrink-0"
+              />
+            </Button>
+          ) : null}
+        </li>
+      ))}
+    </ul>
+  </div>
+);
+
+const BackButtonOnly = ({ onBack }: { onBack: () => void }) => (
+  <div className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
+    <div className="flex h-11 items-center px-3">
+      <Button
+        onClick={onBack}
+        variant="ghost"
+        size="icon"
+        className="rounded-md mr-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+      >
+        <ChevronLeft size={18} />
+      </Button>
+    </div>
+  </div>
 );
 
 const BackButtonWithTitle = ({
@@ -75,16 +91,18 @@ const BackButtonWithTitle = ({
   title: string;
   onBack: () => void;
 }) => (
-  <div className="px-4 py-3 flex items-center border-b border-gray-200 bg-gray-50">
-    <Button
-      variant="ghost"
-      size="sm"
-      className="h-7 w-7 rounded-full mr-2 hover:bg-gray-200 transition-colors"
-      onClick={onBack}
-    >
-      <ChevronLeft className="h-4 w-4 text-gray-600" />
-    </Button>
-    <h2 className="text-sm font-medium text-gray-800">{title}</h2>
+  <div className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
+    <div className="px-4 py-3 flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="rounded-md mr-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+        onClick={onBack}
+      >
+        <ChevronLeft size={18} />
+      </Button>
+      <h2 className="text-sm font-semibold text-gray-800 truncate">{title}</h2>
+    </div>
   </div>
 );
 
@@ -103,6 +121,9 @@ export default function MultiLevelSidebar({
     initialMenu.items?.[0]?.title || ""
   );
 
+  // Add a state to track whether we should skip animations during direct navigation
+  const [skipTransition, setSkipTransition] = useState(false);
+
   // This effect runs only once on initial load to set up default submenu if provided
   useEffect(() => {
     if (defaultSubmenu && initialMenu.items) {
@@ -114,6 +135,8 @@ export default function MultiLevelSidebar({
           (item) => item.title === defaultSubmenu
         );
         if (submenuItem) {
+          // Directly set the menu stack to skip any visual transitions
+          setSkipTransition(true);
           setMenuStack([
             initialMenu,
             {
@@ -126,6 +149,12 @@ export default function MultiLevelSidebar({
               componentProps: submenuItem.componentProps,
             },
           ]);
+
+          // Set the active tab to Header to ensure proper panel visibility
+          setActiveTab("Header");
+
+          // Reset the skip transition flag after rendering
+          setTimeout(() => setSkipTransition(false), 50);
         }
       }
     }
@@ -134,16 +163,65 @@ export default function MultiLevelSidebar({
   // This effect handles the switchTab event
   useEffect(() => {
     const handleSwitchTab = (
-      e: CustomEvent<{ targetTab: string; targetSubmenu?: string }>
+      e: CustomEvent<{
+        targetTab: string;
+        targetSubmenu?: string;
+        settingId?: string;
+      }>
     ) => {
       const targetTab = e.detail.targetTab;
       const targetSubmenu = e.detail.targetSubmenu;
+      const settingId = e.detail.settingId;
 
       const menuItem = initialMenu.items?.find(
         (item) => item.title.toLowerCase() === targetTab.toLowerCase()
       );
 
       if (menuItem) {
+        // If we have both a tab and submenu, directly navigate to the target
+        // without intermediate steps to prevent flickering
+        if (targetTab === "Header" && targetSubmenu) {
+          setActiveTab(menuItem.title);
+
+          if (menuItem.subMenu) {
+            const submenuItem = menuItem.subMenu.find(
+              (item) => item.title === targetSubmenu
+            );
+
+            if (submenuItem) {
+              // Directly set the menu stack to the target state
+              setSkipTransition(true);
+              setMenuStack([
+                initialMenu,
+                {
+                  title: "Header",
+                  items: menuItem.subMenu,
+                },
+                {
+                  title: submenuItem.title,
+                  component: submenuItem.component,
+                  componentProps: {
+                    ...submenuItem.componentProps,
+                    selectedSetting: settingId, // Pass the selected setting ID
+                  },
+                },
+              ]);
+
+              // Reset the skip transition flag after rendering
+              setTimeout(() => setSkipTransition(false), 50);
+
+              // Notify about the navigation
+              if (submenuItem.onClick) {
+                submenuItem.onClick();
+              }
+              onMenuItemClick?.(submenuItem);
+              onNavigate?.(submenuItem);
+              return; // Skip the normal navigation flow
+            }
+          }
+        }
+
+        // Default behavior for other cases
         handleTabChange(menuItem.title);
 
         // If there's a target submenu, navigate to it
@@ -177,6 +255,8 @@ export default function MultiLevelSidebar({
           (item) => item.title === defaultSubmenu
         );
         if (submenuItem) {
+          // Directly set the full menu stack in one operation
+          setSkipTransition(true);
           setMenuStack([
             initialMenu,
             {
@@ -189,6 +269,12 @@ export default function MultiLevelSidebar({
               componentProps: submenuItem.componentProps,
             },
           ]);
+
+          // Set the active tab correctly
+          setActiveTab("Header");
+
+          // Reset the skip transition flag after rendering
+          setTimeout(() => setSkipTransition(false), 50);
         }
       }
     }
@@ -228,6 +314,33 @@ export default function MultiLevelSidebar({
 
   const goBack = () => {
     if (isInitialLoad) setIsInitialLoad(false);
+
+    // Store current menu for reference before updating state
+    const currentMenu = menuStack[menuStack.length - 1];
+    const previousMenu = menuStack[menuStack.length - 2];
+
+    // Check if we're going back to Header or Footer main panel
+    if (menuStack.length === 2) {
+      if (previousMenu.title === "Main Menu") {
+        // We're going back to the first level
+        if (
+          currentMenu.title.includes("Header") ||
+          currentMenu.title === "Top Bar Setting" ||
+          currentMenu.title === "Header Main Setting" ||
+          currentMenu.title === "Header Bottom Setting" ||
+          currentMenu.title === "Header Navigation Setting" ||
+          currentMenu.title === "Header Search Setting" ||
+          currentMenu.title === "Buttons" ||
+          currentMenu.title === "Social" ||
+          currentMenu.title === "HTML"
+        ) {
+          setActiveTab("Header");
+        } else if (currentMenu.title.includes("Footer")) {
+          setActiveTab("Footer");
+        }
+      }
+    }
+
     setMenuStack((prev) => prev.slice(0, -1));
     onBack?.();
   };
@@ -244,15 +357,21 @@ export default function MultiLevelSidebar({
 
   const currentMenu = menuStack[menuStack.length - 1];
 
+  // Function to get the title based on active tab
+  const getActiveTabTitle = () => {
+    if (activeTab === "Header") return "Header Settings";
+    if (activeTab === "Footer") return "Footer Settings";
+    // Skip Global Settings Panel since its component has its own title
+    if (activeTab === "Global Settings Panel") return "";
+    if (activeTab === "Section Settings") return "Section Settings";
+    if (activeTab === "Design") return "Design";
+    if (activeTab === "SEO") return "SEO Settings";
+    if (activeTab === "Page Setting") return "Page Settings";
+    return "";
+  };
+
   return (
-    <motion.div
-      custom={direction}
-      initial={{ x: direction === "forward" ? "100%" : "-30%", opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: direction === "forward" ? "100%" : "-30%", opacity: 0 }}
-      className="absolute top-0 left-0 w-full h-full flex"
-      transition={animationConfig}
-    >
+    <div className="absolute top-0 left-0 w-full h-full flex">
       {/* Vertical Tabs with Tooltips */}
       <div className="w-14 border-r border-gray-200 bg-gray-50 flex flex-col items-center py-2">
         <Tooltip.Provider delayDuration={300} skipDelayDuration={100}>
@@ -295,56 +414,63 @@ export default function MultiLevelSidebar({
         </Tooltip.Provider>
       </div>
 
-      {/* Content Area */}
+      {/* Content Area - Without animations */}
       <div className="flex-1 relative overflow-y-auto bg-white">
-        <AnimatePresence initial={false} custom={direction}>
-          <motion.div
-            key={menuStack.length}
-            custom={direction}
-            initial={{
-              x: direction === "forward" ? "100%" : "-30%",
-              opacity: 0,
-            }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: direction === "forward" ? "100%" : "-30%", opacity: 0 }}
-            className="absolute top-0 left-0 w-full"
-            transition={animationConfig}
-          >
-            {menuStack.length > 1 && (
+        <div
+          className={`absolute top-0 left-0 w-full ${
+            skipTransition ? "transition-none" : ""
+          }`}
+        >
+          {/* Display title based on menu level */}
+          {menuStack.length === 1 && getActiveTabTitle() ? (
+            <div className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
+              <h2 className="px-4 py-3 text-sm font-semibold text-gray-800">
+                {getActiveTabTitle()}
+              </h2>
+            </div>
+          ) : (
+            menuStack.length > 1 &&
+            // For Header/Footer first level, show back button only when not the main panel
+            // For deeper nesting, show back button with title
+            (menuStack[0].title === "Header" ||
+            menuStack[0].title === "Footer" ? (
+              // Don't show anything for the main panels (activeTab === "Header" || activeTab === "Footer")
+              activeTab === menuStack[0].title ? null : (
+                <BackButtonOnly onBack={goBack} />
+              )
+            ) : (
               <BackButtonWithTitle title={currentMenu.title} onBack={goBack} />
-            )}
+            ))
+          )}
 
-            {menuStack.length === 1 && initialMenu.items ? (
-              <>
-                {initialMenu.items.map((item) => (
-                  <div
-                    key={item.title}
-                    style={{
-                      display: item.title === activeTab ? "block" : "none",
-                    }}
-                  >
-                    {item.subMenu ? (
-                      <MenuItemList
-                        items={item.subMenu}
-                        onItemClick={navigateTo}
-                      />
-                    ) : item.component ? (
-                      <item.component {...item.componentProps} />
-                    ) : null}
-                  </div>
-                ))}
-              </>
-            ) : currentMenu.items ? (
-              <MenuItemList
-                items={currentMenu.items}
-                onItemClick={navigateTo}
-              />
-            ) : currentMenu.component ? (
-              <currentMenu.component {...currentMenu.componentProps} />
-            ) : null}
-          </motion.div>
-        </AnimatePresence>
+          {menuStack.length === 1 && initialMenu.items ? (
+            <>
+              {initialMenu.items.map((item) => (
+                <div
+                  key={item.title}
+                  className={skipTransition ? "transition-none" : ""}
+                  style={{
+                    display: item.title === activeTab ? "block" : "none",
+                  }}
+                >
+                  {item.subMenu ? (
+                    <MenuItemList
+                      items={item.subMenu}
+                      onItemClick={navigateTo}
+                    />
+                  ) : item.component ? (
+                    <item.component {...item.componentProps} />
+                  ) : null}
+                </div>
+              ))}
+            </>
+          ) : currentMenu.items ? (
+            <MenuItemList items={currentMenu.items} onItemClick={navigateTo} />
+          ) : currentMenu.component ? (
+            <currentMenu.component {...currentMenu.componentProps} />
+          ) : null}
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

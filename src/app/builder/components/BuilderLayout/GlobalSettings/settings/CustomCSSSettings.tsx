@@ -3,6 +3,8 @@ import { useBuilder } from "@/app/builder/contexts/BuilderContext";
 import { SettingSection } from "./SettingSection";
 import Editor from "@monaco-editor/react";
 import { CodeiumEditor } from "@codeium/react-code-editor";
+import { Button } from "@/components/ui/button";
+import { Maximize2, Minimize2, X } from "lucide-react";
 
 interface CustomCSS {
   mobile: string;
@@ -12,6 +14,7 @@ interface CustomCSS {
 
 export function CustomCSSSettings() {
   const { customCSS, setCustomCSS } = useBuilder();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const initialCSS: CustomCSS =
     typeof customCSS === "object" && customCSS !== null
@@ -54,6 +57,101 @@ export function CustomCSSSettings() {
     }));
   };
 
+  const toggleDrawer = () => {
+    setIsDrawerOpen(!isDrawerOpen);
+  };
+
+  // CSS Editor component that's used in both small and large views
+  const cssEditor = (
+    <>
+      {/* Breakpoint Selector */}
+      <div className="flex gap-2 border-b border-gray-200">
+        {(["mobile", "tablet", "desktop"] as const).map((breakpoint) => (
+          <button
+            key={breakpoint}
+            onClick={() => setActiveBreakpoint(breakpoint)}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeBreakpoint === breakpoint
+                ? "border-b-2 border-blue-500 text-blue-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {breakpoint.charAt(0).toUpperCase() + breakpoint.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Breakpoint Labels */}
+      <div className="text-sm text-gray-500">
+        {activeBreakpoint === "mobile" && "Mobile (≤640px)"}
+        {activeBreakpoint === "tablet" && "Tablet (641px - 1024px)"}
+        {activeBreakpoint === "desktop" && "Desktop (>1024px)"}
+      </div>
+
+      {/* CSS Editor */}
+      <div
+        className={`border rounded-md overflow-hidden ${
+          isDrawerOpen ? "h-[calc(100%-80px)]" : "h-[200px]"
+        }`}
+      >
+        <Editor
+          height="100%"
+          defaultLanguage="css"
+          value={breakpointCSS[activeBreakpoint]}
+          onChange={handleEditorChange}
+          theme="Dawn"
+          options={{
+            minimap: { enabled: isDrawerOpen },
+            fontSize: 14,
+            lineHeight: 20,
+            padding: { top: 8, bottom: 8 },
+            scrollBeyondLastLine: false,
+            folding: true,
+            lineNumbers: "on",
+            glyphMargin: false,
+            wordWrap: "on",
+            automaticLayout: true,
+            tabSize: 2,
+          }}
+        />
+      </div>
+    </>
+  );
+
+  // Expanded drawer for CSS editing
+  if (isDrawerOpen) {
+    return (
+      <div className="fixed top-0 left-0 h-full w-1/2 bg-white z-50 shadow-2xl border-r border-gray-200 overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between bg-gray-50 border-b border-gray-200 px-4 py-3">
+          <h3 className="text-sm font-semibold text-gray-800">
+            Custom CSS Editor
+          </h3>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleDrawer}
+              title="Minimize editor"
+            >
+              <Minimize2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleDrawer}
+              title="Close"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        <div className="flex-1 p-4 overflow-hidden flex flex-col space-y-4">
+          {cssEditor}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <SettingSection
@@ -61,53 +159,18 @@ export function CustomCSSSettings() {
         description="Add custom CSS for different breakpoints"
       >
         <div className="space-y-4">
-          {/* Breakpoint Selector */}
-          <div className="flex gap-2 border-b border-gray-200">
-            {(["mobile", "tablet", "desktop"] as const).map((breakpoint) => (
-              <button
-                key={breakpoint}
-                onClick={() => setActiveBreakpoint(breakpoint)}
-                className={`px-4 py-2 text-sm font-medium transition-colors ${
-                  activeBreakpoint === breakpoint
-                    ? "border-b-2 border-blue-500 text-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                {breakpoint.charAt(0).toUpperCase() + breakpoint.slice(1)}
-              </button>
-            ))}
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleDrawer}
+              className="flex items-center gap-1 text-xs mb-2"
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+              Expand Editor
+            </Button>
           </div>
-
-          {/* Breakpoint Labels */}
-          <div className="text-sm text-gray-500">
-            {activeBreakpoint === "mobile" && "Mobile (≤640px)"}
-            {activeBreakpoint === "tablet" && "Tablet (641px - 1024px)"}
-            {activeBreakpoint === "desktop" && "Desktop (>1024px)"}
-          </div>
-
-          {/* CSS Editor */}
-          <div className="h-[200px] border rounded-md overflow-hidden">
-            <Editor
-              height="100%"
-              defaultLanguage="css"
-              value={breakpointCSS[activeBreakpoint]}
-              onChange={handleEditorChange}
-              theme="Dawn"
-              options={{
-                minimap: { enabled: false },
-                fontSize: 12,
-                lineHeight: 18,
-                padding: { top: 8, bottom: 8 },
-                scrollBeyondLastLine: false,
-                folding: false,
-                lineNumbers: "on",
-                glyphMargin: false,
-                wordWrap: "on",
-                automaticLayout: true,
-                tabSize: 2,
-              }}
-            />
-          </div>
+          {cssEditor}
         </div>
       </SettingSection>
     </div>

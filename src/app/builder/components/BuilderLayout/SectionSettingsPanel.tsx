@@ -43,13 +43,22 @@ export function SectionSettingsPanel({
   if (!section) return null;
 
   return (
-    <div className="p-4 overflow-y-auto">
-      <SectionSettingsRenderer
-        section={section}
-        onUpdateSection={(updates: SectionUpdate) =>
-          sendSectionUpdate(contentRef, selectedSectionId, updates)
-        }
-      />
+    <div className="h-full w-full overflow-y-auto">
+      {/* Main Panel Heading - Always visible */}
+      <div className="bg-white sticky top-0 z-10 border-b border-gray-200">
+        <h2 className="px-4 py-3 text-lg font-semibold text-gray-800">
+          Section Settings
+        </h2>
+      </div>
+
+      <div className="p-4">
+        <SectionSettingsRenderer
+          section={section}
+          onUpdateSection={(updates: SectionUpdate) =>
+            sendSectionUpdate(contentRef, selectedSectionId, updates)
+          }
+        />
+      </div>
     </div>
   );
 }

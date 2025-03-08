@@ -105,11 +105,18 @@ export function SortableLayersPanel({
 
   const toggleVisibility = (section: Section) => {
     const newVisibility = !(section.isVisible ?? true);
-    setSections((prev) =>
-      prev.map((s) =>
-        s.id === section.id ? { ...s, isVisible: newVisibility } : s
-      )
+    console.log(
+      `Toggling visibility for section ${section.id} from ${section.isVisible} to ${newVisibility}`
     );
+
+    setSections((prev) => {
+      const updated = prev.map((s) =>
+        s.id === section.id ? { ...s, isVisible: newVisibility } : s
+      );
+      console.log("Updated sections:", updated);
+      return updated;
+    });
+
     sendIframeMessage(contentRef, {
       type: "TOGGLE_SECTION_VISIBILITY",
       sectionId: section.id,
@@ -320,9 +327,6 @@ export function SortableLayersPanel({
       {/* Test component - uncomment to test basic drag/drop
       <TestSortable />
       */}
-      <div className="p-4 ps-6 py-3 text-sm border-b font-semibold">
-        Home Page
-      </div>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -346,22 +350,34 @@ export function SortableLayersPanel({
                 items={sections.map((s) => s.id)}
                 strategy={verticalListSortingStrategy}
               >
-                {sections.map((section, index) => (
-                  <div key={section.id}>
-                    {renderSectionSeparator(index)}
-                    <SortableItem
-                      section={section}
-                      index={index}
-                      isDragging={activeId === section.id}
-                      selectedSectionId={selectedSectionId}
-                      onSelectSection={onSelectSection}
-                      onDelete={() => deleteSection(section.id)}
-                      onDuplicate={() => handleDuplicateSection(section.id)}
-                      onToggleVisibility={() => toggleVisibility(section)}
-                      onHover={onHoverSection}
-                    />
-                  </div>
-                ))}
+                {/* Add debug info to show section count */}
+                <div className="mb-2 text-xs text-gray-500">
+                  Total sections: {sections.length} (including hidden sections)
+                </div>
+
+                {sections.map((section, index) => {
+                  // Add debug logging for each section
+                  console.log(
+                    `Rendering section ${section.id}, isVisible: ${section.isVisible}`
+                  );
+
+                  return (
+                    <div key={section.id}>
+                      {renderSectionSeparator(index)}
+                      <SortableItem
+                        section={section}
+                        index={index}
+                        isDragging={activeId === section.id}
+                        selectedSectionId={selectedSectionId}
+                        onSelectSection={onSelectSection}
+                        onDelete={() => deleteSection(section.id)}
+                        onDuplicate={() => handleDuplicateSection(section.id)}
+                        onToggleVisibility={() => toggleVisibility(section)}
+                        onHover={onHoverSection}
+                      />
+                    </div>
+                  );
+                })}
                 {renderSectionSeparator(sections.length)}
               </SortableContext>
             </div>

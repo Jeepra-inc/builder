@@ -1,25 +1,25 @@
 // -- File: types.ts --
 import { ReactNode, ReactElement, ReactNode as ReactNodeType } from "react";
-import { DivideIcon as LucideIcon } from 'lucide-react';
-import { GlobalSettings } from './utils/settingsStorage';
+import { DivideIcon as LucideIcon } from "lucide-react";
+import { GlobalSettings } from "./utils/settingsStorage";
 
 export enum SectionType {
-  Text = 'text',
-  Banner = 'banner',
-  NewBanner = 'newBanner',
-  ModernBanner = 'modernBanner',
-  Hero = 'hero1',
-  Accordion = 'accordion',
-  Multicolumn = 'multicolumn',
-  Card = 'card',
-  Heronew = 'hero'
+  Text = "text",
+  Banner = "banner",
+  NewBanner = "newBanner",
+  ModernBanner = "modernBanner",
+  Hero = "hero1",
+  Accordion = "accordion",
+  Multicolumn = "multicolumn",
+  Card = "card",
+  Heronew = "hero",
 }
 
 export interface Section {
   id: string;
   type: SectionType;
   label?: string;
-  content?: Record<string, any>; 
+  content?: Record<string, any>;
   settings: {
     [key: string]: any;
     items?: {
@@ -35,7 +35,7 @@ export interface Section {
     subtitle?: string;
     image?: string;
   };
-  props?: Record<string, any>; 
+  props?: Record<string, any>;
   isVisible?: boolean;
 }
 
@@ -49,26 +49,26 @@ export interface SectionSchema {
 }
 
 export interface SettingField<T = any> {
-  type: 
-    | 'text'
-    | 'textarea'
-    | 'number'
-    | 'email'
-    | 'url'
-    | 'password'
-    | 'color'
-    | 'image'
-    | 'file'
-    | 'range'
-    | 'select'
-    | 'multiselect'
-    | 'checkbox'
-    | 'radio'
-    | 'switch'
-    | 'date'
-    | 'time'
-    | 'datetime';
-  
+  type:
+    | "text"
+    | "textarea"
+    | "number"
+    | "email"
+    | "url"
+    | "password"
+    | "color"
+    | "image"
+    | "file"
+    | "range"
+    | "select"
+    | "multiselect"
+    | "checkbox"
+    | "radio"
+    | "switch"
+    | "date"
+    | "time"
+    | "datetime";
+
   id: string;
   label: string;
   placeholder?: string;
@@ -83,10 +83,10 @@ export interface SettingField<T = any> {
   max?: number;
   step?: number;
   pattern?: string;
-  options?: Array<{ 
-    label: string; 
-    value: string; 
-    disabled?: boolean 
+  options?: Array<{
+    label: string;
+    value: string;
+    disabled?: boolean;
   }>;
   validation?: {
     required?: boolean;
@@ -94,7 +94,7 @@ export interface SettingField<T = any> {
     maxLength?: number;
     pattern?: string;
   };
-  of?: any[]; 
+  of?: any[];
 }
 
 export interface SectionComponentProps {
@@ -102,7 +102,7 @@ export interface SectionComponentProps {
   isEditing?: boolean;
   isSelected?: boolean;
   className?: string;
-  'data-section-type'?: SectionType;
+  "data-section-type"?: SectionType;
   onUpdateSection?: (updates: Partial<Section>) => void;
   onSelectAccordionItem?: (itemId: string | null) => void;
   schema?: SectionSchema;
@@ -114,7 +114,7 @@ export interface Theme {
   sections: {
     [key: string]: {
       name: string;
-      settings?: Record<string, any> | any[]; 
+      settings?: Record<string, any> | any[];
     };
   };
 }
@@ -134,19 +134,25 @@ export interface Setting {
   default: any;
 }
 
-export type ViewportSize = 'mobile' | 'tablet' | 'desktop' | 'fullscreen';
+export type ViewportSize = "mobile" | "tablet" | "desktop" | "fullscreen";
 
-export type ActiveSidebar = 'layers' | 'settings' | 'global-settings' | 'header-settings' | 'footer-settings' | null;
+export type ActiveSidebar =
+  | "layers"
+  | "settings"
+  | "global-settings"
+  | "header-settings"
+  | "footer-settings"
+  | null;
 
 export interface BannerSettings {
   title: string;
   description: string;
-  textAlignment: 'left' | 'center' | 'right';
+  textAlignment: "left" | "center" | "right";
   backgroundColor: string;
   textColor: string;
   buttonText: string;
   buttonLink: string;
-  buttonStyle: 'primary' | 'secondary' | 'outline';
+  buttonStyle: "primary" | "secondary" | "outline";
 }
 
 export interface TopBarProps {
@@ -270,7 +276,6 @@ export interface SidebarLeftProps {
   headerSettings?: any; // Add headerSettings to the props
 }
 
-
 export interface SectionPadding {
   top: number;
   bottom: number;
@@ -315,32 +320,33 @@ export interface ViewportSizeControlsProps {
 
 export const OUTLINE_CONSTANTS = {
   TOP_THRESHOLD: 10,
-  HOVER_BORDER: '2px solid #4A90E2',
-  SELECTED_BORDER: '3px solid #4A90E2',
-  HOVER_BG: 'transparent',
-  SELECTED_BG: 'rgba(74, 144, 226, 0.1)',
-  HOVER_LABEL_BG: '#4A90E2',
-  SELECTED_LABEL_BG: '#0070f3',
+  HOVER_BORDER: "1px solid #4A90E2",
+  SELECTED_BORDER: "3px solid #4A90E2",
+  HOVER_BG: "transparent",
+  SELECTED_BG: "rgba(74, 144, 226, 0.1)",
+  HOVER_LABEL_BG: "#4A90E2",
+  SELECTED_LABEL_BG: "#0070f3",
   Z_INDEX: 9999,
-  DEFAULT_SECTION_TEXT: 'Section',
+  DEFAULT_SECTION_TEXT: "Section",
+  BORDER_RADIUS: "4px",
 } as const;
 
 export const OUTLINE_LABEL_STYLE = {
-  position: 'absolute',
-  color: 'white',
-  padding: '2px 8px',
-  borderRadius: '4px',
-  fontSize: '12px',
-  fontWeight: 'bold',
-  pointerEvents: 'none',
+  position: "absolute",
+  color: "white",
+  padding: "2px 8px",
+  borderRadius: "4px",
+  fontSize: "12px",
+  fontWeight: "bold",
+  pointerEvents: "none",
 } as const;
 
 export interface AddSectionModalProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onAddSection: (sectionType: SectionType) => void;
-  buttonVariant?: 'default' | 'outline' | 'ghost';
-  buttonSize?: 'default' | 'sm' | 'lg' | 'icon';
+  buttonVariant?: "default" | "outline" | "ghost";
+  buttonSize?: "default" | "sm" | "lg" | "icon";
   buttonClassName?: string;
   buttonText?: string;
   showButtonText?: boolean;
@@ -428,7 +434,7 @@ export interface SectionControlsProps {
 }
 
 export interface ControlButtonProps {
-icon: typeof LucideIcon;
+  icon: typeof LucideIcon;
   onClick: () => void;
   tooltip: string;
   className?: string;
@@ -437,7 +443,7 @@ icon: typeof LucideIcon;
 export const SETTINGS_CONSTANTS = {
   DEFAULT_PADDING: 20,
   INPUT_STYLES: {
-    BASE: 'block w-full p-2 border border-gray-300 rounded-lg',
-    LABEL: 'block text-sm font-medium text-gray-700 mb-1',
+    BASE: "block w-full p-2 border border-gray-300 rounded-lg",
+    LABEL: "block text-sm font-medium text-gray-700 mb-1",
   },
 } as const;
