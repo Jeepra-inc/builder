@@ -16,7 +16,9 @@ export function PageBuilderLayout({
         defaultSize={23}
         minSize={15}
         maxSize={30}
-        className={`bg-white shadow-md ${!isLeftSidebarOpen ? "hidden" : ""}`}
+        className={`bg-white shadow-md transition-[width] duration-300 ease-in-out ${
+          !isLeftSidebarOpen ? "hidden" : ""
+        }`}
       >
         {leftSidebar}
       </ResizablePanel>

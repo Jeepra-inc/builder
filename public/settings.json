@@ -1,42 +1,17 @@
 {
   "sections": [
     {
-      "id": "PyGXekni06pZIPcHSR2W6",
-      "type": "banner",
+      "id": "section_1741435869532_zm8pentcy",
+      "type": "newarrival",
       "content": [
         "Example content"
       ],
       "settings": {
         "paddingTop": 20,
         "paddingBottom": 20,
-        "colorScheme": "scheme-2",
-        "textAlignment": "right",
-        "buttonStyle": "secondary"
-      }
-    },
-    {
-      "id": "DWyz0L5-y_qzvESRjU-q6",
-      "type": "banner",
-      "content": [
-        "Example content"
-      ],
-      "settings": {
-        "paddingTop": 20,
-        "paddingBottom": 20,
-        "colorScheme": "scheme-5",
-        "textAlignment": "left"
-      }
-    },
-    {
-      "id": "TaqHnzkFvaAJ4gZM8WMr5",
-      "type": "banner",
-      "content": [
-        "Example content"
-      ],
-      "settings": {
-        "paddingTop": 20,
-        "paddingBottom": 20,
-        "colorScheme": "scheme-1",
+        "colorScheme": "scheme-3",
+        "textAlignment": "left",
+        "buttonText": "BUY NOW ikk",
         "buttonStyle": "outline"
       }
     }
@@ -112,7 +87,7 @@
       }
     },
     "lastSelectedSubmenu": "Header Navigation Setting",
-    "lastSelectedSetting": "nav_icon"
+    "lastSelectedSetting": "mainMenu"
   },
   "footerSettings": {
     "content": {
@@ -217,9 +192,9 @@
       ]
     },
     "typography": {
-      "headingFont": "Amiko:600",
+      "headingFont": "Lexend:800",
       "bodyFont": "Caveat:700",
-      "headingSizeScale": 50,
+      "headingSizeScale": 115,
       "bodySizeScale": 79,
       "headingColor": "#1a1a1a"
     },

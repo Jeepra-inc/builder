@@ -836,15 +836,33 @@ export default function IframeContent() {
                 onMouseLeave={() => setHoveredSection(null)}
               >
                 {hoveredSection === section.id && (
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[10000]">
                     <div className="group/add-btn relative">
-                      {/* Line that appears when hovering over the plus button - grows from center */}
-                      <div className="absolute top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2 h-[3px] bg-blue-500 w-0 group-hover/add-btn:w-screen transition-all duration-300 -z-10 origin-center"></div>
+                      {/* Line that appears when hovering over the plus button or when active - grows from center */}
+                      <div
+                        className={`absolute top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2 h-[3px] bg-blue-500 
+                        ${
+                          activeInsertIndex === index
+                            ? "w-screen"
+                            : "w-0 group-hover/add-btn:w-screen"
+                        } 
+                        transition-all duration-300 -z-10 origin-center`}
+                      ></div>
 
-                      {/* Plus button visible on section hover */}
+                      {/* Plus button visible on section hover - stays visible when active */}
                       <button
-                        onClick={() => setActiveInsertIndex(index)}
-                        className="flex items-center justify-center bg-blue-500 text-white rounded-full w-6 h-6 group-hover/add-btn:opacity-0 transition-opacity"
+                        onClick={() => {
+                          setActiveInsertIndex(index);
+                          // Disable scrolling
+                          document.body.style.overflow = "hidden";
+                        }}
+                        className={`flex items-center justify-center bg-blue-500 text-white rounded-full w-6 h-6 
+                          ${
+                            activeInsertIndex === index
+                              ? "opacity-0"
+                              : "group-hover/add-btn:opacity-0"
+                          } 
+                          transition-opacity`}
                       >
                         <svg
                           width="12"
@@ -863,10 +881,20 @@ export default function IframeContent() {
                         </svg>
                       </button>
 
-                      {/* Text button only shown when hovering over the plus button */}
+                      {/* Text button - visible on hover or when active */}
                       <button
-                        onClick={() => setActiveInsertIndex(index)}
-                        className="absolute top-0 left-1/2 transform -translate-x-1/2 opacity-0 group-hover/add-btn:opacity-100 whitespace-nowrap transition-opacity bg-blue-500 text-white hover:bg-blue-600 text-xs py-1 px-3 rounded-md shadow-sm font-medium"
+                        onClick={() => {
+                          setActiveInsertIndex(index);
+                          // Disable scrolling
+                          document.body.style.overflow = "hidden";
+                        }}
+                        className={`absolute top-0 left-1/2 transform -translate-x-1/2 
+                          ${
+                            activeInsertIndex === index
+                              ? "opacity-100"
+                              : "opacity-0 group-hover/add-btn:opacity-100"
+                          } 
+                          whitespace-nowrap transition-opacity bg-blue-500 text-white hover:bg-blue-600 text-xs py-1 px-3 rounded-md shadow-sm font-medium z-[10000]`}
                       >
                         Add Section
                       </button>
@@ -876,10 +904,19 @@ export default function IframeContent() {
                     {activeInsertIndex === index && (
                       <AddSectionModal
                         open={true}
-                        onOpenChange={(open: boolean) =>
-                          setActiveInsertIndex(open ? index : null)
-                        }
-                        onAddSection={(type) => handleAddSection(type, index)}
+                        onOpenChange={(open: boolean) => {
+                          setActiveInsertIndex(open ? index : null);
+                          // Re-enable scrolling when closed
+                          if (!open) {
+                            document.body.style.overflow = "auto";
+                          }
+                        }}
+                        onAddSection={(type) => {
+                          handleAddSection(type, index);
+                          // Re-enable scrolling after selection
+                          document.body.style.overflow = "auto";
+                          setActiveInsertIndex(null);
+                        }}
                         buttonVariant="outline"
                         buttonSize="icon"
                         buttonClassName="hidden" // Hide the default button
@@ -927,15 +964,33 @@ export default function IframeContent() {
                 </div>
 
                 {hoveredSection === section.id && (
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-10">
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-[10000]">
                     <div className="group/add-btn relative">
-                      {/* Line that appears when hovering over the plus button - grows from center */}
-                      <div className="absolute top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2 h-[3px] bg-blue-500 w-0 group-hover/add-btn:w-screen transition-all duration-300 -z-10 origin-center"></div>
+                      {/* Line that appears when hovering over the plus button or when active - grows from center */}
+                      <div
+                        className={`absolute top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2 h-[3px] bg-blue-500 
+                        ${
+                          activeInsertIndex === index + 1
+                            ? "w-screen"
+                            : "w-0 group-hover/add-btn:w-screen"
+                        } 
+                        transition-all duration-300 -z-10 origin-center`}
+                      ></div>
 
-                      {/* Plus button visible on section hover */}
+                      {/* Plus button visible on section hover - stays visible when active */}
                       <button
-                        onClick={() => setActiveInsertIndex(index + 1)}
-                        className="flex items-center justify-center bg-blue-500 text-white rounded-full w-6 h-6 group-hover/add-btn:opacity-0 transition-opacity"
+                        onClick={() => {
+                          setActiveInsertIndex(index + 1);
+                          // Disable scrolling
+                          document.body.style.overflow = "hidden";
+                        }}
+                        className={`flex items-center justify-center bg-blue-500 text-white rounded-full w-6 h-6 
+                          ${
+                            activeInsertIndex === index + 1
+                              ? "opacity-0"
+                              : "group-hover/add-btn:opacity-0"
+                          } 
+                          transition-opacity`}
                       >
                         <svg
                           width="12"
@@ -954,10 +1009,20 @@ export default function IframeContent() {
                         </svg>
                       </button>
 
-                      {/* Text button only shown when hovering over the plus button */}
+                      {/* Text button - visible on hover or when active */}
                       <button
-                        onClick={() => setActiveInsertIndex(index + 1)}
-                        className="absolute top-0 left-1/2 transform -translate-x-1/2 opacity-0 group-hover/add-btn:opacity-100 whitespace-nowrap transition-opacity bg-blue-500 text-white hover:bg-blue-600 text-xs py-1 px-3 rounded-md shadow-sm font-medium"
+                        onClick={() => {
+                          setActiveInsertIndex(index + 1);
+                          // Disable scrolling
+                          document.body.style.overflow = "hidden";
+                        }}
+                        className={`absolute top-0 left-1/2 transform -translate-x-1/2 
+                          ${
+                            activeInsertIndex === index + 1
+                              ? "opacity-100"
+                              : "opacity-0 group-hover/add-btn:opacity-100"
+                          } 
+                          whitespace-nowrap transition-opacity bg-blue-500 text-white hover:bg-blue-600 text-xs py-1 px-3 rounded-md shadow-sm font-medium z-[10000]`}
                       >
                         Add Section
                       </button>
@@ -967,12 +1032,19 @@ export default function IframeContent() {
                     {activeInsertIndex === index + 1 && (
                       <AddSectionModal
                         open={true}
-                        onOpenChange={(open: boolean) =>
-                          setActiveInsertIndex(open ? index + 1 : null)
-                        }
-                        onAddSection={(type) =>
-                          handleAddSection(type, index + 1)
-                        }
+                        onOpenChange={(open: boolean) => {
+                          setActiveInsertIndex(open ? index + 1 : null);
+                          // Re-enable scrolling when closed
+                          if (!open) {
+                            document.body.style.overflow = "auto";
+                          }
+                        }}
+                        onAddSection={(type) => {
+                          handleAddSection(type, index + 1);
+                          // Re-enable scrolling after selection
+                          document.body.style.overflow = "auto";
+                          setActiveInsertIndex(null);
+                        }}
                         buttonVariant="outline"
                         buttonSize="icon"
                         buttonClassName="hidden" // Hide the default button

@@ -301,7 +301,7 @@ export function SortableLayersPanel({
       </div>
 
       {(hoverIndex === index || separatorAddSectionIndex === index) && (
-        <div className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 top-1/2 z-10">
+        <div className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 top-1/2 z-[10000]">
           <AddSectionModal
             open={separatorAddSectionIndex === index}
             onOpenChange={(open) => {

@@ -15,6 +15,7 @@ import {
   HeaderButtonSettings,
   HeaderSocialSettings,
   HeaderHtmlSettings,
+  HeaderAccountSettings,
 } from "./settings";
 
 interface HeaderSettingsPanelProps {
@@ -53,6 +54,7 @@ type SettingsComponents = {
   buttons: (props: any) => ReactElement;
   social: (props: any) => ReactElement;
   html: (props: any) => ReactElement;
+  account: (props: any) => ReactElement;
   [key: string]: (props: any) => ReactElement;
 };
 
@@ -115,7 +117,7 @@ export function HeaderSettingsPanel({
       headerBottom: "headerBottom",
 
       // Account
-      account: "buttons",
+      account: "account",
 
       // Cart
       cart: "buttons",
@@ -133,6 +135,7 @@ export function HeaderSettingsPanel({
     { title: "Header Bottom", view: "headerBottom" },
     { title: "Navigation", view: "navigation" },
     { title: "Search", view: "search" },
+    { title: "Account", view: "account" },
     { title: "Buttons", view: "buttons" },
     { title: "Social Icons", view: "social" },
     { title: "HTML Blocks", view: "html" },
@@ -145,6 +148,7 @@ export function HeaderSettingsPanel({
     headerBottom: HeaderBottomSettings,
     navigation: HeaderNavigationSettings,
     search: HeaderSearchSettings,
+    account: HeaderAccountSettings,
     buttons: HeaderButtonSettings,
     social: HeaderSocialSettings,
     html: HeaderHtmlSettings,

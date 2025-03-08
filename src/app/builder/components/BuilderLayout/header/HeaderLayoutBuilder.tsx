@@ -143,7 +143,7 @@ const itemToSettingsMap = {
   headerBottom: { targetTab: "Header", targetSubmenu: "Header Bottom Setting" },
 
   // Account
-  account: { targetTab: "Header", targetSubmenu: "Buttons" },
+  account: { targetTab: "Header", targetSubmenu: "Account Setting" },
 
   // Cart
   cart: { targetTab: "Header", targetSubmenu: "Buttons" },

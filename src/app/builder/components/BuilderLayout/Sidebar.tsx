@@ -21,6 +21,7 @@ import {
   CheckSquare,
   Plus,
   Video,
+  User,
 } from "lucide-react";
 import { SectionSettingsPanel } from "@/app/builder/components/BuilderLayout/SectionSettingsPanel";
 import { GlobalSettingsPanel } from "@/app/builder/components/BuilderLayout/GlobalSettings/GlobalSettingsPanel";
@@ -37,6 +38,7 @@ import { HeaderSearchSettings } from "./header/settings/HeaderSearchSettings";
 import { HeaderButtonSettings } from "./header/settings/HeaderButtonSettings";
 import { HeaderSocialSettings } from "./header/settings/HeaderSocialSettings";
 import { HeaderHtmlSettings } from "./header/settings/HeaderHtmlSettings";
+import { HeaderAccountSettings } from "./header/settings/HeaderAccountSettings";
 import { FooterSettingsPanel } from "./footer/FooterSettingsPanel";
 import { SidebarLeftProps } from "@/app/builder/types";
 import { HeaderSettingsPanel } from "./header/HeaderSettingsPanel";
@@ -1251,6 +1253,12 @@ export function SidebarLeft({
       title: "Header Search Setting",
       component: HeaderSearchSettings,
       icon: Settings,
+      parent: "Header",
+    },
+    {
+      title: "Account Setting",
+      component: HeaderAccountSettings,
+      icon: User,
       parent: "Header",
     },
     {

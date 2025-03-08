@@ -118,7 +118,7 @@ export const AddSectionModal: React.FC<AddSectionModalProps> = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="max-w-[500px] w-full h-[60vh] flex p-0 overflow-hidden"
+        className="max-w-[500px] w-full h-[60vh] flex p-0 overflow-hidden z-[10000]"
         side={side}
         align={align}
       >

@@ -1,13 +1,21 @@
 // HeaderHtmlSettings.tsx
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SettingSection } from "../../GlobalSettings/settings/SettingSection";
 import { Button } from "@/components/ui/button";
 import { Maximize2, Minimize2, X } from "lucide-react";
 import Editor from "@monaco-editor/react";
+import { useDrawerEscapeOutsideClick } from "@/app/builder/hooks/useDrawerEscapeOutsideClick";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import DOMPurify from "dompurify";
 
 // Add this to make TypeScript happy with our window augmentation
 declare global {
@@ -77,9 +85,11 @@ export function HeaderHtmlSettings({
 
     // Set a new timer for this field - debounce the iframe updates
     updateTimers.current[field] = setTimeout(() => {
+      // Sanitize the HTML content before sending it to the iframe
+      const sanitizedValue = DOMPurify.sanitize(value);
+
       // Create a settings update with just this field
-      // Ensure we're sending a string, not an object
-      const newSettings = { [field]: String(value) };
+      const newSettings = { [field]: sanitizedValue };
 
       // Send update to iframe via contentRef or direct querySelector
       try {
@@ -109,7 +119,7 @@ export function HeaderHtmlSettings({
         // Update parent component
         if (onUpdateSettings) {
           const updatedSettings = { ...settings };
-          updatedSettings[field] = value;
+          updatedSettings[field] = sanitizedValue;
           onUpdateSettings(updatedSettings);
         }
       } catch (error) {
@@ -118,40 +128,64 @@ export function HeaderHtmlSettings({
     }, 500); // Debounce time in ms
   };
 
-  const toggleDrawer = (blockNumber: number | null) => {
+  const toggleDrawer = useCallback((blockNumber: number | null) => {
     setExpandedBlock(blockNumber);
-  };
+  }, []);
+
+  // Use our custom hook for Escape key and outside click
+  useDrawerEscapeOutsideClick(
+    expandedBlock !== null,
+    () => toggleDrawer(null),
+    ".html-drawer-container"
+  );
 
   // Render a drawer for expanded HTML block editing
   const renderDrawer = (number: number) => {
     const field = `html_block_${number}` as keyof typeof htmlBlocks;
 
     return (
-      <div className="fixed top-0 left-0 h-full w-1/2 bg-white z-50 shadow-2xl border-r border-gray-200 overflow-hidden flex flex-col">
+      <div className="fixed z-[100] top-0 left-0 h-full w-1/2 bg-white shadow-2xl border-r border-gray-200 overflow-hidden flex flex-col html-drawer-container">
         <div className="flex items-center justify-between bg-gray-50 border-b border-gray-200 px-4 py-3">
           <h3 className="text-sm font-semibold text-gray-800">
-            HTML Block {number} Editor
+            HTML {number} Editor
           </h3>
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => toggleDrawer(null)}
-              title="Minimize editor"
-            >
-              <Minimize2 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => toggleDrawer(null)}
-              title="Close"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+          <div className="flex gap-1 items-center">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-6"
+                    disabled
+                  >
+                    esc
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Press ESC to close</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => toggleDrawer(null)}
+                  >
+                    <Minimize2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Minimize Editor</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
-        <div className="flex-1 p-4 overflow-hidden">
+        <div className="flex-1 p-3 overflow-hidden">
           <Editor
             height="100%"
             defaultLanguage="html"
@@ -186,26 +220,34 @@ export function HeaderHtmlSettings({
     return (
       <div
         key={`html-block-${number}-${field}`} // Update the key to ensure uniqueness
-        className={`space-y-6 ${isSelected ? "bg-blue-50 p-2 rounded-md" : ""}`}
+        className={` ${isSelected ? "bg-blue-50" : ""}`}
         id={`html-block-${number}`}
       >
         <SettingSection
-          title={`HTML Block ${number}`}
-          description={`Add custom HTML content to block ${number}`}
+          title={`HTML ${number}`}
+          description={`Add custom HTML`}
         >
-          <div className="space-y-2">
-            <div className="flex justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => toggleDrawer(number)}
-                className="flex items-center gap-1 text-xs mb-2"
-              >
-                <Maximize2 className="h-3.5 w-3.5" />
-                Expand Editor
-              </Button>
+          <div className="space-y-2 relative">
+            <div className="absolute top-0 right-0">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleDrawer(number)}
+                      className="flex items-center gap-1 text-xs w-6 h-6 text-zinc-500"
+                    >
+                      <Maximize2 width={5} height={5} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Expand Editor</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
-            <Label>HTML Content</Label>
+            <Label className="sr-only">HTML Content</Label>
             <Textarea
               value={htmlBlocks[field] || ""}
               onChange={(e) => {
@@ -215,7 +257,7 @@ export function HeaderHtmlSettings({
               placeholder="Enter HTML content here..."
               rows={6}
               className={`font-mono text-sm resize-y min-h-[100px] ${
-                isSelected ? "border-blue-500 ring-2 ring-blue-200" : ""
+                isSelected ? "" : ""
               }`}
             />
           </div>
@@ -230,9 +272,5 @@ export function HeaderHtmlSettings({
   }
 
   // Otherwise render all blocks normally
-  return (
-    <div className="space-y-6">
-      {[1, 2, 3, 4, 5].map((number) => renderHtmlBlock(number))}
-    </div>
-  );
+  return <div>{[1, 2, 3, 4, 5].map((number) => renderHtmlBlock(number))}</div>;
 }

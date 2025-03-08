@@ -30,6 +30,7 @@ import {
   fetchColorSchemes,
   getColorSchemeStyles,
 } from "@/app/builder/utils/colorSchemeUtils";
+import DOMPurify from "dompurify";
 
 // Add CSS for header item hover effects
 const headerItemStyles = `
@@ -92,6 +93,20 @@ interface HeaderSettings {
   logo?: { text?: string; showText?: boolean };
   lastSelectedSetting?: string | null; // Track the last selected setting
   lastSelectedSubmenu?: string | null; // Track the last selected submenu
+  showAccount?: boolean; // Whether to show the account widget
+  account?: {
+    showText?: boolean;
+    text?: string;
+    showIcon?: boolean;
+    style?: string;
+    dropdownEnabled?: boolean;
+    loginEnabled?: boolean;
+    registerEnabled?: boolean;
+    loginUrl?: string;
+    registerUrl?: string;
+    iconSize?: string;
+    iconStyle?: string; // New property for icon style variants
+  };
 }
 
 interface HeaderProps {
@@ -542,8 +557,12 @@ export default function Header({
               typeof key === "string" &&
               key.startsWith("html_block_")
             ) {
-              htmlUpdates[key] = event.data.settings[key];
-              hasHtmlUpdates = true;
+              // Sanitize HTML content again when receiving it
+              const rawHtml = event.data.settings[key];
+              if (typeof rawHtml === "string") {
+                htmlUpdates[key] = DOMPurify.sanitize(rawHtml);
+                hasHtmlUpdates = true;
+              }
             }
           }
 
@@ -694,27 +713,36 @@ export default function Header({
           const logoText = logoSettings.text || "Your Brand";
           const showText = logoSettings.showText !== false;
 
-          // Create logo HTML based on settings
+          // Create logo HTML based on settings and sanitize it
           if (showText) {
-            return `<div class="logo-container">
+            return DOMPurify.sanitize(`<div class="logo-container">
             <img src="/logo.svg" class="h-8" alt="Logo" />
             <span class="ml-2 font-bold text-lg">${logoText}</span>
-          </div>`;
+          </div>`);
           } else {
-            return `<img src="/logo.svg" class="h-8" alt="Logo" />`;
+            return DOMPurify.sanitize(
+              `<img src="/logo.svg" class="h-8" alt="Logo" />`
+            );
           }
         }
 
         // Fallback to default logo HTML
-        return (
+        return DOMPurify.sanitize(
           HTMLContentMap.logo ||
-          '<img src="/logo.svg" class="h-8" alt="Logo" />'
+            '<img src="/logo.svg" class="h-8" alt="Logo" />'
         );
+      }
+
+      // Special handling for account
+      if (itemId === "account") {
+        // Generate HTML based on account settings
+        const accountHTML = generateAccountHTML(headerSettings);
+        return DOMPurify.sanitize(accountHTML);
       }
 
       // First check customHtml for exact match
       if (customHtml[itemId]) {
-        return customHtml[itemId];
+        return DOMPurify.sanitize(customHtml[itemId]);
       }
       // Then check for HTML blocks in headerSettings
       else if (itemId.startsWith("html_block_")) {
@@ -726,15 +754,17 @@ export default function Header({
 
           // First check customHtml
           if (customHtml[settingKey]) {
-            return customHtml[settingKey];
+            return DOMPurify.sanitize(customHtml[settingKey]);
           }
           // Then check headerSettings
           else if (headerSettings[settingKey as keyof HeaderSettings]) {
-            return headerSettings[settingKey as keyof HeaderSettings] as string;
+            return DOMPurify.sanitize(
+              headerSettings[settingKey as keyof HeaderSettings] as string
+            );
           }
           // Finally use HTMLContentMap
           else if (HTMLContentMap[settingKey]) {
-            return HTMLContentMap[settingKey];
+            return DOMPurify.sanitize(HTMLContentMap[settingKey]);
           }
         }
       }
@@ -742,15 +772,15 @@ export default function Header({
       else if (headerSettings[itemId as keyof HeaderSettings]) {
         const settingContent = headerSettings[itemId as keyof HeaderSettings];
         if (typeof settingContent === "string") {
-          return settingContent;
+          return DOMPurify.sanitize(settingContent);
         }
       }
       // Finally try HTMLContentMap
       else if (HTMLContentMap[itemId]) {
-        return HTMLContentMap[itemId];
+        return DOMPurify.sanitize(HTMLContentMap[itemId]);
       }
 
-      return `<div>${itemId}</div>`;
+      return DOMPurify.sanitize(`<div>${itemId}</div>`);
     },
     [headerSettings, customHtml]
   );
@@ -1168,6 +1198,41 @@ export default function Header({
                 : prev.bottomBarColorScheme,
           }));
         }
+
+        // Handle account settings
+        if (
+          updatedSettings.showAccount !== undefined ||
+          updatedSettings.account !== undefined
+        ) {
+          console.log("Account settings update received:", {
+            showAccount: updatedSettings.showAccount,
+            account: updatedSettings.account,
+          });
+
+          // Apply account settings
+          setHeaderSettings((prev) => {
+            const updatedState = { ...prev };
+
+            // Handle showAccount toggle
+            if (updatedSettings.showAccount !== undefined) {
+              updatedState.showAccount = updatedSettings.showAccount;
+            }
+
+            // Handle nested account settings
+            if (updatedSettings.account !== undefined) {
+              const currentAccount = prev.account || {};
+              const accountField = Object.keys(updatedSettings.account)[0];
+              const accountValue = updatedSettings.account[accountField];
+
+              updatedState.account = {
+                ...currentAccount,
+                [accountField]: accountValue,
+              };
+            }
+
+            return updatedState;
+          });
+        }
       }
     };
 
@@ -1212,6 +1277,9 @@ export default function Header({
       // Search functionality
       search: "Header Search Setting",
 
+      // Account functionality
+      account: "Account Setting",
+
       // Button elements
       button_: "Buttons",
       btn_: "Buttons",
@@ -1219,24 +1287,6 @@ export default function Header({
       // Social media elements
       social: "Social",
       followIcons: "Social",
-      facebook: "Social",
-      twitter: "Social",
-      instagram: "Social",
-
-      // Top bar elements
-      top_: "Top Bar Setting",
-      topBar: "Top Bar Setting",
-      contact: "Top Bar Setting",
-
-      // Bottom bar elements
-      bottom_: "Header Bottom Setting",
-      headerBottom: "Header Bottom Setting",
-
-      // Other dividers and elements
-      divider: "Header Main Setting",
-      account: "Header Main Setting",
-      cart: "Header Main Setting",
-      wishlist: "Header Main Setting",
     };
 
     // Check each mapping to see if the itemId matches or contains the key
@@ -1276,6 +1326,136 @@ export default function Header({
       `⚠️ No submenu match for ${itemId}, defaulting to Header Main Setting`
     );
     return "Header Main Setting";
+  };
+
+  // Function to generate account HTML based on settings
+  const generateAccountHTML = (settings: HeaderSettings) => {
+    const { account, showAccount } = settings;
+
+    // If account widget is disabled, return empty string
+    if (showAccount === false) return "";
+
+    // Default account settings
+    const defaultAccount = {
+      showText: true,
+      text: "Account",
+      showIcon: true,
+      style: "default",
+      iconSize: "medium",
+      iconStyle: "default",
+      dropdownEnabled: true,
+      loginEnabled: true,
+      registerEnabled: true,
+      loginUrl: "/login",
+      registerUrl: "/register",
+    };
+
+    // Merge default settings with user settings
+    const accountSettings = { ...defaultAccount, ...account };
+
+    // Determine icon size
+    let iconSize = "24";
+    if (accountSettings.iconSize === "small") iconSize = "18";
+    if (accountSettings.iconSize === "medium") iconSize = "24";
+    if (accountSettings.iconSize === "large") iconSize = "30";
+    if (accountSettings.iconSize === "xlarge") iconSize = "36";
+
+    // Determine class based on style
+    let containerClass = "account-icon flex items-center gap-2";
+    if (accountSettings.style === "button") {
+      containerClass +=
+        " px-4 py-2 bg-primary text-primary-foreground rounded-md";
+    } else if (accountSettings.style === "text") {
+      containerClass += " text-only";
+    }
+
+    // Build the HTML
+    let html = `<div class="${containerClass}">`;
+
+    // Add icon if enabled
+    if (accountSettings.showIcon) {
+      // Base SVG path for the user icon
+      const userIconPath = `
+        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      `;
+
+      // Different icon styles
+      switch (accountSettings.iconStyle) {
+        case "plain":
+          // Just the icon
+          html += `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${userIconPath}</svg>`;
+          break;
+        case "circle":
+          // Icon in blue circle
+          html += `<div class="rounded-full bg-blue-400 p-1 flex items-center justify-center" style="width:${
+            Number(iconSize) + 8
+          }px;height:${Number(iconSize) + 8}px">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${userIconPath}</svg>
+                  </div>`;
+          break;
+        case "square":
+          // Icon in blue square
+          html += `<div class="rounded-md bg-blue-400 p-1 flex items-center justify-center" style="width:${
+            Number(iconSize) + 8
+          }px;height:${Number(iconSize) + 8}px">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${userIconPath}</svg>
+                  </div>`;
+          break;
+        case "outline-circle":
+          // Icon with circular outline
+          html += `<div class="rounded-full border-2 border-blue-400 p-1 flex items-center justify-center" style="width:${
+            Number(iconSize) + 10
+          }px;height:${Number(iconSize) + 10}px">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${userIconPath}</svg>
+                  </div>`;
+          break;
+        case "outline-square":
+          // Icon with square outline
+          html += `<div class="rounded-md border-2 border-blue-400 p-1 flex items-center justify-center" style="width:${
+            Number(iconSize) + 10
+          }px;height:${Number(iconSize) + 10}px">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${userIconPath}</svg>
+                  </div>`;
+          break;
+        case "solid-bg":
+          // Icon with solid blue background (rectangle)
+          html += `<div class="rounded-md bg-blue-400 p-2 flex items-center justify-center" style="width:${
+            Number(iconSize) + 16
+          }px;height:${Number(iconSize) + 12}px">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${userIconPath}</svg>
+                  </div>`;
+          break;
+        default:
+          // Default plain icon
+          html += `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${userIconPath}</svg>`;
+      }
+    }
+
+    // Add text if enabled
+    if (accountSettings.showText) {
+      html += `<span>${accountSettings.text}</span>`;
+    }
+
+    html += "</div>";
+
+    // Add dropdown if enabled
+    if (accountSettings.dropdownEnabled) {
+      html +=
+        '<div class="account-dropdown absolute z-10 mt-2 w-48 py-1 bg-white rounded-md shadow-lg hidden group-hover:block">';
+
+      if (accountSettings.loginEnabled) {
+        html += `<a href="${accountSettings.loginUrl}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Login</a>`;
+      }
+
+      if (accountSettings.registerEnabled) {
+        html += `<a href="${accountSettings.registerUrl}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Register</a>`;
+      }
+
+      html += "</div>";
+    }
+
+    return html;
   };
 
   return (

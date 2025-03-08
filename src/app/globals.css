@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Remove the problematic sidebar-container class
+.sidebar-container {
+  width: 320px !important;
+  max-width: 320px !important;
+  transition: opacity 0.3s ease;
+}
+*/
+
 @layer base {
   :root {
     --background: 0 0% 100%;
