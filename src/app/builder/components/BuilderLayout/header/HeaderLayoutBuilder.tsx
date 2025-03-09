@@ -23,12 +23,6 @@ interface LayoutContextType {
   setLayout: React.Dispatch<React.SetStateAction<HeaderLayout>>;
 }
 
-// Create the layout context
-const LayoutContext = createContext<LayoutContextType>({
-  layout: presetLayouts.preset1,
-  setLayout: () => {},
-});
-
 // Utility function to sanitize a layout and ensure no duplicates
 const sanitizeLayout = (layout: HeaderLayout): HeaderLayout => {
   // Deep clone the layout to avoid reference issues
@@ -87,6 +81,12 @@ const sanitizeLayout = (layout: HeaderLayout): HeaderLayout => {
   return newLayout;
 };
 
+// Create the layout context
+const LayoutContext = createContext<LayoutContextType>({
+  layout: presetLayouts.preset1,
+  setLayout: () => {},
+});
+
 interface HeaderLayoutBuilderProps {
   onShowPresets?: () => void;
   onShowHeaderMain?: () => void;
@@ -117,12 +117,7 @@ const itemToSettingsMap = {
   // Logo
   logo: { targetTab: "Header", targetSubmenu: "Header Main Setting" },
 
-  // Navigation
-  mainMenu: { targetTab: "Header", targetSubmenu: "Header Navigation Setting" },
-  topBarMenu: {
-    targetTab: "Header",
-    targetSubmenu: "Header Navigation Setting",
-  },
+  // Navigation menus have been removed as we don't want settings for them
 
   // Search
   search: { targetTab: "Header", targetSubmenu: "Header Search Setting" },
@@ -131,9 +126,6 @@ const itemToSettingsMap = {
   button_1: { targetTab: "Header", targetSubmenu: "Buttons" },
   button_2: { targetTab: "Header", targetSubmenu: "Buttons" },
   buttons: { targetTab: "Header", targetSubmenu: "Buttons" },
-
-  // Social
-  followIcons: { targetTab: "Header", targetSubmenu: "Social" },
 
   // Top bar
   topBar: { targetTab: "Header", targetSubmenu: "Top Bar Setting" },
@@ -181,6 +173,11 @@ const DraggableItem = ({
   const isLogo = item.id === "logo";
   // Check if this item is in the available items container
   const isInAvailableItems = containerId === "available";
+  // Check if this is a menu item (for which we don't want to show settings)
+  const isMenuType =
+    item.id === "mainMenu" ||
+    item.id === "topBarMenu" ||
+    item.id === "bottomMenu";
 
   // Only allow dragging if it's not a logo
   const [{ isDragging }, drag] = useDrag({
@@ -303,8 +300,8 @@ const DraggableItem = ({
         ${isDragging ? "opacity-50" : ""} flex items-center gap-1 shrink-0
         h-[28px] my-1`}
       onClick={() => {
-        // Only allow click to open settings if not in available items
-        if (!isInAvailableItems && onItemClick) {
+        // Only allow click to open settings if not in available items and not a menu item
+        if (!isInAvailableItems && !isMenuType && onItemClick) {
           onItemClick(item.id);
         }
       }}
@@ -315,7 +312,9 @@ const DraggableItem = ({
     >
       <div className="flex items-center justify-between w-full gap-1">
         <div>{item.builderLabel || item.label}</div>
-        {!isInAvailableItems && !isLogo && <Settings size={13} />}
+        {!isInAvailableItems && !isLogo && !isMenuType && (
+          <Settings size={13} />
+        )}
       </div>
     </div>
   );
@@ -560,7 +559,7 @@ const DroppableZone = ({
 
 // Define the type for the layout structure
 interface HeaderLayout {
-  [key: string]: string[];
+  [key: string]: string[] | undefined;
   top_left: string[];
   top_center: string[];
   top_right: string[];
@@ -792,6 +791,15 @@ export function HeaderLayoutBuilder({
   }, [currentPreset, setLayout]);
 
   const handleItemClick = useCallback((itemId: string) => {
+    // Skip settings for menu items
+    if (
+      itemId === "mainMenu" ||
+      itemId === "topBarMenu" ||
+      itemId === "bottomMenu"
+    ) {
+      return; // Early return to prevent settings from opening
+    }
+
     // Find the appropriate settings panel for this item
     const settingsInfo =
       itemToSettingsMap[itemId as keyof typeof itemToSettingsMap];

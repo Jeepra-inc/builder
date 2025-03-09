@@ -1,20 +1,29 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { SettingSection } from '../../GlobalSettings/settings/SettingSection';
-import { Trash2 } from 'lucide-react';
+import React from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { SettingSection } from "../../GlobalSettings/settings/SettingSection";
+import { Trash2 } from "lucide-react";
 
 interface HeaderSocialSettingsProps {
   settings?: any;
   onUpdateSettings?: (settings: any) => void;
 }
 
-export function HeaderSocialSettings({ settings = {}, onUpdateSettings }: HeaderSocialSettingsProps) {
+export function HeaderSocialSettings({
+  settings = {},
+  onUpdateSettings,
+}: HeaderSocialSettingsProps) {
   const handleUpdate = (field: string, value: any) => {
     if (onUpdateSettings) {
       onUpdateSettings({ [field]: value });
@@ -23,16 +32,16 @@ export function HeaderSocialSettings({ settings = {}, onUpdateSettings }: Header
 
   const handleAddSocial = () => {
     const currentSocials = settings.social?.items || [];
-    handleUpdate('social.items', [
+    handleUpdate("social.items", [
       ...currentSocials,
-      { platform: 'facebook', url: '#', icon: 'facebook' }
+      { platform: "facebook", url: "#", icon: "facebook" },
     ]);
   };
 
   const handleRemoveSocial = (index: number) => {
     const newSocials = [...(settings.social?.items || [])];
     newSocials.splice(index, 1);
-    handleUpdate('social.items', newSocials);
+    handleUpdate("social.items", newSocials);
   };
 
   return (
@@ -46,7 +55,9 @@ export function HeaderSocialSettings({ settings = {}, onUpdateSettings }: Header
             <Label>Show Social Icons</Label>
             <Switch
               checked={settings.social?.show}
-              onCheckedChange={(checked) => handleUpdate('social.show', checked)}
+              onCheckedChange={(checked) =>
+                handleUpdate("social.show", checked)
+              }
             />
           </div>
 
@@ -68,8 +79,12 @@ export function HeaderSocialSettings({ settings = {}, onUpdateSettings }: Header
                   value={social.platform}
                   onValueChange={(value) => {
                     const newSocials = [...(settings.social?.items || [])];
-                    newSocials[index] = { ...social, platform: value, icon: value };
-                    handleUpdate('social.items', newSocials);
+                    newSocials[index] = {
+                      ...social,
+                      platform: value,
+                      icon: value,
+                    };
+                    handleUpdate("social.items", newSocials);
                   }}
                 >
                   <SelectTrigger>
@@ -91,7 +106,7 @@ export function HeaderSocialSettings({ settings = {}, onUpdateSettings }: Header
                   onChange={(e) => {
                     const newSocials = [...(settings.social?.items || [])];
                     newSocials[index] = { ...social, url: e.target.value };
-                    handleUpdate('social.items', newSocials);
+                    handleUpdate("social.items", newSocials);
                   }}
                 />
               </div>

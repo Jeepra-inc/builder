@@ -64,6 +64,12 @@ export const headerItems: HeaderItem[] = [
     builderLabel: "Main Menu",
     type: "core",
   },
+  {
+    id: "bottomMenu",
+    label: "Bottom Bar Menu",
+    builderLabel: "Bottom Menu",
+    type: "core",
+  },
   { id: "search", label: "Search", builderLabel: "Search", type: "core" },
   { id: "contact", label: "Contact", builderLabel: "Contact", type: "core" },
   { id: "button_1", label: "Button 1", builderLabel: "Button 1", type: "core" },
@@ -73,12 +79,6 @@ export const headerItems: HeaderItem[] = [
     id: "social_icon",
     label: "Social Icons",
     builderLabel: "Social Icons",
-    type: "core",
-  },
-  {
-    id: "followIcons",
-    label: "Follow Icons",
-    builderLabel: "Follow Icons",
     type: "core",
   },
 ];

@@ -4,9 +4,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import CodeEditor from "@uiw/react-textarea-code-editor";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { SettingSection } from "../../GlobalSettings/settings/SettingSection";
-import RadioButtonGroup from "./RadioButtonGroup";
-import RangeSlider from "../../GlobalSettings/settings/RangeSlider";
+import { SettingSection } from "../GlobalSettings/settings/SettingSection";
+import RadioButtonGroup from "./settings/RadioButtonGroup";
+import RangeSlider from "../GlobalSettings/settings/RangeSlider";
 import { CaseLower, CaseSensitive, CaseUpper } from "lucide-react";
 
 interface HeaderBottomSettingsProps {
@@ -76,25 +76,30 @@ export function HeaderBottomSettings({
             <Label>Height</Label>
             <RangeSlider
               value={settings.bottomHeight}
-              onValueChange={(value) => handleUpdate("bottomHeight", value[0])}
+              onValueChange={(value: number) =>
+                handleUpdate("bottomHeight", value)
+              }
             />
           </div>
 
           {/* Color Scheme */}
-          <div className="space-y-4">
+          <div className="space-y-2">
             <Label>Color Scheme</Label>
-            <RadioButtonGroup
-              options={[
-                { id: "header-light", value: "light", label: "light" },
-                { id: "header-dark", value: "dark", label: "Dark" },
-              ]}
-              name="bottomColorScheme"
-              defaultValue={settings.bottomColorScheme || "light"}
-              onValueChange={(value) =>
+            <RadioGroup
+              value={settings.bottomColorScheme || "light"}
+              onValueChange={(value: string) =>
                 handleUpdate("bottomColorScheme", value)
               }
-              required
-            />
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="light" id="bottom-light" />
+                <Label htmlFor="bottom-light">Light</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="dark" id="bottom-dark" />
+                <Label htmlFor="bottom-dark">Dark</Label>
+              </div>
+            </RadioGroup>
           </div>
 
           {/* Background Image */}

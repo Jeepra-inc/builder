@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, Fragment } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   DndContext,
   closestCenter,
@@ -95,7 +95,7 @@ export function SortableLayersPanel({
     });
 
     // Select the new section
-    onSelectSection(newSection.id);
+    onSelectSection(String(newSection.id));
   };
 
   const deleteSection = (sectionId: string) => {
@@ -105,15 +105,11 @@ export function SortableLayersPanel({
 
   const toggleVisibility = (section: Section) => {
     const newVisibility = !(section.isVisible ?? true);
-    console.log(
-      `Toggling visibility for section ${section.id} from ${section.isVisible} to ${newVisibility}`
-    );
 
     setSections((prev) => {
       const updated = prev.map((s) =>
         s.id === section.id ? { ...s, isVisible: newVisibility } : s
       );
-      console.log("Updated sections:", updated);
       return updated;
     });
 
@@ -151,7 +147,7 @@ export function SortableLayersPanel({
       scrollToSection: true,
     });
 
-    onSelectSection(duplicated.id);
+    onSelectSection(String(duplicated.id));
   };
 
   useEffect(() => {
@@ -179,17 +175,14 @@ export function SortableLayersPanel({
       if (contentRef.current?.contentWindow !== event.source) return;
 
       const message = event.data;
-      console.log("Received message from iframe:", message);
 
       // Handle various section messages from iframe
       if (message.type === "SECTION_REORDERED") {
         if (message.sections && Array.isArray(message.sections)) {
-          console.log("Updating sections from iframe:", message.sections);
           setSections(message.sections);
         }
       } else if (message.type === "UPDATE_SECTIONS") {
         if (message.sections && Array.isArray(message.sections)) {
-          console.log("Received updated sections from iframe");
           setSections(message.sections);
         }
       }
@@ -199,74 +192,59 @@ export function SortableLayersPanel({
     return () => window.removeEventListener("message", handleMessage);
   }, [contentRef]);
 
+  const sendMessageToIframe = (
+    type: string,
+    payload: Partial<IframeMessage>
+  ) => {
+    sendIframeMessage(contentRef, { type, ...payload });
+  };
+
+  const setActiveSection = (
+    id: UniqueIdentifier | null,
+    index: number | null
+  ) => {
+    setActiveId(id);
+    setActiveIndex(index);
+  };
+
   const handleDragStart = ({ active }: DragStartEvent) => {
     const index = sections.findIndex((s) => s.id === active.id);
-    console.log("Drag start:", { active, index, id: active.id });
-    setActiveId(active.id);
-    setActiveIndex(index);
+    setActiveSection(active.id, index);
     setIsDragging(true);
 
-    // Notify the iframe that we're starting a drag operation
-    // Using caution to not interfere with iframe operations
-    sendIframeMessage(contentRef, {
-      type: "DRAG_START",
-      sectionId: active.id,
-      source: "layer_panel", // To identify the source of the drag operation
-      index: index,
-      allSections: sections.map((s) => s.id), // Send all section IDs to help iframe understand current order
+    sendMessageToIframe("DRAG_START", {
+      sectionId: String(active.id),
+      source: "layer_panel",
+      index,
+      sections: sections.map((s) => ({ ...s, id: s.id })),
     });
   };
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    console.log("Drag end:", { active, over });
-
     if (over && active.id !== over.id) {
       const oldIndex = sections.findIndex((s) => s.id === active.id);
       const newIndex = sections.findIndex((s) => s.id === over.id);
 
-      console.log("Reordering:", {
-        oldIndex,
-        newIndex,
-        activeId: active.id,
-        overId: over.id,
-      });
-
       if (oldIndex !== -1 && newIndex !== -1) {
-        // Use arrayMove helper from dnd-kit
         const updated = arrayMove(sections, oldIndex, newIndex);
-
-        console.log(
-          "Updated sections:",
-          updated.map((s) => s.type)
-        );
         setSections(updated);
 
-        // The iframe is expecting a different format than what we're sending
-        // It needs sections array and sectionId
-        sendIframeMessage(contentRef, {
-          type: "SECTIONS_UPDATED", // Using a message type that the iframe already understands
+        sendMessageToIframe("SECTIONS_UPDATED", {
           sections: updated,
           moveInfo: {
-            sectionId: active.id,
+            sectionId: String(active.id),
             oldIndex,
             newIndex,
-            source: "layer_panel",
           },
         });
       }
-    } else {
-      console.log("No reordering needed or over target missing");
     }
 
-    setActiveId(null);
-    setActiveIndex(null);
+    setActiveSection(null, null);
     setIsDragging(false);
 
-    // Notify iframe that drag has ended
-    sendIframeMessage(contentRef, {
-      type: "DRAG_END",
+    sendMessageToIframe("DRAG_END", {
       source: "layer_panel",
-      success: over && active.id !== over.id,
     });
   };
 
@@ -324,9 +302,6 @@ export function SortableLayersPanel({
 
   return (
     <div>
-      {/* Test component - uncomment to test basic drag/drop
-      <TestSortable />
-      */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -350,17 +325,7 @@ export function SortableLayersPanel({
                 items={sections.map((s) => s.id)}
                 strategy={verticalListSortingStrategy}
               >
-                {/* Add debug info to show section count */}
-                <div className="mb-2 text-xs text-gray-500">
-                  Total sections: {sections.length} (including hidden sections)
-                </div>
-
                 {sections.map((section, index) => {
-                  // Add debug logging for each section
-                  console.log(
-                    `Rendering section ${section.id}, isVisible: ${section.isVisible}`
-                  );
-
                   return (
                     <div key={section.id}>
                       {renderSectionSeparator(index)}

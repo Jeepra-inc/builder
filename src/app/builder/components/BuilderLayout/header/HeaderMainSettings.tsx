@@ -3,9 +3,9 @@ import React from "react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { SettingSection } from "../../GlobalSettings/settings/SettingSection";
-import RadioButtonGroup from "./RadioButtonGroup";
-import RangeSlider from "../../GlobalSettings/settings/RangeSlider";
+import { SettingSection } from "../GlobalSettings/settings/SettingSection";
+import RadioButtonGroup from "./settings/RadioButtonGroup";
+import RangeSlider from "../GlobalSettings/settings/RangeSlider";
 import CodeEditor from "@uiw/react-textarea-code-editor";
 import { CaseLower, CaseSensitive, CaseUpper } from "lucide-react";
 
@@ -62,23 +62,26 @@ export function HeaderMainSettings({
             <Label>Height</Label>
             <RangeSlider
               value={settings.headerHeight}
-              onValueChange={(v) => handleUpdate("headerHeight")(v)}
+              onValueChange={(v: number) => handleUpdate("headerHeight", v)}
             />
           </div>
 
           {/* Color Scheme */}
           <div className="space-y-2">
             <Label>Color Scheme</Label>
-            <RadioButtonGroup
-              options={[
-                { id: "header-light", value: "light", label: "light" },
-                { id: "header-dark", value: "dark", label: "Dark" },
-              ]}
-              name="textTransform"
-              defaultValue={settings.colorScheme || "light"}
+            <RadioGroup
+              value={settings.colorScheme || "light"}
               onValueChange={(value) => handleUpdate("colorScheme", value)}
-              required
-            />
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="light" id="header-light" />
+                <Label htmlFor="header-light">Light</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="dark" id="header-dark" />
+                <Label htmlFor="header-dark">Dark</Label>
+              </div>
+            </RadioGroup>
           </div>
 
           {/* Background Image */}

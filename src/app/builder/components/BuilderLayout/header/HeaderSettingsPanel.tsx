@@ -10,12 +10,13 @@ import {
   TopBarSettingsPanel,
   HeaderMainSettings,
   HeaderBottomSettings,
-  HeaderNavigationSettings,
   HeaderSearchSettings,
   HeaderButtonSettings,
   HeaderSocialSettings,
   HeaderHtmlSettings,
   HeaderAccountSettings,
+  HeaderNavIconSettings,
+  HeaderContactSettings,
 } from "./settings";
 
 interface HeaderSettingsPanelProps {
@@ -49,12 +50,13 @@ type SettingsComponents = {
   topBar: (props: any) => ReactElement;
   headerMain: (props: any) => ReactElement;
   headerBottom: (props: any) => ReactElement;
-  navigation: (props: any) => ReactElement;
   search: (props: any) => ReactElement;
   buttons: (props: any) => ReactElement;
   social: (props: any) => ReactElement;
   html: (props: any) => ReactElement;
   account: (props: any) => ReactElement;
+  navIcon: (props: any) => ReactElement;
+  contact: (props: any) => ReactElement;
   [key: string]: (props: any) => ReactElement;
 };
 
@@ -84,61 +86,18 @@ export function HeaderSettingsPanel({
     }
   };
 
-  const handleSettingsSelect = (settingId: string) => {
-    const settingMap: Record<string, string> = {
-      // HTML blocks
-      html_block_1: "html",
-      html_block_2: "html",
-      html_block_3: "html",
-      html_block_4: "html",
-      html_block_5: "html",
-
-      // Logo
-      logo: "headerMain",
-
-      // Navigation
-      mainMenu: "navigation",
-      topBarMenu: "navigation",
-
-      // Search
-      search: "search",
-
-      // Buttons
-      buttons: "buttons",
-
-      // Social
-      followIcons: "social",
-
-      // Top bar
-      topBar: "topBar",
-
-      // Header sections
-      headerMain: "headerMain",
-      headerBottom: "headerBottom",
-
-      // Account
-      account: "account",
-
-      // Cart
-      cart: "buttons",
-    };
-
-    const targetView = settingMap[settingId] || "main";
-    setCurrentView(targetView);
-    setSelectedSetting(settingId);
-  };
-
   const items = [
-    { title: "Header Layouts", view: "layouts" },
+    { title: "Layouts", view: "layouts" },
     { title: "Top Bar", view: "topBar" },
-    { title: "Header Main", view: "headerMain" },
-    { title: "Header Bottom", view: "headerBottom" },
-    { title: "Navigation", view: "navigation" },
+    { title: "Main Bar", view: "headerMain" },
+    { title: "Bottom Bar", view: "headerBottom" },
     { title: "Search", view: "search" },
+    { title: "Navigation Icon", view: "navIcon" },
     { title: "Account", view: "account" },
     { title: "Buttons", view: "buttons" },
     { title: "Social Icons", view: "social" },
     { title: "HTML Blocks", view: "html" },
+    { title: "Contact", view: "contact" },
   ];
 
   const settingsComponents: SettingsComponents = {
@@ -146,12 +105,13 @@ export function HeaderSettingsPanel({
     topBar: TopBarSettingsPanel,
     headerMain: HeaderMainSettings,
     headerBottom: HeaderBottomSettings,
-    navigation: HeaderNavigationSettings,
     search: HeaderSearchSettings,
     account: HeaderAccountSettings,
     buttons: HeaderButtonSettings,
     social: HeaderSocialSettings,
     html: HeaderHtmlSettings,
+    navIcon: HeaderNavIconSettings,
+    contact: HeaderContactSettings,
   };
 
   const currentItem = items.find((item) => item.view === currentView);
@@ -160,6 +120,28 @@ export function HeaderSettingsPanel({
     : currentItem?.title || "Header Settings";
 
   const renderSettingsPanel = () => {
+    // Handle main view
+    if (currentView === "main") {
+      // Debug info
+      console.log("HeaderSettingsPanel: Rendering main view", {
+        itemCount: items.length,
+        hasNavIcon: items.some((item) => item.view === "navIcon"),
+      });
+
+      // Main view shows the list of setting options
+      return (
+        <div>
+          {items.map((item, index) => (
+            <ClickableItem
+              key={`${item.view}_${index}`}
+              title={item.title}
+              onClick={() => setCurrentView(item.view)}
+            />
+          ))}
+        </div>
+      );
+    }
+
     // Special case for HTML settings with a selected block
     if (currentView === "html" && selectedSetting) {
       return (
@@ -185,7 +167,8 @@ export function HeaderSettingsPanel({
     }
 
     // Default rendering for other components
-    const Component = settingsComponents[currentView];
+    const Component =
+      settingsComponents[currentView as keyof SettingsComponents];
     if (Component) {
       // For the layouts panel, pass the currentPreset prop
       if (currentView === "layouts") {
@@ -213,17 +196,8 @@ export function HeaderSettingsPanel({
       );
     }
 
-    return (
-      <div>
-        {items.map((item, index) => (
-          <ClickableItem
-            key={`${item.view}_${index}`} // Update the key to ensure uniqueness
-            title={item.title}
-            onClick={() => setCurrentView(item.view)}
-          />
-        ))}
-      </div>
-    );
+    // Fallback - should never reach here
+    return <div>No settings available for this option</div>;
   };
 
   return (

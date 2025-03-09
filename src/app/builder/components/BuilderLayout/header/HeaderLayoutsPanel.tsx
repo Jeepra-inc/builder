@@ -3,6 +3,7 @@ import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { headerPresets, presetLayouts } from "../data/headerPresets";
+import { ensureNavIconInAvailableItems } from "./generateNavIconHTML";
 
 interface HeaderLayoutsPanelProps {
   onBack?: () => void;
@@ -16,32 +17,53 @@ export function HeaderLayoutsPanel({
   currentPreset,
 }: HeaderLayoutsPanelProps) {
   const handlePresetSelect = (presetId: string) => {
-    console.log('🎯 HeaderLayoutsPanel: Preset selected:', {
+    console.log("🎯 HeaderLayoutsPanel: Preset selected:", {
       previousPreset: currentPreset,
       newPreset: presetId,
-      hasLayoutData: !!presetLayouts[presetId]
+      hasLayoutData: !!presetLayouts[presetId as keyof typeof presetLayouts],
     });
-    
+
     if (onSelectPreset) {
       // Notify parent about preset change
-      console.log('⬆️ Calling onSelectPreset with:', presetId);
+      console.log("⬆️ Calling onSelectPreset with:", presetId);
       onSelectPreset(presetId);
-      
+
       // Send message to iframe to update the header layout
-      const iframe = document.querySelector('iframe');
-      if (iframe?.contentWindow && presetLayouts[presetId]) {
-        console.log('📤 Sending UPDATE_HEADER_LAYOUT message to iframe for preset:', presetId);
-        
+      const iframe = document.querySelector("iframe");
+      if (
+        iframe?.contentWindow &&
+        presetLayouts[presetId as keyof typeof presetLayouts]
+      ) {
+        console.log(
+          "📤 Sending UPDATE_HEADER_LAYOUT message to iframe for preset:",
+          presetId
+        );
+
+        // Get the layout and ensure nav_icon is in the available items
+        const layout = {
+          ...presetLayouts[presetId as keyof typeof presetLayouts],
+        };
+
+        // Make sure nav_icon is in available items
+        if (layout.available) {
+          layout.available = ensureNavIconInAvailableItems(layout.available);
+        }
+
         // Create a custom event to ensure layout is saved after preset change
-        window.dispatchEvent(new CustomEvent('saveHeaderPresetChange', {
-          detail: { presetId, layout: presetLayouts[presetId] }
-        }));
-        
-        iframe.contentWindow.postMessage({
-          type: "UPDATE_HEADER_LAYOUT",
-          presetId,  // Include the presetId in the message
-          ...presetLayouts[presetId]
-        }, '*');
+        window.dispatchEvent(
+          new CustomEvent("saveHeaderPresetChange", {
+            detail: { presetId, layout },
+          })
+        );
+
+        iframe.contentWindow.postMessage(
+          {
+            type: "UPDATE_HEADER_LAYOUT",
+            presetId,
+            ...layout,
+          },
+          "*"
+        );
       }
     }
   };
@@ -62,7 +84,11 @@ export function HeaderLayoutsPanel({
             )}
             onClick={() => handlePresetSelect(preset.id)}
           >
-            <img src={preset.image} alt={`Preset ${preset.id}`} className="w-full h-auto" />
+            <img
+              src={preset.image}
+              alt={`Preset ${preset.id}`}
+              className="w-full h-auto"
+            />
           </div>
         ))}
       </div>

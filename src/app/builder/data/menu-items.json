@@ -1,0 +1,142 @@
+{
+  "mainMenu": {
+    "name": "Main Navigation",
+    "description": "Primary navigation items displayed in the main header section",
+    "items": [
+      {
+        "id": "main_home",
+        "text": "Home",
+        "url": "/",
+        "isButton": false,
+        "children": []
+      },
+      {
+        "id": "main_shop",
+        "text": "Shop",
+        "url": "/shop",
+        "isButton": false,
+        "children": [
+          {
+            "id": "shop_new",
+            "text": "New Arrivals",
+            "url": "/shop/new",
+            "isButton": false
+          },
+          {
+            "id": "shop_bestsellers",
+            "text": "Bestsellers",
+            "url": "/shop/bestsellers",
+            "isButton": false
+          },
+          {
+            "id": "shop_sale",
+            "text": "Sale",
+            "url": "/shop/sale",
+            "isButton": false
+          }
+        ]
+      },
+      {
+        "id": "main_collections",
+        "text": "Collections",
+        "url": "/collections",
+        "isButton": false,
+        "children": [
+          {
+            "id": "collections_summer",
+            "text": "Summer Collection",
+            "url": "/collections/summer",
+            "isButton": false
+          },
+          {
+            "id": "collections_winter",
+            "text": "Winter Collection",
+            "url": "/collections/winter",
+            "isButton": false
+          }
+        ]
+      },
+      {
+        "id": "main_about",
+        "text": "About Us",
+        "url": "/about",
+        "isButton": false,
+        "children": []
+      },
+      {
+        "id": "main_contact",
+        "text": "Contact",
+        "url": "/contact",
+        "isButton": true,
+        "children": []
+      }
+    ]
+  },
+  "topBarMstillenu": {
+    "name": "Top Bar Navigation",
+    "description": "Secondary navigation items displayed in the top bar section",
+    "items": [
+      {
+        "id": "top_support",
+        "text": "Support",
+        "url": "/support",
+        "isButton": false
+      },
+      { "id": "top_faq", "text": "FAQ", "url": "/faq", "isButton": false },
+      {
+        "id": "top_tracking",
+        "text": "Track Order",
+        "url": "/tracking",
+        "isButton": false
+      },
+      {
+        "id": "top_locator",
+        "text": "Store Locator",
+        "url": "/stores",
+        "isButton": false
+      },
+      {
+        "id": "top_shipping",
+        "text": "Shipping Policy",
+        "url": "/shipping",
+        "isButton": false
+      }
+    ]
+  },
+  "bottomMenu": {
+    "name": "Bottom Bar Navigation",
+    "description": "Footer navigation items displayed in the bottom section",
+    "items": [
+      {
+        "id": "bottom_terms",
+        "text": "Terms & Conditions",
+        "url": "/terms",
+        "isButton": false
+      },
+      {
+        "id": "bottom_privacy",
+        "text": "Privacy Policy",
+        "url": "/privacy",
+        "isButton": false
+      },
+      {
+        "id": "bottom_returns",
+        "text": "Returns",
+        "url": "/returns",
+        "isButton": false
+      },
+      {
+        "id": "bottom_warranty",
+        "text": "Warranty",
+        "url": "/warranty",
+        "isButton": false
+      },
+      {
+        "id": "bottom_sitemap",
+        "text": "Sitemap",
+        "url": "/sitemap",
+        "isButton": false
+      }
+    ]
+  }
+}

@@ -28,6 +28,81 @@ import {
   SectionAction,
 } from "../components/IframeContent/sectionReducer";
 
+// First, let's fix the HeaderSettings type definition
+interface HeaderSettings {
+  logo?: {
+    text: string;
+    showText: boolean;
+  };
+  navigation?: {
+    menuType: string;
+    items: any[];
+  };
+  layout?: {
+    sticky: boolean;
+    maxWidth: string;
+    currentPreset: string;
+    containers: {
+      top_left: any[];
+      top_center: any[];
+      top_right: any[];
+      middle_left: any[];
+      middle_center: any[];
+      middle_right: any[];
+      bottom_left: any[];
+      bottom_center: any[];
+      bottom_right: any[];
+      available: any[];
+    };
+  };
+  search?: {
+    show: boolean; // Required fields
+    type: string;
+    showText: boolean;
+    behavior: string;
+    design: string;
+    placeholder?: string;
+    rounded?: number;
+    style?: string;
+    shape?: string;
+    showIcon?: boolean;
+    iconPosition?: string;
+    iconColor?: string;
+    iconSize?: string;
+    fontSize?: string;
+    textColor?: string;
+    width?: string;
+    showButton?: boolean;
+    buttonText?: string;
+    buttonColor?: string;
+    buttonTextColor?: string;
+    [key: string]: any; // Allow for additional search properties
+  };
+  account?: {
+    showText: boolean;
+    text: string;
+    showIcon: boolean;
+    style?: string;
+    iconStyle?: string;
+    iconSize?: string;
+    dropdownEnabled?: boolean;
+    loginEnabled?: boolean;
+    registerEnabled?: boolean;
+    [key: string]: any;
+  };
+  contact?: {
+    show: boolean;
+    email?: string;
+    emailLabel?: string;
+    phone?: string;
+    location?: string;
+    locationLabel?: string;
+    openHours?: string;
+    hoursDetails?: string;
+  };
+  [key: string]: any; // Allow for additional properties
+}
+
 export default function IframeContent() {
   // ----------------- State + Reducer -----------------
   const { backgroundColor } = useBuilder();
@@ -57,34 +132,47 @@ export default function IframeContent() {
   const [localSections, setLocalSections] = useState<Section[]>(sections);
 
   // Add headerSettings state
-  const [headerSettings, setHeaderSettings] = useState({
+  const [headerSettings, setHeaderSettings] = useState<HeaderSettings>({
     logo: {
-      text: "Your Brand",
+      text: "Builder",
       showText: true,
     },
     navigation: {
-      items: [
-        { text: "Home", url: "#", isButton: false },
-        { text: "About", url: "#", isButton: false },
-        { text: "Contact", url: "#", isButton: true },
-      ],
+      menuType: "mainMenu",
+      items: [],
     },
     layout: {
-      sticky: true,
+      sticky: false,
       maxWidth: "1200px",
-      currentPreset: "preset1",
+      currentPreset: "default",
       containers: {
         top_left: [],
         top_center: [],
         top_right: [],
-        middle_left: ["logo"],
+        middle_left: [],
         middle_center: [],
-        middle_right: ["cart"],
+        middle_right: [],
         bottom_left: [],
         bottom_center: [],
         bottom_right: [],
         available: [],
       },
+    },
+    search: {
+      show: true,
+      type: "form",
+      placeholder: "Search...",
+      showText: true,
+      behavior: "inline",
+      design: "standard",
+    },
+    account: {
+      showText: true,
+      text: "Account",
+      showIcon: true,
+    },
+    contact: {
+      show: true,
     },
   });
 
@@ -237,6 +325,21 @@ export default function IframeContent() {
     const handleMessage = (event: MessageEvent) => {
       if (!event.data || typeof event.data !== "object") return;
 
+      // Extract headers if present and log them
+      const headers = event.data.headers || {};
+      const messageType = event.data.type;
+
+      // Log all incoming messages with proper debug information
+      console.log(
+        `IFRAME: Received message of type "${messageType}" from parent`,
+        {
+          origin: event.origin,
+          headers,
+          data: event.data,
+        }
+      );
+
+      // Process the message based on type
       const { type } = event.data;
 
       switch (type) {
@@ -255,14 +358,538 @@ export default function IframeContent() {
         }
         case "UPDATE_HEADER_SETTINGS": {
           const { settings } = event.data;
+
+          // If the settings include navIcon, handle it specially
+          if (settings.navIcon) {
+            console.log("IFRAME: Received navIcon settings:", settings.navIcon);
+
+            // Update navIcon elements in the DOM
+            const navIcons = document.querySelectorAll(
+              '[data-item-id="nav_icon"]'
+            );
+            navIcons.forEach((navIcon) => {
+              // Update navIcon with the new settings
+              const container = navIcon.closest(".nav-icon-container");
+              if (container) {
+                // Update drawer settings
+                container.setAttribute(
+                  "data-drawer-effect",
+                  settings.navIcon.drawerEffect || "slide"
+                );
+                container.setAttribute(
+                  "data-drawer-direction",
+                  settings.navIcon.drawerDirection || "left"
+                );
+
+                // Update icon
+                const iconType = settings.navIcon.type || "hamburger";
+                const iconSize = settings.navIcon.iconSize || "24px";
+                const iconColor = settings.navIcon.iconColor || "#333333";
+
+                // Generate SVG based on icon type
+                let iconSvg = "";
+                switch (iconType) {
+                  case "chevron":
+                    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>`;
+                    break;
+                  case "dots":
+                    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>`;
+                    break;
+                  case "justify":
+                    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>`;
+                    break;
+                  default: // hamburger
+                    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg>`;
+                }
+
+                // Find the nav-icon-button or create it
+                let navIconButton = container.querySelector(".nav-icon-button");
+                if (!navIconButton) {
+                  navIconButton = document.createElement("div");
+                  (navIconButton as HTMLElement).className = "nav-icon-button";
+                  (navIconButton as HTMLElement).style.display = "flex";
+                  (navIconButton as HTMLElement).style.alignItems = "center";
+                  (navIconButton as HTMLElement).style.gap = "8px";
+                  container.appendChild(navIconButton);
+                } else {
+                  // Clear existing content
+                  navIconButton.innerHTML = "";
+                }
+
+                // Create content based on position
+                const position = settings.navIcon.position || "right";
+                const showText = settings.navIcon.showText !== false;
+                const text = settings.navIcon.text || "Menu";
+                const textColor = settings.navIcon.textColor || "#333333";
+
+                // Create icon element
+                const iconElement = document.createElement("div");
+                iconElement.innerHTML = iconSvg;
+
+                // Create text element if enabled
+                let textElement;
+                if (showText) {
+                  textElement = document.createElement("span");
+                  textElement.className = "nav-icon-text";
+                  (textElement as HTMLElement).style.color = textColor;
+                  textElement.textContent = text;
+                }
+
+                // Add elements in the right order based on position
+                if (position === "left") {
+                  navIconButton.appendChild(iconElement);
+                  if (textElement) {
+                    navIconButton.appendChild(textElement);
+                  }
+                } else {
+                  if (textElement) {
+                    navIconButton.appendChild(textElement);
+                  }
+                  navIconButton.appendChild(iconElement);
+                }
+              }
+            });
+
+            // Send confirmation back to parent
+            if (window.parent) {
+              try {
+                window.parent.postMessage(
+                  {
+                    type: "NAV_ICON_SETTINGS_UPDATED",
+                    success: true,
+                    timestamp: Date.now(),
+                    headers: {
+                      "Content-Type": "application/json",
+                      "X-Builder-Target":
+                        headers["X-Builder-Source"] || "Unknown",
+                    },
+                  },
+                  event.origin || "*"
+                );
+              } catch (error) {
+                console.error(
+                  "IFRAME: Failed to send nav icon settings confirmation:",
+                  error
+                );
+              }
+            }
+          }
+
+          // If the settings include contact, handle it
+          if (settings.contact) {
+            console.log("IFRAME: Received contact settings:", settings.contact);
+
+            // Update contact elements in the DOM
+            const contactContainers = document.querySelectorAll(
+              '[data-item-id="contact"]'
+            );
+
+            contactContainers.forEach((container) => {
+              // Show/hide based on the show setting
+              if (container instanceof HTMLElement) {
+                if (settings.contact.show === false) {
+                  container.style.display = "none";
+                } else {
+                  container.style.display = "flex";
+                  container.style.flexDirection = "column";
+                  container.style.gap = "5px";
+                }
+              }
+
+              // For creating SVG elements
+              const createSvgElement = (svgPath: string) => {
+                const div = document.createElement("div");
+                div.innerHTML = svgPath;
+                return div.firstChild as SVGElement;
+              };
+
+              // Update or create email if provided
+              if (settings.contact.email) {
+                let emailItem = container.querySelector(".contact-item.email");
+
+                // Create email item if it doesn't exist
+                if (!emailItem) {
+                  emailItem = document.createElement("div");
+                  emailItem.className = "contact-item email";
+                  (emailItem as HTMLElement).style.display = "flex";
+                  (emailItem as HTMLElement).style.alignItems = "center";
+                  (emailItem as HTMLElement).style.gap = "8px";
+
+                  // Create email icon
+                  const emailSvg =
+                    createSvgElement(`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                  </svg>`);
+
+                  // Create label
+                  const label = document.createElement("span");
+                  label.className = "contact-label";
+
+                  // Create value
+                  const value = document.createElement("a");
+                  value.className = "contact-value";
+
+                  // Append everything
+                  emailItem.appendChild(emailSvg);
+                  emailItem.appendChild(label);
+                  emailItem.appendChild(value);
+                  container.appendChild(emailItem);
+                }
+
+                // Update email content
+                const label = emailItem.querySelector(".contact-label");
+                if (label) {
+                  label.textContent = settings.contact.emailLabel
+                    ? `${settings.contact.emailLabel}: `
+                    : "Email: ";
+                }
+
+                const value = emailItem.querySelector(".contact-value");
+                if (value) {
+                  value.textContent = settings.contact.email;
+                  (
+                    value as HTMLAnchorElement
+                  ).href = `mailto:${settings.contact.email}`;
+                }
+              }
+
+              // Update or create phone if provided
+              if (settings.contact.phone) {
+                let phoneItem = container.querySelector(".contact-item.phone");
+
+                // Create phone item if it doesn't exist
+                if (!phoneItem) {
+                  phoneItem = document.createElement("div");
+                  phoneItem.className = "contact-item phone";
+                  (phoneItem as HTMLElement).style.display = "flex";
+                  (phoneItem as HTMLElement).style.alignItems = "center";
+                  (phoneItem as HTMLElement).style.gap = "8px";
+
+                  // Create phone icon
+                  const phoneSvg =
+                    createSvgElement(`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                  </svg>`);
+
+                  // Create value
+                  const value = document.createElement("a");
+                  value.className = "contact-value";
+
+                  // Append everything
+                  phoneItem.appendChild(phoneSvg);
+                  phoneItem.appendChild(value);
+                  container.appendChild(phoneItem);
+                }
+
+                // Update phone content
+                const value = phoneItem.querySelector(".contact-value");
+                if (value) {
+                  value.textContent = settings.contact.phone;
+                  (
+                    value as HTMLAnchorElement
+                  ).href = `tel:${settings.contact.phone}`;
+                }
+              }
+
+              // Update or create location if provided
+              if (settings.contact.location) {
+                let locationItem = container.querySelector(
+                  ".contact-item.location"
+                );
+
+                // Create location item if it doesn't exist
+                if (!locationItem) {
+                  locationItem = document.createElement("div");
+                  locationItem.className = "contact-item location";
+                  (locationItem as HTMLElement).style.display = "flex";
+                  (locationItem as HTMLElement).style.alignItems = "center";
+                  (locationItem as HTMLElement).style.gap = "8px";
+
+                  // Create location icon
+                  const locationSvg =
+                    createSvgElement(`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>`);
+
+                  // Create label
+                  const label = document.createElement("span");
+                  label.className = "contact-label";
+
+                  // Create value
+                  const value = document.createElement("span");
+                  value.className = "contact-value";
+
+                  // Append everything
+                  locationItem.appendChild(locationSvg);
+                  locationItem.appendChild(label);
+                  locationItem.appendChild(value);
+                  container.appendChild(locationItem);
+                }
+
+                // Update location content
+                const label = locationItem.querySelector(".contact-label");
+                if (label) {
+                  label.textContent = settings.contact.locationLabel
+                    ? `${settings.contact.locationLabel}: `
+                    : "Location: ";
+                }
+
+                const value = locationItem.querySelector(".contact-value");
+                if (value) {
+                  value.textContent = settings.contact.location;
+                }
+              }
+
+              // Update or create hours if provided
+              if (settings.contact.openHours || settings.contact.hoursDetails) {
+                let hoursItem = container.querySelector(".contact-item.hours");
+
+                // Create hours item if it doesn't exist
+                if (!hoursItem) {
+                  hoursItem = document.createElement("div");
+                  hoursItem.className = "contact-item hours";
+                  (hoursItem as HTMLElement).style.display = "flex";
+                  (hoursItem as HTMLElement).style.alignItems = "center";
+                  (hoursItem as HTMLElement).style.gap = "8px";
+                  (hoursItem as HTMLElement).style.position = "relative";
+
+                  // Create hours icon
+                  const hoursSvg =
+                    createSvgElement(`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>`);
+
+                  // Create label
+                  const label = document.createElement("span");
+                  label.className = "contact-label";
+
+                  // Create details popup
+                  const details = document.createElement("div");
+                  details.className = "contact-hours-details";
+                  (details as HTMLElement).style.display = "none";
+                  (details as HTMLElement).style.position = "absolute";
+                  (details as HTMLElement).style.background = "white";
+                  (details as HTMLElement).style.padding = "10px";
+                  (details as HTMLElement).style.border = "1px solid #eee";
+                  (details as HTMLElement).style.borderRadius = "4px";
+                  (details as HTMLElement).style.boxShadow =
+                    "0 2px 8px rgba(0,0,0,0.1)";
+                  (details as HTMLElement).style.zIndex = "100";
+                  (details as HTMLElement).style.whiteSpace = "pre-line";
+                  (details as HTMLElement).style.top = "100%";
+                  (details as HTMLElement).style.left = "0";
+
+                  // Append everything
+                  hoursItem.appendChild(hoursSvg);
+                  hoursItem.appendChild(label);
+                  hoursItem.appendChild(details);
+                  container.appendChild(hoursItem);
+                }
+
+                // Update hours content
+                const label = hoursItem.querySelector(".contact-label");
+                if (label && settings.contact.openHours) {
+                  label.textContent = settings.contact.openHours;
+                }
+
+                const details = hoursItem.querySelector(
+                  ".contact-hours-details"
+                );
+                if (details && settings.contact.hoursDetails) {
+                  details.innerHTML = settings.contact.hoursDetails.replace(
+                    /\n/g,
+                    "<br>"
+                  );
+                }
+
+                // Add hover effect to show hours details
+                (hoursItem as HTMLElement).onmouseenter = () => {
+                  if (details) {
+                    (details as HTMLElement).style.display = "block";
+                  }
+                };
+
+                (hoursItem as HTMLElement).onmouseleave = () => {
+                  if (details) {
+                    (details as HTMLElement).style.display = "none";
+                  }
+                };
+              }
+            });
+          }
+
           setHeaderSettings((prev) => ({ ...prev, ...settings }));
           break;
         }
-        case "UPDATE_FOOTER_SETTINGS": {
-          const { settings } = event.data;
-          setFooterSettings((prev) => ({ ...prev, ...settings }));
+
+        // Add handlers for the search-specific message types
+        case "TEST_IFRAME_COMMUNICATION": {
+          console.log("TEST: Received test communication message from parent", {
+            timestamp: event.data.timestamp,
+            headers: headers,
+          });
+
+          // Send acknowledgment back to parent
+          if (window.parent) {
+            try {
+              window.parent.postMessage(
+                {
+                  type: "TEST_COMMUNICATION_RECEIVED",
+                  success: true,
+                  timestamp: Date.now(),
+                  originalTimestamp: event.data.timestamp,
+                  headers: {
+                    "Content-Type": "application/json",
+                    "X-Builder-Target":
+                      headers["X-Builder-Source"] || "Unknown",
+                  },
+                },
+                event.origin || "*"
+              );
+
+              console.log("TEST: Sent acknowledgment back to parent");
+            } catch (error) {
+              console.error("TEST: Failed to send acknowledgment:", error);
+            }
+          }
           break;
         }
+
+        case "INITIALIZE_SEARCH_SETTINGS": {
+          console.log("SEARCH: Received initial search settings from parent", {
+            settings: event.data.settings,
+            headers: headers,
+          });
+
+          // Apply the search settings
+          if (event.data.settings) {
+            setHeaderSettings((prev) => ({
+              ...prev,
+              search: {
+                ...prev.search,
+                ...event.data.settings,
+              },
+            }));
+
+            // Send confirmation back to parent
+            if (window.parent) {
+              try {
+                window.parent.postMessage(
+                  {
+                    type: "SEARCH_SETTINGS_RECEIVED",
+                    success: true,
+                    timestamp: Date.now(),
+                    headers: {
+                      "Content-Type": "application/json",
+                      "X-Builder-Target":
+                        headers["X-Builder-Source"] || "Unknown",
+                    },
+                  },
+                  event.origin || "*"
+                );
+              } catch (error) {
+                console.error(
+                  "SEARCH: Failed to send settings confirmation:",
+                  error
+                );
+              }
+            }
+          }
+          break;
+        }
+
+        case "DIRECT_SEARCH_SETTING_UPDATE": {
+          console.log("SEARCH: Received direct search setting update", {
+            key: event.data.key,
+            value: event.data.value,
+            headers: headers,
+          });
+
+          // Apply the specific search setting update
+          if (event.data.key) {
+            setHeaderSettings((prev) => ({
+              ...prev,
+              search: {
+                ...prev.search,
+                [event.data.key]: event.data.value,
+              },
+            }));
+
+            // Send confirmation back to parent
+            if (window.parent) {
+              try {
+                window.parent.postMessage(
+                  {
+                    type: "SEARCH_SETTING_UPDATE_RECEIVED",
+                    key: event.data.key,
+                    value: event.data.value,
+                    success: true,
+                    timestamp: Date.now(),
+                    headers: {
+                      "Content-Type": "application/json",
+                      "X-Builder-Target":
+                        headers["X-Builder-Source"] || "Unknown",
+                    },
+                  },
+                  event.origin || "*"
+                );
+              } catch (error) {
+                console.error(
+                  "SEARCH: Failed to send update confirmation:",
+                  error
+                );
+              }
+            }
+          }
+          break;
+        }
+
+        case "FULL_SEARCH_SETTINGS_UPDATE": {
+          console.log("SEARCH: Received full search settings update", {
+            settings: event.data.settings,
+            headers: headers,
+          });
+
+          // Apply the full search settings update
+          if (event.data.settings) {
+            setHeaderSettings((prev) => ({
+              ...prev,
+              search: {
+                ...prev.search,
+                ...event.data.settings,
+              },
+            }));
+
+            // Send confirmation back to parent
+            if (window.parent) {
+              try {
+                window.parent.postMessage(
+                  {
+                    type: "FULL_SEARCH_SETTINGS_RECEIVED",
+                    success: true,
+                    timestamp: Date.now(),
+                    headers: {
+                      "Content-Type": "application/json",
+                      "X-Builder-Target":
+                        headers["X-Builder-Source"] || "Unknown",
+                    },
+                  },
+                  event.origin || "*"
+                );
+              } catch (error) {
+                console.error(
+                  "SEARCH: Failed to send full update confirmation:",
+                  error
+                );
+              }
+            }
+          }
+          break;
+        }
+
         case "SECTION_SELECTED": {
           setIsHeaderSelected(false);
           setIsFooterSelected(false);
@@ -308,8 +935,25 @@ export default function IframeContent() {
             setHeaderSettings((prevSettings) => ({
               ...prevSettings,
               layout: {
-                ...prevSettings.layout,
-                currentPreset: presetId || prevSettings.layout.currentPreset,
+                ...(prevSettings.layout || {
+                  sticky: false,
+                  maxWidth: "1200px",
+                  currentPreset: "",
+                  containers: {
+                    top_left: [],
+                    top_center: [],
+                    top_right: [],
+                    middle_left: [],
+                    middle_center: [],
+                    middle_right: [],
+                    bottom_left: [],
+                    bottom_center: [],
+                    bottom_right: [],
+                    available: [],
+                  },
+                }),
+                currentPreset:
+                  presetId || prevSettings.layout?.currentPreset || "default",
                 // Store all layout data from the preset
                 topLeft: layoutData.top_left || [],
                 topCenter: layoutData.top_center || [],
@@ -337,6 +981,76 @@ export default function IframeContent() {
           }
           break;
         }
+
+        case "EXECUTE_DIRECT_SCRIPT": {
+          console.log("IFRAME: Received script to execute directly");
+
+          if (typeof event.data.script === "string") {
+            try {
+              // Execute the script in the iframe context
+              // Using Function constructor to avoid eval directly
+              const scriptFunction = new Function(event.data.script);
+              scriptFunction();
+
+              // Send confirmation back to parent
+              if (window.parent) {
+                try {
+                  window.parent.postMessage(
+                    {
+                      type: "SCRIPT_EXECUTION_COMPLETE",
+                      success: true,
+                      timestamp: Date.now(),
+                      headers: {
+                        "Content-Type": "application/json",
+                        "X-Builder-Target":
+                          headers["X-Builder-Source"] || "Unknown",
+                      },
+                    },
+                    event.origin || "*"
+                  );
+                } catch (error) {
+                  console.error(
+                    "IFRAME: Failed to send script execution confirmation:",
+                    error
+                  );
+                }
+              }
+            } catch (error) {
+              console.error("IFRAME: Error executing script:", error);
+
+              // Send error back to parent
+              if (window.parent) {
+                try {
+                  window.parent.postMessage(
+                    {
+                      type: "SCRIPT_EXECUTION_ERROR",
+                      error: String(error),
+                      timestamp: Date.now(),
+                      headers: {
+                        "Content-Type": "application/json",
+                        "X-Builder-Target":
+                          headers["X-Builder-Source"] || "Unknown",
+                      },
+                    },
+                    event.origin || "*"
+                  );
+                } catch (sendError) {
+                  console.error(
+                    "IFRAME: Failed to send error message:",
+                    sendError
+                  );
+                }
+              }
+            }
+          } else {
+            console.error(
+              "IFRAME: Received invalid script:",
+              event.data.script
+            );
+          }
+          break;
+        }
+
         default:
           break;
       }
@@ -511,12 +1225,6 @@ export default function IframeContent() {
           break;
         }
 
-        case "UPDATE_BACKGROUND_COLOR": {
-          const { backgroundColor } = event.data;
-          document.body.style.backgroundColor = backgroundColor;
-          break;
-        }
-
         case "UPDATE_HEADER": {
           const { settings } = event.data;
           const header = document.querySelector("header");
@@ -548,12 +1256,6 @@ export default function IframeContent() {
           if (customStyleElement) {
             customStyleElement.textContent = settings.customCSS;
           }
-          break;
-        }
-
-        case "UPDATE_HEADER_SETTINGS": {
-          const { settings } = event.data;
-          setHeaderSettings((prev) => ({ ...prev, ...settings }));
           break;
         }
 
@@ -755,51 +1457,318 @@ export default function IframeContent() {
     return sectionRefs.current[sectionId];
   }, []);
 
+  // Add these handlers for nav icon functionality in the iframe
   useEffect(() => {
-    const handleHeaderLayoutMessage = (event: MessageEvent) => {
-      if (event.data.type === "UPDATE_HEADER_LAYOUT") {
-        console.log(
-          "Iframe received UPDATE_HEADER_LAYOUT message:",
-          event.data
-        );
+    // Handler function for navigation icon clicks
+    const handleNavIconClick = (event: Event) => {
+      event.preventDefault();
 
-        try {
-          const { presetId, ...layoutData } = event.data;
+      console.log("IFRAME: Navigation icon clicked, sending settings message");
 
-          // Extract the containers from the message
-          const containers = {
-            top_left: layoutData.top_left || [],
-            top_center: layoutData.top_center || [],
-            top_right: layoutData.top_right || [],
-            middle_left: layoutData.middle_left || [],
-            middle_center: layoutData.middle_center || [],
-            middle_right: layoutData.middle_right || [],
-            bottom_left: layoutData.bottom_left || [],
-            bottom_center: layoutData.bottom_center || [],
-            bottom_right: layoutData.bottom_right || [],
-            available: layoutData.available || [],
-          };
+      // Send message to open the navigation icon settings
+      window.parent.postMessage(
+        {
+          type: "HEADER_SETTING_SELECTED",
+          settingId: "nav_icon",
+          submenu: "Navigation Icon",
+          itemType: "nav_icon",
+          source: "nav-icon-click",
+          timestamp: Date.now(),
+          directNav: true,
+        },
+        "*"
+      );
 
-          // Update header settings with the new layout
-          setHeaderSettings((prev) => ({
-            ...prev,
-            layout: {
-              ...prev.layout,
-              currentPreset: presetId,
-              containers: containers,
-            },
-          }));
+      console.log("IFRAME: Message sent to open Navigation Icon settings");
 
-          console.log("Header layout updated in iframe:", containers);
-        } catch (error) {
-          console.error("Error updating header layout in iframe:", error);
+      // Get the drawer settings from the clicked nav icon
+      const container = (event.currentTarget as HTMLElement).closest(
+        ".nav-icon-container"
+      );
+      if (!container) return;
+
+      const drawerEffect =
+        container.getAttribute("data-drawer-effect") || "slide";
+      const drawerDirection =
+        container.getAttribute("data-drawer-direction") || "left";
+
+      // Create or get drawer
+      let drawer = document.getElementById("nav-drawer");
+      if (!drawer) {
+        drawer = document.createElement("div");
+        drawer.id = "nav-drawer";
+        document.body.appendChild(drawer);
+      }
+
+      // Set drawer styles based on effect and direction
+      drawer.className = `nav-drawer ${drawerEffect}-${drawerDirection}`;
+
+      // Create drawer content
+      drawer.innerHTML = `
+        <div class="nav-drawer-overlay"></div>
+        <div class="nav-drawer-content">
+          <div class="nav-drawer-header">
+            <button class="nav-drawer-close">×</button>
+          </div>
+          <div class="nav-drawer-body">
+            <nav>
+              <ul>
+                <li><a href="#">Home</a></li>
+                <li><a href="#">About</a></li>
+                <li><a href="#">Services</a></li>
+                <li><a href="#">Products</a></li>
+                <li><a href="#">Contact</a></li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      `;
+
+      // Add CSS for drawer
+      const style =
+        document.getElementById("nav-drawer-style") ||
+        document.createElement("style");
+      style.id = "nav-drawer-style";
+      style.textContent = `
+        .nav-drawer {
+          position: fixed;
+          z-index: 1000;
+          top: 0;
+          width: 300px;
+          height: 100%;
+          background: white;
+          box-shadow: 0 0 10px rgba(0,0,0,0.2);
+          transition: transform 0.3s ease, opacity 0.3s ease;
         }
+        
+        .nav-drawer-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0,0,0,0.5);
+          z-index: -1;
+        }
+        
+        .nav-drawer-content {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          overflow-y: auto;
+        }
+        
+        .nav-drawer-header {
+          padding: 15px;
+          border-bottom: 1px solid #eee;
+          display: flex;
+          justify-content: flex-end;
+        }
+        
+        .nav-drawer-close {
+          background: none;
+          border: none;
+          font-size: 24px;
+          cursor: pointer;
+        }
+        
+        .nav-drawer-body {
+          padding: 20px;
+          flex: 1;
+        }
+        
+        .nav-drawer-body ul {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+        
+        .nav-drawer-body li {
+          margin-bottom: 15px;
+        }
+        
+        .nav-drawer-body a {
+          color: #333;
+          text-decoration: none;
+          font-size: 18px;
+          display: block;
+          padding: 5px 0;
+        }
+        
+        /* Slide effect */
+        .slide-left {
+          left: 0;
+          transform: translateX(-100%);
+        }
+        
+        .slide-left.active {
+          transform: translateX(0);
+        }
+        
+        .slide-right {
+          right: 0;
+          transform: translateX(100%);
+        }
+        
+        .slide-right.active {
+          transform: translateX(0);
+        }
+        
+        /* Fade effect */
+        .fade-left, .fade-right {
+          opacity: 0;
+          pointer-events: none;
+        }
+        
+        .fade-left {
+          left: 0;
+        }
+        
+        .fade-right {
+          right: 0;
+        }
+        
+        .fade-left.active, .fade-right.active {
+          opacity: 1;
+          pointer-events: auto;
+        }
+        
+        /* Push effect */
+        .push-left {
+          left: 0;
+          transform: translateX(-100%);
+        }
+        
+        .push-right {
+          right: 0;
+          transform: translateX(100%);
+        }
+        
+        /* Top drawer */
+        .slide-top, .fade-top, .push-top {
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 300px;
+          transform: translateY(-100%);
+        }
+        
+        .slide-top.active, .push-top.active {
+          transform: translateY(0);
+        }
+        
+        .fade-top {
+          opacity: 0;
+          pointer-events: none;
+        }
+        
+        .fade-top.active {
+          opacity: 1;
+          pointer-events: auto;
+        }
+      `;
+      document.head.appendChild(style);
+
+      // Show drawer
+      setTimeout(() => {
+        drawer.classList.add("active");
+
+        // Push page content if using push effect
+        if (drawerEffect === "push") {
+          const mainContent = document.querySelector("main");
+          if (mainContent) {
+            if (drawerDirection === "left") {
+              (mainContent as HTMLElement).style.transition =
+                "transform 0.3s ease";
+              (mainContent as HTMLElement).style.transform =
+                "translateX(300px)";
+            } else if (drawerDirection === "right") {
+              (mainContent as HTMLElement).style.transition =
+                "transform 0.3s ease";
+              (mainContent as HTMLElement).style.transform =
+                "translateX(-300px)";
+            } else if (drawerDirection === "top") {
+              (mainContent as HTMLElement).style.transition =
+                "transform 0.3s ease";
+              (mainContent as HTMLElement).style.transform =
+                "translateY(300px)";
+            }
+          }
+        }
+      }, 10);
+
+      // Add close event handler
+      setTimeout(() => {
+        const closeBtn = drawer.querySelector(".nav-drawer-close");
+        const overlay = drawer.querySelector(".nav-drawer-overlay");
+
+        const closeDrawer = () => {
+          drawer.classList.remove("active");
+
+          // Reset content transform if using push effect
+          if (drawerEffect === "push") {
+            const mainContent = document.querySelector("main");
+            if (mainContent) {
+              (mainContent as HTMLElement).style.transform = "";
+            }
+          }
+
+          // Remove drawer after animation completes
+          setTimeout(() => {
+            if (drawer.parentNode) {
+              drawer.parentNode.removeChild(drawer);
+            }
+          }, 300);
+        };
+
+        if (closeBtn) {
+          closeBtn.addEventListener("click", closeDrawer);
+        }
+
+        if (overlay) {
+          overlay.addEventListener("click", closeDrawer);
+        }
+      }, 50);
+    };
+
+    // Function to add click listeners to all nav icons
+    const attachNavIconListeners = () => {
+      // Find all navigation icons
+      const navIcons = document.querySelectorAll('[data-item-id="nav_icon"]');
+
+      // Add click event listeners
+      navIcons.forEach((navIcon) => {
+        // First remove any existing click listeners (safer approach than node replacement)
+        navIcon.removeEventListener("click", handleNavIconClick);
+
+        // Then add the click event listener
+        navIcon.addEventListener("click", handleNavIconClick);
+      });
+    };
+
+    // Initial setup of listeners
+    attachNavIconListeners();
+
+    // Setup event listener for when header settings are updated (to re-attach listeners)
+    const messageHandler = (event: MessageEvent) => {
+      if (event.data && event.data.type === "UPDATE_HEADER_SETTINGS") {
+        // Wait a moment for DOM to update before re-attaching listeners
+        setTimeout(attachNavIconListeners, 100);
       }
     };
 
-    window.addEventListener("message", handleHeaderLayoutMessage);
-    return () =>
-      window.removeEventListener("message", handleHeaderLayoutMessage);
+    window.addEventListener("message", messageHandler);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("message", messageHandler);
+
+      // Remove click listeners
+      const navIcons = document.querySelectorAll('[data-item-id="nav_icon"]');
+      navIcons.forEach((navIcon) => {
+        navIcon.removeEventListener("click", handleNavIconClick);
+      });
+    };
   }, []);
 
   // ----------------- RENDER -----------------

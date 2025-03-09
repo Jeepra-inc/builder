@@ -328,7 +328,6 @@ export default function MultiLevelSidebar({
           currentMenu.title === "Top Bar Setting" ||
           currentMenu.title === "Header Main Setting" ||
           currentMenu.title === "Header Bottom Setting" ||
-          currentMenu.title === "Header Navigation Setting" ||
           currentMenu.title === "Header Search Setting" ||
           currentMenu.title === "Buttons" ||
           currentMenu.title === "Social" ||

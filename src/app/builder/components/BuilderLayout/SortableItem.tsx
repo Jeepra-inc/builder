@@ -9,11 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Copy, Trash2, GripVertical, Eye, EyeOff } from "lucide-react";
-import {
-  SortableItemProps,
-  ExtendedSortableArguments,
-  ActionButtonProps,
-} from "@/app/builder/types";
+import { SortableItemProps, ActionButtonProps } from "@/app/builder/types";
 
 // Reusable action button component
 const ActionButton = ({

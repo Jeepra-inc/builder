@@ -240,6 +240,12 @@ export interface IframeMessage {
   sectionId?: string;
   isVisible?: boolean;
   sections?: Section[];
+  source?: string;
+  moveInfo?: {
+    sectionId: string;
+    oldIndex: number;
+    newIndex: number;
+  };
 }
 
 export interface IframeContentProps {

@@ -192,3 +192,105 @@
   opacity: 0.5;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 }
+
+/* Improved CSS for search elements with better responsiveness */
+.search-wrapper {
+  display: block;
+  width: 100%;
+}
+
+.search-container,
+.search-box {
+  position: relative;
+  transition: all 0.3s ease;
+  will-change: transform, opacity;
+}
+
+.search-updated {
+  animation: search-highlight 0.5s ease-in-out;
+}
+
+@keyframes search-highlight {
+  0% {
+    transform: scale(0.98);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Force repaint trick */
+[data-timestamp] {
+  contain: content;
+}
+
+.search-container input,
+.search-box input {
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.search-type-icon .search-icon-button {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.search-type-form {
+  min-width: 200px;
+  display: flex;
+}
+
+/* Style variants with more pronounced visuals */
+.search-minimal {
+  background: #f9f9f9;
+  transition: all 0.3s ease;
+}
+
+.search-minimal:hover,
+.search-minimal:focus-within {
+  background: #f0f0f0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.search-bordered {
+  border: 2px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.search-bordered:focus-within {
+  border-color: #a0a0a0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.search-rounded {
+  border-radius: 9999px !important;
+  padding-left: 0.75rem;
+  padding-right: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.search-rounded:focus-within {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.search-underlined {
+  border-radius: 0 !important;
+  border-bottom: 2px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.search-underlined:focus-within {
+  border-bottom-color: #a0a0a0;
+}

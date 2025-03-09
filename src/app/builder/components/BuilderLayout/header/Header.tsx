@@ -31,6 +31,7 @@ import {
   getColorSchemeStyles,
 } from "@/app/builder/utils/colorSchemeUtils";
 import DOMPurify from "dompurify";
+import menuItemsData from "@/app/builder/data/menu-items.json";
 
 // Add CSS for header item hover effects
 const headerItemStyles = `
@@ -107,6 +108,54 @@ interface HeaderSettings {
     iconSize?: string;
     iconStyle?: string; // New property for icon style variants
   };
+  contact?: {
+    show?: boolean;
+    email?: string;
+    emailLabel?: string;
+    phone?: string;
+    location?: string;
+    locationLabel?: string;
+    openHours?: string;
+    hoursDetails?: string;
+  };
+  navigation?: {
+    menuType: string;
+    items: any[];
+  };
+  search?: {
+    show: boolean;
+    type: string;
+    placeholder?: string;
+    rounded?: number;
+    showText: boolean;
+    behavior: string;
+    design: string;
+    style?: string;
+    shape?: string;
+    showIcon?: boolean;
+    iconPosition?: string;
+    iconColor?: string;
+    iconSize?: string;
+    fontSize?: string;
+    textColor?: string;
+    width?: string;
+    showButton?: boolean;
+    buttonText?: string;
+    buttonColor?: string;
+    buttonTextColor?: string;
+  };
+  navIcon?: {
+    show: boolean;
+    type: string; // hamburger, dots, chevron, etc.
+    showText: boolean;
+    text: string;
+    position: string; // left, right
+    drawerEffect: string; // slide, fade, push
+    drawerDirection: string; // left, right, top
+    iconSize: string;
+    iconColor?: string;
+    textColor?: string;
+  };
 }
 
 interface HeaderProps {
@@ -132,14 +181,21 @@ const HTMLContentMap: Record<string, string> = {
       <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
            </svg>
          </div>`,
-  search: `<div class="search-box">
-    <input type="text" placeholder="Search..." class="px-3 py-2 border rounded" />
-    <button class="search-icon ml-2">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-    </button>
+  contact: `<div class="contact-info-container" data-item-id="contact" style="display: flex; flex-direction: column; gap: 5px;">
+    <div class="contact-item email" style="display: flex; align-items: center; gap: 8px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+        <polyline points="22,6 12,13 2,6"></polyline>
+      </svg>
+      <span class="contact-label">Email: </span>
+      <a href="mailto:contact@example.com" class="contact-value">contact@example.com</a>
+    </div>
+    <div class="contact-item phone" style="display: flex; align-items: center; gap: 8px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+      </svg>
+      <a href="tel:+1234567890" class="contact-value">(123) 456-7890</a>
+    </div>
   </div>`,
   mainMenu: `<nav class="main-menu">
     <ul class="flex gap-6">
@@ -156,25 +212,13 @@ const HTMLContentMap: Record<string, string> = {
       <li class="hover:underline cursor-pointer">Store Locator</li>
     </ul>
   </div>`,
-  followIcons: `<div class="social-icons flex gap-3">
-    <a href="#" class="hover:text-primary">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-               </svg>
-    </a>
-    <a href="#" class="hover:text-primary">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-      </svg>
-    </a>
-    <a href="#" class="hover:text-primary">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
-      </svg>
-             </a>
-           </div>`,
+  bottomMenu: `<div class="bottom-bar-menu">
+    <ul class="flex gap-4 text-sm">
+      <li class="hover:underline cursor-pointer">Terms</li>
+      <li class="hover:underline cursor-pointer">Privacy</li>
+      <li class="hover:underline cursor-pointer">Returns</li>
+    </ul>
+  </div>`,
   nav_icon: `<button class="flex items-center">
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -187,12 +231,6 @@ const HTMLContentMap: Record<string, string> = {
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path>
     </svg>
-          </div>`,
-  contact: `<div class="contact-info flex items-center">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
-      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-    </svg>
-    <span>+1 234 567 890</span>
           </div>`,
   social_icon: `<div class="social-icon-group flex gap-2">
     <a href="#" class="social-icon hover:text-primary">
@@ -227,6 +265,10 @@ const defaultHeaderSettings: HeaderSettings = {
   mainBarColorScheme: "light", // Default for main section
   bottomBarColorScheme: "light", // Default for bottom section
   showTopBarButton: false,
+  navigation: {
+    menuType: "mainMenu",
+    items: menuItemsData.mainMenu.items,
+  },
 };
 
 function debounce<F extends (...args: any[]) => any>(
@@ -269,8 +311,27 @@ export default function Header({
   }, [settings]);
 
   // State to store the header settings
-  const [headerSettings, setHeaderSettings] =
-    useState<HeaderSettings>(initHeaderSettings);
+  const [headerSettings, setHeaderSettings] = useState<HeaderSettings>({
+    topBarVisible: true,
+    topBarHeight: 40,
+    showTopBarButton: false,
+    topBarColorScheme: "light",
+    mainBarColorScheme: "light", // Default for main section
+    bottomBarColorScheme: "light", // Default for bottom section
+    search: {
+      show: true,
+      type: "form",
+      placeholder: "Search...",
+      rounded: 4,
+      showText: true,
+      behavior: "inline",
+      design: "standard",
+    },
+    navigation: {
+      menuType: "mainMenu",
+      items: menuItemsData.mainMenu.items,
+    },
+  });
 
   // Add state for color scheme styles for all three sections
   const [topBarStyles, setTopBarStyles] = useState<{
@@ -398,6 +459,8 @@ export default function Header({
   // Initialize layout items using containers from settings
   useEffect(() => {
     console.log("useEffect: initializing layout items from headerSettings");
+    console.log("Current headerSettings:", headerSettings);
+
     // Check if we have containers defined in the layout settings
     if (headerSettings.layout && headerSettings.layout.containers) {
       const containers = headerSettings.layout.containers;
@@ -416,6 +479,25 @@ export default function Header({
         bottom_right: containers.bottom_right || [],
         available: containers.available || [],
       };
+
+      // Make sure contact is included in the top_right section if it's not already included elsewhere
+      const allSections = [
+        ...newLayoutItems.top_left,
+        ...newLayoutItems.top_center,
+        ...newLayoutItems.top_right,
+        ...newLayoutItems.middle_left,
+        ...newLayoutItems.middle_center,
+        ...newLayoutItems.middle_right,
+        ...newLayoutItems.bottom_left,
+        ...newLayoutItems.bottom_center,
+        ...newLayoutItems.bottom_right,
+      ];
+
+      // Add contact to top_right if it's not included elsewhere
+      if (!allSections.includes("contact")) {
+        console.log("Adding contact to top_right section");
+        newLayoutItems.top_right.push("contact");
+      }
 
       // Update layout items
       console.log("Setting layout items to:", newLayoutItems);
@@ -436,35 +518,133 @@ export default function Header({
       // Set default layout items if no containers in settings
       console.log("No layout containers found in settings, using defaults");
 
-      // Default layout with common items
-      const defaultLayout = {
-        top_left: [] as string[],
-        top_center: [] as string[],
-        top_right: [] as string[],
-        middle_left: ["mainMenu"] as string[],
-        middle_center: ["logo"] as string[],
-        middle_right: ["account", "cart"] as string[],
-        bottom_left: ["search"] as string[],
-        bottom_center: [] as string[],
-        bottom_right: [] as string[],
-        available: [
-          "html_block_1",
-          "html_block_2",
-          "html_block_3",
-          "html_block_4",
-          "html_block_5",
-        ] as string[],
+      // Apply the default layout if no valid preset is found
+      const defaultLayout: HeaderLayout = {
+        top_left: [],
+        top_center: [],
+        top_right: ["contact"],
+        middle_left: ["logo"],
+        middle_center: ["mainMenu"],
+        middle_right: ["account", "cart"],
+        bottom_left: [],
+        bottom_center: [],
+        bottom_right: [],
+        available: [],
       };
 
       setLayoutItems(defaultLayout);
     }
   }, [headerSettings.layout]);
 
+  // Enhance the search settings handler to completely regenerate the search component
+  const handleSearchSettingsMessage = (data: any) => {
+    if (data && data.settings) {
+      console.log(
+        "SEARCH DEBUG: Received search settings update:",
+        JSON.stringify(data.settings)
+      );
+
+      // Ensure the type property is correctly extracted
+      const updatedType = data.settings.type;
+      console.log("SEARCH DEBUG: Extracted type from update:", updatedType);
+
+      // Preserve _timestamp if sent
+      const timestamp = data.settings._timestamp || Date.now();
+
+      // Update the settings in state
+      setHeaderSettings((prev) => {
+        // Create comprehensive updated settings object
+        const updatedSettings = {
+          ...prev,
+          search: {
+            ...prev.search,
+            ...data.settings,
+            // Ensure type is explicitly set if provided
+            ...(updatedType ? { type: updatedType } : {}),
+          },
+        };
+
+        console.log(
+          "SEARCH DEBUG: New header settings search object:",
+          JSON.stringify(updatedSettings.search)
+        );
+
+        // IMPORTANT: Force immediate DOM regeneration of search components
+        setTimeout(() => {
+          try {
+            const searchContainers = document.querySelectorAll(
+              '[data-item-id="search"]'
+            );
+
+            if (searchContainers.length > 0) {
+              console.log(
+                "SEARCH DEBUG: Found search containers to update:",
+                searchContainers.length
+              );
+
+              // Regenerate search HTML for each container
+              searchContainers.forEach((container) => {
+                if (container instanceof HTMLElement) {
+                  // Generate fresh HTML with updated settings
+                  const freshHtml = DOMPurify.sanitize(
+                    generateSearchHTML(updatedSettings)
+                  );
+
+                  console.log(
+                    `SEARCH DEBUG: New HTML type attribute check: ${
+                      freshHtml.includes('data-search-type="icon"')
+                        ? "ICON"
+                        : freshHtml.includes('data-search-type="expandable"')
+                        ? "EXPANDABLE"
+                        : "FORM"
+                    }`
+                  );
+
+                  // First add animation class
+                  container.classList.add("search-updated");
+
+                  // Then replace the HTML content
+                  container.innerHTML = freshHtml;
+
+                  // Force a reflow
+                  void container.offsetHeight;
+
+                  // Remove animation class after animation completes
+                  setTimeout(() => {
+                    container.classList.remove("search-updated");
+                  }, 500);
+
+                  console.log(
+                    "SEARCH DEBUG: Regenerated search component with new settings"
+                  );
+                }
+              });
+            } else {
+              console.warn(
+                "SEARCH DEBUG: No search containers found in the DOM"
+              );
+            }
+          } catch (error) {
+            console.error(
+              "SEARCH DEBUG: Error refreshing search components:",
+              error
+            );
+          }
+        }, 10);
+
+        return updatedSettings;
+      });
+    }
+  };
+
+  // Find the useEffect where message handling occurs and update it
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (!event.data || typeof event.data !== "object") return;
 
-      switch (event.data.type) {
+      const { type, data } = event.data;
+
+      switch (type) {
         case "UPDATE_LAYOUT_ITEMS":
           try {
             console.log("Received UPDATE_LAYOUT_ITEMS:", event.data);
@@ -573,6 +753,18 @@ export default function Header({
               ...htmlUpdates,
             }));
           }
+
+          // Handle search settings specifically if present
+          if (event.data.settings && event.data.settings.search) {
+            handleSearchSettingsMessage({
+              settings: event.data.settings.search,
+            });
+          }
+
+          // Update other header settings
+          if (event.data.settings) {
+            setHeaderSettings((prev) => ({ ...prev, ...event.data.settings }));
+          }
           break;
 
         case "HEADER_GET_STATE":
@@ -654,6 +846,458 @@ export default function Header({
           }
           break;
 
+        case "UPDATE_NAVIGATION":
+          const { menuType, items } = event.data;
+
+          setHeaderSettings((prevSettings) => {
+            return {
+              ...prevSettings,
+              navigation: {
+                ...prevSettings.navigation,
+                menuType,
+                items,
+              },
+            };
+          });
+          break;
+
+        case "UPDATE_SEARCH_SETTINGS":
+          handleSearchSettingsMessage(event.data);
+          break;
+
+        case "FORCE_SEARCH_UPDATE":
+          // Force complete regeneration of all search elements
+          console.log(
+            "SEARCH DEBUG: Received FORCE_SEARCH_UPDATE command, timestamp:",
+            event.data.timestamp
+          );
+
+          // Log the current search settings
+          console.log(
+            "SEARCH DEBUG: Current headerSettings.search:",
+            JSON.stringify(headerSettings.search)
+          );
+
+          try {
+            // Get all containers with search components
+            const searchContainers = document.querySelectorAll(
+              '[data-item-id="search"]'
+            );
+
+            if (searchContainers.length > 0) {
+              console.log(
+                "SEARCH DEBUG: Forcing update of",
+                searchContainers.length,
+                "search containers"
+              );
+
+              // Regenerate each search container with current settings
+              searchContainers.forEach((container) => {
+                if (container instanceof HTMLElement) {
+                  // Add animation class first
+                  container.classList.add("search-updated");
+
+                  // Regenerate the search HTML with current settings
+                  const freshHtml = DOMPurify.sanitize(
+                    generateSearchHTML(headerSettings)
+                  );
+
+                  // Debug type in generated HTML
+                  console.log(
+                    `SEARCH DEBUG: Force update generated HTML type: ${
+                      freshHtml.includes('data-search-type="icon"')
+                        ? "ICON"
+                        : freshHtml.includes('data-search-type="expandable"')
+                        ? "EXPANDABLE"
+                        : "FORM"
+                    }`
+                  );
+
+                  // Replace content completely
+                  container.innerHTML = freshHtml;
+
+                  // Force browser repaint by manipulating display
+                  const currentDisplay =
+                    window.getComputedStyle(container).display;
+                  container.style.display = "none";
+                  void container.offsetHeight; // Force reflow
+                  container.style.display = currentDisplay;
+
+                  // Add extra visual indication of update
+                  container.style.outline = "2px solid rgba(59, 130, 246, 0.5)";
+
+                  // Remove animation class and outline after delay
+                  setTimeout(() => {
+                    container.classList.remove("search-updated");
+                    container.style.outline = "";
+                  }, 800);
+                }
+              });
+
+              console.log("SEARCH DEBUG: All search containers regenerated");
+            } else {
+              console.warn(
+                "SEARCH DEBUG: No search containers found to force-update"
+              );
+            }
+          } catch (error) {
+            console.error(
+              "SEARCH DEBUG: Error during forced search update:",
+              error
+            );
+          }
+          break;
+
+        case "TEST_IFRAME_COMMUNICATION":
+          console.log(
+            "TEST: Successfully received test message in iframe!",
+            event.data.timestamp
+          );
+
+          // Send back acknowledgment to parent window
+          if (window.parent && event.source) {
+            try {
+              // Acknowledge receipt of the test message
+              window.parent.postMessage(
+                {
+                  type: "TEST_COMMUNICATION_RECEIVED",
+                  timestamp: Date.now(),
+                  originalTimestamp: event.data.timestamp,
+                  success: true,
+                  headers: event.data.headers || {
+                    "Content-Type": "application/json",
+                    "X-Builder-Target": "HeaderSearchSettings",
+                  },
+                },
+                event.origin || "*"
+              );
+
+              console.log("TEST: Sent acknowledgment back to parent window");
+            } catch (error) {
+              console.error("TEST: Failed to send acknowledgment:", error);
+            }
+          }
+          break;
+
+        case "INITIALIZE_SEARCH_SETTINGS":
+          console.log(
+            "TEST: Received initial search settings:",
+            event.data.settings
+          );
+
+          // Extract headers if present
+          const requestHeaders = event.data.headers || {};
+          console.log("REQUEST HEADERS:", requestHeaders);
+
+          if (event.data.settings) {
+            // Set search settings directly with proper type handling
+            setHeaderSettings((prev) => {
+              // Create a complete search settings object with all required fields
+              const completeSearchSettings = {
+                show: event.data.settings.show ?? true,
+                type: event.data.settings.type || "form",
+                placeholder: event.data.settings.placeholder || "Search...",
+                rounded: event.data.settings.rounded ?? 4,
+                showText: event.data.settings.showText ?? true,
+                behavior: event.data.settings.behavior || "inline",
+                design: event.data.settings.design || "standard",
+                ...event.data.settings,
+              };
+
+              return {
+                ...prev,
+                search: completeSearchSettings,
+              };
+            });
+
+            // Send acknowledgment back to parent
+            if (window.parent && event.source) {
+              try {
+                window.parent.postMessage(
+                  {
+                    type: "SEARCH_SETTINGS_RECEIVED",
+                    timestamp: Date.now(),
+                    success: true,
+                    headers: {
+                      "Content-Type": "application/json",
+                      "X-Builder-Target": "HeaderSearchSettings",
+                    },
+                  },
+                  event.origin || "*"
+                );
+              } catch (error) {
+                console.error("Failed to send settings acknowledgment:", error);
+              }
+            }
+
+            // Force search components to update
+            setTimeout(() => {
+              document
+                .querySelectorAll('[data-item-id="search"]')
+                .forEach((el) => {
+                  if (el instanceof HTMLElement) {
+                    console.log(
+                      "TEST: Refreshing search component with initial settings"
+                    );
+                    const newSettings = { ...headerSettings };
+                    if (newSettings.search) {
+                      newSettings.search = {
+                        ...newSettings.search,
+                        ...event.data.settings,
+                        // Ensure required fields
+                        show: event.data.settings.show ?? true,
+                        type: event.data.settings.type || "form",
+                        showText: event.data.settings.showText ?? true,
+                        behavior: event.data.settings.behavior || "inline",
+                        design: event.data.settings.design || "standard",
+                      };
+                    }
+                    el.innerHTML = DOMPurify.sanitize(
+                      generateSearchHTML(newSettings)
+                    );
+                  }
+                });
+            }, 100);
+          }
+          break;
+
+        case "DIRECT_SEARCH_SETTING_UPDATE":
+          console.log(
+            "ACTION: Received direct search setting update:",
+            event.data.key,
+            "=",
+            event.data.value,
+            "with headers:",
+            event.data.headers
+          );
+
+          if (event.data.key) {
+            // Update the specific property in headerSettings.search
+            setHeaderSettings((prev) => {
+              // Make sure search object exists with required properties
+              const currentSearch = prev.search || {
+                show: true,
+                type: "form",
+                showText: true,
+                behavior: "inline",
+                design: "standard",
+              };
+
+              // Create a new search settings object with the updated property
+              const updatedSearch = {
+                ...currentSearch,
+                [event.data.key]: event.data.value,
+              };
+
+              console.log(
+                "ACTION: Updated search settings with new value:",
+                updatedSearch
+              );
+
+              // Return updated headerSettings
+              return {
+                ...prev,
+                search: updatedSearch,
+              };
+            });
+
+            // Send acknowledgment back to parent
+            if (window.parent && event.source) {
+              try {
+                window.parent.postMessage(
+                  {
+                    type: "SEARCH_SETTING_UPDATE_RECEIVED",
+                    key: event.data.key,
+                    value: event.data.value,
+                    timestamp: Date.now(),
+                    success: true,
+                    headers: {
+                      "Content-Type": "application/json",
+                      "X-Builder-Target": "HeaderSearchSettings",
+                    },
+                  },
+                  event.origin || "*"
+                );
+              } catch (error) {
+                console.error("Failed to send update acknowledgment:", error);
+              }
+            }
+
+            // Force an immediate DOM update after a short delay
+            setTimeout(() => {
+              try {
+                // Get all search components
+                const searchComponents = document.querySelectorAll(
+                  '[data-item-id="search"]'
+                );
+
+                if (searchComponents.length > 0) {
+                  console.log(
+                    "ACTION: Updating",
+                    searchComponents.length,
+                    "search components"
+                  );
+
+                  // Update each component
+                  searchComponents.forEach((comp) => {
+                    if (comp instanceof HTMLElement) {
+                      // Add visual feedback
+                      comp.style.outline = "2px solid blue";
+
+                      // Force reflow
+                      void comp.offsetHeight;
+
+                      // Remove outline after a short delay
+                      setTimeout(() => {
+                        comp.style.outline = "";
+                      }, 500);
+                    }
+                  });
+                } else {
+                  console.error(
+                    "ACTION: No search components found to update!"
+                  );
+                }
+              } catch (err) {
+                console.error(
+                  "ERROR: Failed to update search components:",
+                  err
+                );
+              }
+            }, 50);
+          }
+          break;
+
+        case "FULL_SEARCH_SETTINGS_UPDATE":
+          console.log("ACTION: Received full search settings update");
+
+          if (event.data.settings) {
+            // Update the entire search settings object
+            setHeaderSettings((prev) => {
+              // Ensure all required properties are present
+              const completeSettings = {
+                show: event.data.settings.show ?? true,
+                type: event.data.settings.type || "form",
+                showText: event.data.settings.showText ?? true,
+                behavior: event.data.settings.behavior || "inline",
+                design: event.data.settings.design || "standard",
+                ...event.data.settings,
+              };
+
+              return {
+                ...prev,
+                search: completeSettings,
+              };
+            });
+
+            // Force all search components to update
+            setTimeout(() => {
+              try {
+                const allComponents = document.querySelectorAll(
+                  '[data-item-id="search"]'
+                );
+                console.log(
+                  "ACTION: Regenerating",
+                  allComponents.length,
+                  "search components"
+                );
+
+                allComponents.forEach((el) => {
+                  if (el instanceof HTMLElement) {
+                    // Get current search settings with update
+                    const currentSettings = {
+                      ...headerSettings,
+                      search: {
+                        // Ensure required fields
+                        show: event.data.settings.show ?? true,
+                        type: event.data.settings.type || "form",
+                        showText: event.data.settings.showText ?? true,
+                        behavior: event.data.settings.behavior || "inline",
+                        design: event.data.settings.design || "standard",
+                        ...event.data.settings,
+                      },
+                    };
+
+                    // Generate new HTML
+                    const newHtml = generateSearchHTML(currentSettings);
+
+                    // Replace content
+                    el.innerHTML = DOMPurify.sanitize(newHtml);
+
+                    // Visual feedback
+                    el.style.outline = "2px solid green";
+                    setTimeout(() => {
+                      el.style.outline = "";
+                    }, 800);
+                  }
+                });
+              } catch (err) {
+                console.error(
+                  "ERROR: Failed to regenerate search components:",
+                  err
+                );
+              }
+            }, 100);
+          }
+          break;
+
+        case "EXECUTE_DIRECT_SCRIPT":
+          console.log("SCRIPT: Received script execution request");
+
+          if (event.data.script) {
+            try {
+              console.log("SCRIPT: Attempting to execute script");
+
+              // Create a new function from the script string and execute it
+              const scriptFunction = new Function(event.data.script);
+              scriptFunction();
+
+              console.log("SCRIPT: Script executed successfully");
+
+              // Also trigger a search update after script execution
+              setTimeout(() => {
+                try {
+                  // Get all search components
+                  const searchComponents = document.querySelectorAll(
+                    '[data-item-id="search"]'
+                  );
+
+                  if (searchComponents.length > 0) {
+                    // Get component type information for logging
+                    const types = Array.from(searchComponents).map((el) =>
+                      el instanceof HTMLElement
+                        ? el.getAttribute("data-search-type")
+                        : "unknown"
+                    );
+
+                    console.log(
+                      "SCRIPT: Search components after script execution:",
+                      types
+                    );
+
+                    // Force a redraw
+                    searchComponents.forEach((comp) => {
+                      if (comp instanceof HTMLElement) {
+                        comp.classList.add("search-updated");
+                        setTimeout(() => {
+                          comp.classList.remove("search-updated");
+                        }, 500);
+                      }
+                    });
+                  }
+                } catch (err) {
+                  console.error(
+                    "SCRIPT: Error checking components after script:",
+                    err
+                  );
+                }
+              }, 500);
+            } catch (err) {
+              console.error("SCRIPT: Failed to execute script:", err);
+            }
+          }
+          break;
+
         default:
           // Ignore other message types
           break;
@@ -702,6 +1346,61 @@ export default function Header({
   // Get HTML content for a layout item (MOVE THIS FUNCTION BEFORE renderSection)
   const getHtmlContent = React.useCallback(
     (itemId: string): string => {
+      // Special handling for search with a unique key to force re-rendering
+      if (itemId === "search") {
+        // Generate search HTML with the current settings
+        const html = generateSearchHTML(headerSettings);
+        return DOMPurify.sanitize(`<div data-item-id="search">${html}</div>`);
+      }
+
+      // Special handling for navigation icon - handle both IDs (nav_icon and navIcon)
+      if (itemId === "navIcon" || itemId === "nav_icon") {
+        // Generate navigation icon HTML with current settings
+        const html = generateNavIconHTML(headerSettings);
+        return DOMPurify.sanitize(`<div data-item-id="nav_icon">${html}</div>`);
+      }
+
+      // Special handling for contact information
+      if (itemId === "contact") {
+        // Generate HTML based on contact settings
+        console.log(
+          "Generating contact HTML with settings:",
+          headerSettings.contact
+        );
+        const contactHTML = generateContactHTML(headerSettings);
+        console.log("Generated contact HTML:", contactHTML);
+        // Note: We don't wrap in another div because the generateContactHTML function already includes a div with data-item-id="contact"
+        return DOMPurify.sanitize(contactHTML);
+      }
+
+      // Special handling for menu items
+      if (
+        itemId === "mainMenu" ||
+        itemId === "topBarMenu" ||
+        itemId === "bottomMenu"
+      ) {
+        // Check if we have navigation data for this menu type
+        if (
+          headerSettings.navigation &&
+          headerSettings.navigation.menuType === itemId &&
+          headerSettings.navigation.items &&
+          headerSettings.navigation.items.length > 0
+        ) {
+          // Generate HTML from the navigation items
+          return DOMPurify.sanitize(
+            generateMenuHTML(itemId, headerSettings.navigation.items)
+          );
+        } else {
+          // Use menu data from menuItems.json as fallback
+          const menuType = itemId as keyof typeof menuItemsData;
+          if (menuItemsData[menuType] && menuItemsData[menuType].items) {
+            return DOMPurify.sanitize(
+              generateMenuHTML(itemId, menuItemsData[menuType].items)
+            );
+          }
+        }
+      }
+
       // Special handling for logo
       if (itemId === "logo") {
         // Check if we have a logo setting
@@ -821,16 +1520,25 @@ export default function Header({
 
         const key = `${sectionName}_${renderId}_${index}`;
 
+        // Check if this is a menu item (for which we don't want to show the settings icon)
+        const isMenuType =
+          renderId === "mainMenu" ||
+          renderId === "topBarMenu" ||
+          renderId === "bottomMenu";
+
         // Use a wrapper div with position: relative for the gear icon
         return (
           <div
             key={key}
-            className="header-item-wrapper relative group"
+            className={`header-item-wrapper relative group ${
+              isMenuType ? "menu-item-no-settings" : ""
+            }`}
             data-item-id={renderId}
             data-original-id={itemId}
+            data-is-menu-item={isMenuType ? "true" : "false"}
             style={textStyle}
             onClick={() => {
-              if (isEditing) {
+              if (isEditing && !isMenuType) {
                 sendMessageToParent({
                   type: "SELECT_HEADER_SETTING",
                   settingId: renderId,
@@ -844,10 +1552,10 @@ export default function Header({
               dangerouslySetInnerHTML={{ __html: htmlContent }}
             />
 
-            {/* Gear icon only shown when editing */}
-            {isEditing && (
+            {/* Gear icon only shown when editing and NOT a menu item */}
+            {isEditing && !isMenuType && (
               <div
-                className="absolute opacity-0 group-hover:opacity-100 top-1 right-1 p-1.5 bg-black bg-opacity-80 rounded-sm cursor-pointer transition-opacity z-10 hover:bg-opacity-100"
+                className="absolute opacity-0 group-hover:opacity-100 top-1 right-1 p-1.5 bg-black bg-opacity-80 rounded-sm cursor-pointer transition-opacity z-10 hover:bg-opacity-100 settings-icon"
                 onClick={(e) => {
                   e.stopPropagation(); // Prevent triggering the parent click
 
@@ -868,7 +1576,7 @@ export default function Header({
                   // Update the last click time
                   target.setAttribute("data-last-click", now.toString());
 
-                  // Get the submenu for this item and log the determination process
+                  // Get the submenu for this item
                   const targetSubmenu = getSubmenuForHeaderItem(renderId);
 
                   // First, check if this setting is already open
@@ -1216,18 +1924,46 @@ export default function Header({
             // Handle showAccount toggle
             if (updatedSettings.showAccount !== undefined) {
               updatedState.showAccount = updatedSettings.showAccount;
+              console.log(
+                "Updated showAccount to:",
+                updatedSettings.showAccount
+              );
             }
 
             // Handle nested account settings
             if (updatedSettings.account !== undefined) {
+              // Get current account settings or initialize empty object
               const currentAccount = prev.account || {};
-              const accountField = Object.keys(updatedSettings.account)[0];
-              const accountValue = updatedSettings.account[accountField];
 
-              updatedState.account = {
-                ...currentAccount,
-                [accountField]: accountValue,
-              };
+              // Check if we're updating a specific field or the entire account object
+              if (typeof updatedSettings.account === "object") {
+                // For nested property updates like "account.showIcon"
+                const accountField = Object.keys(updatedSettings.account)[0];
+                if (accountField) {
+                  const accountValue = updatedSettings.account[accountField];
+
+                  // Create or update the account property
+                  updatedState.account = {
+                    ...currentAccount,
+                    [accountField]: accountValue,
+                  };
+
+                  console.log(
+                    `Updated account.${accountField} to:`,
+                    accountValue
+                  );
+                } else {
+                  // If we received an empty object, do nothing
+                  updatedState.account = currentAccount;
+                }
+              } else {
+                // If we received a direct value (unlikely), replace the entire account object
+                updatedState.account = updatedSettings.account;
+                console.log(
+                  "Replaced entire account settings with:",
+                  updatedSettings.account
+                );
+              }
             }
 
             return updatedState;
@@ -1260,15 +1996,19 @@ export default function Header({
   const getSubmenuForHeaderItem = (itemId: string): string => {
     console.log(`Finding submenu for item: ${itemId}`);
 
+    // Menu items should not redirect to settings
+    if (
+      itemId === "mainMenu" ||
+      itemId === "topBarMenu" ||
+      itemId === "bottomMenu"
+    ) {
+      return ""; // Return empty string to indicate no submenu mapping
+    }
+
     // Map common item prefixes/keywords to their appropriate submenu
     const submenuMappings: Record<string, string> = {
       // HTML blocks
       html_block_: "HTML",
-
-      // Navigation elements
-      mainMenu: "Header Navigation Setting",
-      nav_: "Header Navigation Setting",
-      topBarMenu: "Header Navigation Setting",
 
       // Logo and main header elements
       logo: "Header Main Setting",
@@ -1286,7 +2026,15 @@ export default function Header({
 
       // Social media elements
       social: "Social",
-      followIcons: "Social",
+
+      // Top bar elements (for the top information bar)
+      topBar: "Top Bar Setting",
+
+      // Bottom bar elements
+      bottomBar: "Header Bottom Setting",
+
+      // Cart functionality
+      cart: "Header Main Setting",
     };
 
     // Check each mapping to see if the itemId matches or contains the key
@@ -1330,10 +2078,7 @@ export default function Header({
 
   // Function to generate account HTML based on settings
   const generateAccountHTML = (settings: HeaderSettings) => {
-    const { account, showAccount } = settings;
-
-    // If account widget is disabled, return empty string
-    if (showAccount === false) return "";
+    const { account } = settings;
 
     // Default account settings
     const defaultAccount = {
@@ -1351,7 +2096,7 @@ export default function Header({
     };
 
     // Merge default settings with user settings
-    const accountSettings = { ...defaultAccount, ...account };
+    const accountSettings = { ...defaultAccount, ...(account || {}) };
 
     // Determine icon size
     let iconSize = "24";
@@ -1372,8 +2117,8 @@ export default function Header({
     // Build the HTML
     let html = `<div class="${containerClass}">`;
 
-    // Add icon if enabled
-    if (accountSettings.showIcon) {
+    // Add icon if enabled AND not using text-only style
+    if (accountSettings.showIcon && accountSettings.style !== "text") {
       // Base SVG path for the user icon
       const userIconPath = `
         <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
@@ -1458,6 +2203,519 @@ export default function Header({
     return html;
   };
 
+  // Add function to generate HTML for different menu types
+  const generateMenuHTML = (menuType: string, items: any[]) => {
+    if (!items || items.length === 0) return "";
+
+    switch (menuType) {
+      case "mainMenu":
+        return `<nav class="main-menu">
+          <ul class="flex gap-6">
+            ${items
+              .map(
+                (item) => `
+              <li class="${
+                item.isButton
+                  ? "bg-primary text-white px-4 py-2 rounded-md"
+                  : "hover:text-primary"
+              } cursor-pointer">
+                ${item.text}
+                ${
+                  item.children && item.children.length > 0
+                    ? `
+                  <ul class="absolute hidden group-hover:block bg-white shadow-md mt-2 p-2 rounded-md z-10">
+                    ${item.children
+                      .map(
+                        (child: any) => `
+                      <li class="hover:text-primary py-1 cursor-pointer">${child.text}</li>
+                    `
+                      )
+                      .join("")}
+                  </ul>
+                `
+                    : ""
+                }
+              </li>
+            `
+              )
+              .join("")}
+          </ul>
+        </nav>`;
+
+      case "topBarMenu":
+        return `<div class="top-bar-menu">
+          <ul class="flex gap-3 text-sm">
+            ${items
+              .map(
+                (item) => `
+              <li class="hover:underline cursor-pointer">${item.text}</li>
+            `
+              )
+              .join("")}
+          </ul>
+        </div>`;
+
+      case "bottomMenu":
+        return `<div class="bottom-bar-menu">
+          <ul class="flex gap-4 text-sm">
+            ${items
+              .map(
+                (item) => `
+              <li class="hover:underline cursor-pointer">${item.text}</li>
+            `
+              )
+              .join("")}
+          </ul>
+        </div>`;
+
+      default:
+        return "";
+    }
+  };
+
+  // Add a function to generate search HTML based on settings
+  const generateSearchHTML = (settings: HeaderSettings): string => {
+    // Add detailed debugging information
+    console.log("SEARCH HTML GEN: Settings received:", {
+      type: settings.search?.type,
+      show: settings.search?.show,
+      style: settings.search?.style,
+      design: settings.search?.design,
+    });
+
+    // DIRECTLY force updates to DOM if search components exist
+    const existingComponents = document.querySelectorAll(
+      '[data-item-id="search"]'
+    );
+    if (existingComponents.length > 0) {
+      console.log(
+        `SEARCH HTML GEN: Found ${existingComponents.length} existing components to update`
+      );
+    }
+
+    // Get search settings with defaults - ensure type is preserved
+    const searchSettings = settings.search || {
+      show: true,
+      type: "form",
+      placeholder: "Search...",
+      rounded: 4,
+      showText: true,
+      behavior: "inline",
+      design: "standard",
+      style: "minimal",
+      shape: "rounded",
+      showIcon: true,
+      iconPosition: "left",
+      iconColor: "#666666",
+      iconSize: "16px",
+      fontSize: "14px",
+      textColor: "#333333",
+      width: "250px",
+      showButton: false,
+      buttonText: "Search",
+      buttonColor: "#4a90e2",
+      buttonTextColor: "#ffffff",
+    };
+
+    // Create a unique key to force re-render when settings change
+    const timestamp = Date.now();
+
+    // Return empty if search is disabled
+    if (searchSettings.show === false) {
+      console.log("SEARCH HTML GEN: Search is disabled, returning empty");
+      return "";
+    }
+
+    // Important: Log the actual search type and settings being used
+    console.log("SEARCH HTML GEN: *** USING TYPE:", searchSettings.type, "***");
+
+    // Force type to be lowercase string for safety
+    let searchType = String(searchSettings.type || "form").toLowerCase();
+    console.log(`SEARCH HTML GEN: Normalized type = "${searchType}"`);
+
+    // Get style classes based on settings
+    const styleClass =
+      searchSettings.style || searchSettings.design || "minimal";
+    const shapeClass = searchSettings.shape || "rounded";
+
+    // Determine container classes based on the actual type, style, shape, and behavior
+    const containerClasses = [
+      searchType === "form" ? "search-box" : "search-container",
+      `search-${styleClass}`,
+      `search-${shapeClass}`,
+      `search-type-${searchType}`,
+      searchSettings.behavior === "popout" ? "search-popout" : "search-inline",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    console.log("SEARCH HTML GEN: Container classes:", containerClasses);
+
+    // Create border radius styles based on shape and rounded settings
+    const borderRadiusStyle =
+      shapeClass === "rounded"
+        ? "border-radius: 9999px;"
+        : searchSettings.rounded
+        ? `border-radius: ${searchSettings.rounded}px;`
+        : "";
+
+    // Get placeholder text based on showText setting
+    const placeholder =
+      searchSettings.showText !== false
+        ? searchSettings.placeholder || "Search..."
+        : "";
+
+    // Generate search icon HTML based on settings
+    let searchIconHTML = "";
+    if (searchSettings.showIcon !== false) {
+      // Use provided colors and sizes or defaults
+      const iconColor = searchSettings.iconColor || "#666666";
+      const iconSize = searchSettings.iconSize || "16px";
+
+      searchIconHTML = `
+        <div class="search-icon-button" style="padding: 0 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </div>
+      `;
+    }
+
+    // Generate button HTML if enabled
+    let buttonHTML = "";
+    if (searchSettings.showButton === true) {
+      const buttonText = searchSettings.buttonText || "Search";
+      const buttonColor = searchSettings.buttonColor || "#4a90e2";
+      const buttonTextColor = searchSettings.buttonTextColor || "#ffffff";
+
+      buttonHTML = `
+        <button class="search-button" style="background-color: ${buttonColor}; color: ${buttonTextColor}; border: none; padding: 6px 12px; margin-left: 8px; border-radius: 4px; cursor: pointer;">
+          ${buttonText}
+        </button>
+      `;
+    }
+
+    // Determine search box position for icon
+    const iconPosition = searchSettings.iconPosition || "left";
+
+    // Generate HTML based on search type using specific type checking
+    let searchHTML = "";
+
+    if (searchType === "icon") {
+      console.log("SEARCH HTML GEN: Generating ICON type search");
+      // Icon-only search
+      searchHTML = `
+        <div class="${containerClasses} search-wrapper" data-timestamp="${timestamp}" data-search-type="icon">
+          <button class="search-icon-button p-2 hover:bg-gray-200 transition-colors" style="${borderRadiusStyle}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="${
+              searchSettings.iconSize || "18px"
+            }" height="${
+        searchSettings.iconSize || "18px"
+      }" viewBox="0 0 24 24" fill="none" stroke="${
+        searchSettings.iconColor || "currentColor"
+      }" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+        </div>
+      `;
+    } else if (searchType === "expandable") {
+      console.log("SEARCH HTML GEN: Generating EXPANDABLE type search");
+      // Expandable search
+      searchHTML = `
+        <div class="${containerClasses} search-wrapper" data-timestamp="${timestamp}" data-search-type="expandable">
+          <button class="search-icon-button p-2 hover:bg-gray-200 transition-colors" style="${borderRadiusStyle}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="${
+              searchSettings.iconSize || "18px"
+            }" height="${
+        searchSettings.iconSize || "18px"
+      }" viewBox="0 0 24 24" fill="none" stroke="${
+        searchSettings.iconColor || "currentColor"
+      }" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+          <div class="search-form hidden">
+            <div class="flex items-center" style="${borderRadiusStyle}">
+              <input type="text" placeholder="${placeholder}" class="px-3 py-2 bg-transparent focus:outline-none w-full" style="font-size: ${
+        searchSettings.fontSize || "14px"
+      }; color: ${searchSettings.textColor || "#333333"};" />
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      console.log("SEARCH HTML GEN: Generating FORM type search (default)");
+      // Default form type
+      searchHTML = `
+        <div class="${containerClasses} search-wrapper" data-timestamp="${timestamp}" data-search-type="form">
+          <form class="search-type-form" style="display: flex; align-items: center;">
+            <div class="flex items-center" style="padding: 6px; ${borderRadiusStyle} ${
+        searchSettings.width ? `width: ${searchSettings.width};` : ""
+      }">
+              ${iconPosition === "left" ? searchIconHTML : ""}
+              <input type="text" placeholder="${placeholder}" style="width: 100%; font-size: ${
+        searchSettings.fontSize || "14px"
+      }; color: ${searchSettings.textColor || "#333333"};" />
+              ${iconPosition === "right" ? searchIconHTML : ""}
+            </div>
+            ${buttonHTML}
+          </form>
+        </div>
+      `;
+    }
+
+    return searchHTML;
+  };
+
+  // Define the headerDefaults at the appropriate place in the component
+  const headerDefaults = {
+    logo: `<div class="logo-container">
+      <img src="/logo.svg" class="h-8" alt="Logo" />
+      <span class="ml-2 font-bold text-lg">Your Brand</span>
+    </div>`,
+    searchIcon: `<div class="search-icon flex items-center justify-center">
+      <button class="text-current hover:text-primary flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+    </div>`,
+    navIcon: `<div class="nav-icon-container" data-item-id="nav_icon" style="display: flex; align-items: center; cursor: pointer;">
+      <div class="nav-icon-button" style="display: flex; align-items: center; gap: 8px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="6" x2="20" y2="6"></line>
+          <line x1="4" y1="12" x2="20" y2="12"></line>
+          <line x1="4" y1="18" x2="20" y2="18"></line>
+        </svg>
+        <span class="nav-icon-text">Menu</span>
+      </div>
+    </div>`,
+    contact: `<div class="contact-info-container" data-item-id="contact" style="display: flex; flex-direction: column; gap: 5px;">
+      <div class="contact-item email" style="display: flex; align-items: center; gap: 8px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+        <span class="contact-label">Email: </span>
+        <a href="mailto:contact@example.com" class="contact-value">contact@example.com</a>
+      </div>
+      <div class="contact-item phone" style="display: flex; align-items: center; gap: 8px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+        </svg>
+        <a href="tel:+1234567890" class="contact-value">(123) 456-7890</a>
+      </div>
+    </div>`,
+    mainMenu: generateMenuHTML(
+      "mainMenu",
+      headerSettings.navigation?.menuType === "mainMenu"
+        ? headerSettings.navigation?.items
+        : []
+    ),
+    topBarMenu: generateMenuHTML(
+      "topBarMenu",
+      headerSettings.navigation?.menuType === "topBarMenu"
+        ? headerSettings.navigation?.items
+        : menuItemsData.topBarMenu.items
+    ),
+    bottomMenu: generateMenuHTML(
+      "bottomMenu",
+      headerSettings.navigation?.menuType === "bottomMenu"
+        ? headerSettings.navigation?.items
+        : menuItemsData.bottomMenu.items
+    ),
+    followIcons: `<div class="social-icons flex gap-3">
+      <a href="#" class="hover:text-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+          </svg>
+      </a>
+      <a href="#" class="hover:text-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+          </svg>
+      </a>
+    </div>`,
+    // ... other elements ...
+  };
+
+  // Add the navigation icon HTML generation function
+  const generateNavIconHTML = (settings: HeaderSettings): string => {
+    // Get nav icon settings with defaults
+    const navIconSettings = settings.navIcon || {
+      show: true,
+      type: "hamburger",
+      showText: true,
+      text: "Menu",
+      position: "right",
+      drawerEffect: "slide",
+      drawerDirection: "left",
+      iconSize: "24px",
+      iconColor: "#333333",
+      textColor: "#333333",
+    };
+
+    // Return empty if nav icon is disabled
+    if (navIconSettings.show === false) {
+      return "";
+    }
+
+    // Generate different icon SVGs based on type
+    let iconSvg = "";
+    switch (navIconSettings.type) {
+      case "chevron":
+        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${navIconSettings.iconSize}" height="${navIconSettings.iconSize}" viewBox="0 0 24 24" fill="none" stroke="${navIconSettings.iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18l6-6-6-6"></path>
+        </svg>`;
+        break;
+      case "dots":
+        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${navIconSettings.iconSize}" height="${navIconSettings.iconSize}" viewBox="0 0 24 24" fill="none" stroke="${navIconSettings.iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="1"></circle>
+          <circle cx="19" cy="12" r="1"></circle>
+          <circle cx="5" cy="12" r="1"></circle>
+        </svg>`;
+        break;
+      case "justify":
+        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${navIconSettings.iconSize}" height="${navIconSettings.iconSize}" viewBox="0 0 24 24" fill="none" stroke="${navIconSettings.iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>`;
+        break;
+      default: // hamburger
+        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${navIconSettings.iconSize}" height="${navIconSettings.iconSize}" viewBox="0 0 24 24" fill="none" stroke="${navIconSettings.iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="6" x2="20" y2="6"></line>
+          <line x1="4" y1="12" x2="20" y2="12"></line>
+          <line x1="4" y1="18" x2="20" y2="18"></line>
+        </svg>`;
+    }
+
+    // Create timestamp to force re-renders
+    const timestamp = Date.now();
+
+    // Generate text HTML if enabled
+    const textHtml = navIconSettings.showText
+      ? `<span style="color: ${
+          navIconSettings.textColor || "#333333"
+        };" class="nav-icon-text">${navIconSettings.text}</span>`
+      : "";
+
+    // Generate HTML for nav icon button with appropriate positioning
+    let navIconHtml = "";
+    if (navIconSettings.position === "left") {
+      navIconHtml = `
+        <div class="nav-icon-container" data-timestamp="${timestamp}" data-item-id="nav_icon" style="display: flex; align-items: center; cursor: pointer;" data-drawer-effect="${navIconSettings.drawerEffect}" data-drawer-direction="${navIconSettings.drawerDirection}">
+          <div class="nav-icon-button" style="display: flex; align-items: center; gap: 8px;">
+            ${iconSvg}
+            ${textHtml}
+          </div>
+        </div>
+      `;
+    } else {
+      navIconHtml = `
+        <div class="nav-icon-container" data-timestamp="${timestamp}" data-item-id="nav_icon" style="display: flex; align-items: center; cursor: pointer;" data-drawer-effect="${navIconSettings.drawerEffect}" data-drawer-direction="${navIconSettings.drawerDirection}">
+          <div class="nav-icon-button" style="display: flex; align-items: center; gap: 8px;">
+            ${textHtml}
+            ${iconSvg}
+          </div>
+        </div>
+      `;
+    }
+
+    return navIconHtml;
+  };
+
+  // Add the contact info HTML generation function
+  const generateContactHTML = (settings: HeaderSettings): string => {
+    // Get contact settings with defaults
+    const contactSettings = settings.contact || {
+      show: true,
+      email: "",
+      emailLabel: "Email",
+      phone: "",
+      location: "",
+      locationLabel: "Location",
+      openHours: "Open Hours",
+      hoursDetails: "Mon-Fri: 9am - 5pm\nSat: 10am - 2pm\nSun: Closed",
+    };
+
+    // Return empty if contact is disabled
+    if (contactSettings.show === false) {
+      return "";
+    }
+
+    // Generate HTML for contact info
+    let contactHTML = `
+      <div class="contact-info-container" data-item-id="contact" style="display: flex; flex-direction: column; gap: 5px;">
+    `;
+
+    // Add email if provided
+    if (contactSettings.email) {
+      contactHTML += `
+        <div class="contact-item email" style="display: flex; align-items: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          <span class="contact-label">${contactSettings.emailLabel}: </span>
+          <a href="mailto:${contactSettings.email}" class="contact-value">${contactSettings.email}</a>
+        </div>
+      `;
+    }
+
+    // Add phone if provided
+    if (contactSettings.phone) {
+      contactHTML += `
+        <div class="contact-item phone" style="display: flex; align-items: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+          </svg>
+          <a href="tel:${contactSettings.phone}" class="contact-value">${contactSettings.phone}</a>
+        </div>
+      `;
+    }
+
+    // Add location if provided
+    if (contactSettings.location) {
+      contactHTML += `
+        <div class="contact-item location" style="display: flex; align-items: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+          <span class="contact-label">${contactSettings.locationLabel}: </span>
+          <span class="contact-value">${contactSettings.location}</span>
+        </div>
+      `;
+    }
+
+    // Add hours if provided
+    if (contactSettings.openHours && contactSettings.hoursDetails) {
+      contactHTML += `
+        <div class="contact-item hours" style="display: flex; align-items: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span class="contact-label">${contactSettings.openHours}</span>
+          <div class="contact-hours-details" style="display: none; position: absolute; background: white; padding: 10px; border: 1px solid #eee; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 100; white-space: pre-line;">
+            ${contactSettings.hoursDetails.replace(/\n/g, "<br>")}
+          </div>
+        </div>
+      `;
+    }
+
+    contactHTML += `</div>`;
+    return contactHTML;
+  };
+
   return (
     <header
       className={`relative shadow ${isEditing ? "editing" : ""} ${
@@ -1467,7 +2725,14 @@ export default function Header({
         if (isEditing && onSelect) {
           onSelect();
         }
-        sendMessageToParent({ type: "HEADER_SETTING_SELECTED" });
+        sendMessageToParent({
+          type: "HEADER_SETTING_SELECTED",
+          settingId: "header", // For the entire header
+          submenu: "General",
+          itemType: "header",
+          source: "header-click",
+          timestamp: Date.now(),
+        });
       }}
       data-top-scheme={headerSettings.topBarColorScheme || "light"}
       data-main-scheme={headerSettings.mainBarColorScheme || "light"}

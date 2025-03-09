@@ -39,6 +39,121 @@ import {
   loadSettingsSync,
 } from "./utils/settingsStorage";
 
+// Import or define the HeaderSettings interface
+interface HeaderSettings {
+  theme?: string;
+  layout?: {
+    sticky?: boolean;
+    maxWidth?: string;
+    currentPreset?: string;
+    containers?: {
+      top_left?: any[];
+      top_center?: any[];
+      top_right?: any[];
+      middle_left?: any[];
+      middle_center?: any[];
+      middle_right?: any[];
+      bottom_left?: any[];
+      bottom_center?: any[];
+      bottom_right?: any[];
+      available?: any[];
+      [key: string]: any[] | undefined;
+    };
+    [key: string]: any;
+  };
+  html_block_1?: string;
+  html_block_2?: string;
+  html_block_3?: string;
+  html_block_4?: string;
+  html_block_5?: string;
+  topBarVisible?: boolean;
+  topBarHeight?: number;
+  showTopBarButton?: boolean;
+  topBarColorScheme?: string;
+  mainBarColorScheme?: string;
+  bottomBarColorScheme?: string;
+  topBarNavStyle?: "style1" | "style2" | "style3";
+  topBarTextTransform?: "uppercase" | "capitalize" | "lowercase";
+  logo?: { text?: string; showText?: boolean };
+  lastSelectedSetting?: string | null;
+  lastSelectedSubmenu?: string | null;
+  showAccount?: boolean;
+  account?: {
+    showText?: boolean;
+    text?: string;
+    showIcon?: boolean;
+    style?: string;
+    dropdownEnabled?: boolean;
+    loginEnabled?: boolean;
+    registerEnabled?: boolean;
+    loginUrl?: string;
+    registerUrl?: string;
+    iconSize?: string;
+    iconStyle?: string;
+    [key: string]: any;
+  };
+  navigation?: {
+    menuType?: string;
+    items?: any[];
+  };
+  search?: {
+    show?: boolean;
+    type?: string;
+    placeholder?: string;
+    rounded?: number;
+    showText?: boolean;
+    behavior?: string;
+    design?: string;
+    style?: string;
+    shape?: string;
+    showIcon?: boolean;
+    iconPosition?: string;
+    iconColor?: string;
+    iconSize?: string;
+    fontSize?: string;
+    textColor?: string;
+    width?: string;
+    showButton?: boolean;
+    buttonText?: string;
+    buttonColor?: string;
+    buttonTextColor?: string;
+    [key: string]: any;
+  };
+  navIcon?: {
+    show?: boolean;
+    type?: string; // hamburger, dots, chevron, etc.
+    showText?: boolean;
+    text?: string;
+    position?: string; // left, right
+    drawerEffect?: string; // slide, fade, push
+    drawerDirection?: string; // left, right, top
+    iconSize?: string;
+    iconColor?: string;
+    textColor?: string;
+    [key: string]: any;
+  };
+  [key: string]: any;
+}
+
+// Define an interface for the preset layouts
+interface PresetLayout {
+  top_left: any[];
+  top_center: any[];
+  top_right: any[];
+  middle_left: any[];
+  middle_center: any[];
+  middle_right: any[];
+  bottom_left: any[];
+  bottom_center: any[];
+  bottom_right: any[];
+  available: any[];
+  [key: string]: any[] | undefined;
+}
+
+interface PresetLayouts {
+  [key: string]: PresetLayout;
+}
+
 export default function PageBuilder() {
   const contentRef = useRef<HTMLIFrameElement | null>(null);
   const settingsPanelRef = useRef<HTMLDivElement | null>(null);
@@ -76,7 +191,7 @@ export default function PageBuilder() {
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
   const [globalSettings, setGlobalSettings] =
     useState<GlobalSettings>(defaultSettings);
-  const [headerSettings, setHeaderSettings] = useState<any>({
+  const [headerSettings, setHeaderSettings] = useState<HeaderSettings>({
     // Initialize with default values
     layout: {
       currentPreset: "preset1",
@@ -385,7 +500,7 @@ export default function PageBuilder() {
           }
 
           // Track in headerSettings for later reference
-          setHeaderSettings((prev) => ({
+          setHeaderSettings((prev: HeaderSettings) => ({
             ...prev,
             lastSelectedSubmenu: submenu,
             lastSelectedSetting: settingId || prev.lastSelectedSetting,
@@ -403,7 +518,7 @@ export default function PageBuilder() {
             setActiveSubmenu(submenu);
 
             // Track this in headerSettings for later reference
-            setHeaderSettings((prev) => ({
+            setHeaderSettings((prev: HeaderSettings) => ({
               ...prev,
               lastSelectedSubmenu: submenu,
               lastSelectedSetting: settingId || prev.lastSelectedSetting,
@@ -818,15 +933,16 @@ export default function PageBuilder() {
 
       // Import the preset layouts to update the headerSettings
       import("./components/BuilderLayout/data/headerPresets")
-        .then(({ presetLayouts }) => {
-          if (presetLayouts[presetId]) {
+        .then(({ presetLayouts }: { presetLayouts: PresetLayouts }) => {
+          if (presetLayouts[presetId as keyof typeof presetLayouts]) {
             // Create updated header settings
             const updatedHeaderSettings = {
               ...headerSettings,
               layout: {
                 ...headerSettings?.layout,
                 currentPreset: presetId,
-                containers: presetLayouts[presetId],
+                containers:
+                  presetLayouts[presetId as keyof typeof presetLayouts],
               },
             };
 
@@ -1033,14 +1149,29 @@ export default function PageBuilder() {
       console.log("Header layout changed but not saved:", event.detail);
       // Update the state without saving to persistent storage
       if (event.detail.layout && event.detail.presetId) {
-        setHeaderSettings((prev) => ({
-          ...prev,
-          layout: {
-            ...prev.layout,
-            currentPreset: event.detail.presetId,
-            containers: event.detail.layout,
-          },
-        }));
+        setHeaderSettings((prev: HeaderSettings) => {
+          // Create a safe copy of prev and ensure layout exists
+          const prevCopy = { ...prev };
+
+          // Initialize layout property if it doesn't exist
+          if (!prevCopy.layout) {
+            prevCopy.layout = {
+              sticky: false,
+              maxWidth: "1200px",
+              currentPreset: "",
+              containers: {},
+            };
+          }
+
+          return {
+            ...prevCopy,
+            layout: {
+              ...prevCopy.layout,
+              currentPreset: event.detail.presetId,
+              containers: event.detail.layout,
+            },
+          };
+        });
       }
     };
 
@@ -1063,7 +1194,7 @@ export default function PageBuilder() {
       console.log("Saving header layout:", event.detail);
       // Update the state
       if (event.detail.layout && event.detail.presetId) {
-        setHeaderSettings((prev) => ({
+        setHeaderSettings((prev: HeaderSettings) => ({
           ...prev,
           layout: {
             ...prev.layout,

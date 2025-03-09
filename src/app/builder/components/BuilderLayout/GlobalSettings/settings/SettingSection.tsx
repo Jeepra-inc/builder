@@ -6,6 +6,7 @@ interface SettingSectionProps {
   description?: string;
   children: React.ReactNode;
   className?: string; // Add className prop
+  expanded?: boolean;
 }
 
 export function SettingSection({
@@ -13,6 +14,7 @@ export function SettingSection({
   description,
   children,
   className, // Destructure className
+  expanded = true,
 }: SettingSectionProps) {
   return (
     <>
@@ -23,7 +25,7 @@ export function SettingSection({
             <p className="text-xs text-gray-500">{description}</p>
           )}
         </div>
-        <div>{children}</div>
+        {expanded && <div className="mt-4 space-y-4">{children}</div>}
       </div>
       <Separator />
     </>

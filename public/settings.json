@@ -1,94 +1,5 @@
 {
-  "sections": [
-    {
-      "id": "section_1741435869532_zm8pentcy",
-      "type": "newarrival",
-      "content": [
-        "Example content"
-      ],
-      "settings": {
-        "paddingTop": 20,
-        "paddingBottom": 20,
-        "colorScheme": "scheme-3",
-        "textAlignment": "left",
-        "buttonText": "BUY NOW ikk",
-        "buttonStyle": "outline"
-      }
-    }
-  ],
-  "headerSettings": {
-    "logo": {
-      "text": "Your Brand",
-      "showText": true
-    },
-    "navigation": {
-      "items": [
-        {
-          "text": "Home",
-          "url": "#",
-          "isButton": false
-        },
-        {
-          "text": "About",
-          "url": "#",
-          "isButton": false
-        },
-        {
-          "text": "Contact",
-          "url": "#",
-          "isButton": true
-        }
-      ]
-    },
-    "layout": {
-      "sticky": true,
-      "maxWidth": "1200px",
-      "currentPreset": "preset1",
-      "containers": {
-        "top_left": [
-          "html_block_4"
-        ],
-        "top_center": [],
-        "top_right": [
-          "html_block_3"
-        ],
-        "middle_left": [
-          "logo"
-        ],
-        "middle_center": [
-          "nav_icon",
-          "search"
-        ],
-        "middle_right": [
-          "divider_1",
-          "cart",
-          "divider_4",
-          "button_2",
-          "button_1",
-          "account",
-          "html_block_5"
-        ],
-        "bottom_left": [],
-        "bottom_center": [],
-        "bottom_right": [
-          "mainMenu"
-        ],
-        "available": [
-          "html_block_1",
-          "html_block_2",
-          "topBarMenu",
-          "contact",
-          "wishlist",
-          "social_icon",
-          "followIcons",
-          "divider_2",
-          "divider_3"
-        ]
-      }
-    },
-    "lastSelectedSubmenu": "Header Navigation Setting",
-    "lastSelectedSetting": "mainMenu"
-  },
+  "sections": [],
   "footerSettings": {
     "content": {
       "copyright": "© 2024 Your Company. All rights reserved.",
@@ -206,5 +117,57 @@
       "backgroundColor": "#ffffff"
     }
   },
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "headerSettings": {
+    "layout": {
+      "sticky": false,
+      "maxWidth": "1200px",
+      "currentPreset": "preset1",
+      "containers": {
+        "top_left": [
+          "html_block_4",
+          "html_block_5"
+        ],
+        "top_center": [
+          "account",
+          "html_block_3"
+        ],
+        "top_right": [
+          "html_block_2",
+          "html_block_1"
+        ],
+        "middle_left": [
+          "logo"
+        ],
+        "middle_center": [
+          "search",
+          "button_1",
+          "button_2"
+        ],
+        "middle_right": [
+          "nav_icon",
+          "contact"
+        ],
+        "bottom_left": [
+          "bottomMenu"
+        ],
+        "bottom_center": [],
+        "bottom_right": [
+          "topBarMenu",
+          "mainMenu"
+        ],
+        "available": [
+          "cart",
+          "wishlist",
+          "social_icon",
+          "divider_1",
+          "divider_2",
+          "divider_3",
+          "divider_4"
+        ]
+      }
+    },
+    "lastSelectedSubmenu": "Header Main Setting",
+    "lastSelectedSetting": "contact"
+  }
 }

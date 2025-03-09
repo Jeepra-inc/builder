@@ -1,4 +1,5 @@
 import { getAllHeaderItems } from "./headerItems";
+import { PresetLayouts } from "../sidebar/types";
 
 export const headerPresets = [
   {
@@ -53,11 +54,11 @@ export const headerPresets = [
   },
 ];
 
-export const presetLayouts = {
+export const presetLayouts: PresetLayouts = {
   preset1: {
     top_left: [],
     top_center: [],
-    top_right: [],
+    top_right: ["contact"],
     middle_left: ["logo"],
     middle_center: [],
     middle_right: ["cart"],
@@ -66,12 +67,12 @@ export const presetLayouts = {
     bottom_right: [],
     available: getAllHeaderItems()
       .map((item) => item.id)
-      .filter((id) => !["logo", "search", "cart"].includes(id)),
+      .filter((id) => !["logo", "search", "cart", "contact"].includes(id)),
   },
   preset2: {
     top_left: ["html_block_1"],
     top_center: [],
-    top_right: ["topBarMenu", "followIcons"],
+    top_right: ["topBarMenu", "followIcons", "contact"],
     middle_left: ["search", "mainMenu"],
     middle_center: ["logo"],
     middle_right: ["account", "cart"],
@@ -91,6 +92,7 @@ export const presetLayouts = {
             "logo",
             "account",
             "cart",
+            "contact",
           ].includes(id)
       ),
   },
