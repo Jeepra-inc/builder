@@ -1,0 +1,101 @@
+:root {
+  /* Global Layout Settings */
+  --page-width: 2500px;
+  
+  /* Layout Settings */
+  --header-max-width: 1200px;
+  --header-sticky: false;
+  
+  /* Header Color Schemes */
+  --top-bar-color-scheme: light;
+  --main-bar-color-scheme: light;
+  --bottom-bar-color-scheme: light;
+  
+  /* Header Visibility */
+  --top-bar-visible: false;
+  --bottom-bar-visible: false;
+  
+  /* Header Heights */
+  --top-bar-height: 40px;
+  --main-bar-height: 80px;
+  --bottom-bar-height: 50px;
+  
+  /* Logo Settings */
+  --logo-width: 48px;
+  
+  /* Typography */
+  --heading-font: 'Bebas Neue:400', sans-serif;
+  --body-font: 'Assistant', sans-serif;
+  --heading-size-scale: 100%;
+  --body-size-scale: 100%;
+  --heading-color: #1a1a1a;
+  
+  /* Colors */
+  --background-color: #ffffff;
+  
+  /* Theme variables */
+  --theme-primary: #3b82f6;
+  --theme-secondary: #6b7280;
+  --theme-accent: #f59e0b;
+  --theme-background: #ffffff;
+  --theme-foreground: #111827;
+  --theme-muted: #f3f4f6;
+  --theme-muted-foreground: #6b7280;
+  --theme-border: #e5e7eb;
+  --theme-input: #e5e7eb;
+  --theme-ring: #3b82f6;
+  --theme-radius: 0.5rem;
+}
+
+/* Helper classes that use CSS variables */
+.max-width-container {
+  width: 100%;
+  max-width: var(--header-max-width);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.page-container {
+  width: 100%;
+  max-width: var(--page-width);
+  margin-left: auto;
+  margin-right: auto;
+  transition: max-width 0.3s ease;
+}
+
+.header-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.top-bar {
+  display: var(--top-bar-visible, flex);
+  height: var(--top-bar-height);
+}
+
+.bottom-bar {
+  display: var(--bottom-bar-visible, flex);
+  height: var(--bottom-bar-height);
+}
+
+body {
+  font-family: var(--body-font);
+  background-color: var(--background-color);
+  color: var(--theme-foreground);
+}
+
+/* Custom container class that respects page width */
+.nish {
+  width: 100%;
+  max-width: var(--page-width);
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+  transition: max-width 0.3s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--heading-font);
+  color: var(--heading-color);
+}

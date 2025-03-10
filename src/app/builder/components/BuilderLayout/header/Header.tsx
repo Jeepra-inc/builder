@@ -7,29 +7,7 @@ import React, {
   useRef,
   useCallback,
 } from "react";
-import clsx from "clsx";
-import { getAllHeaderItems } from "../data/headerItems";
-import {
-  Facebook,
-  Instagram,
-  Linkedin,
-  Phone,
-  Twitter,
-  Settings,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Pencil, Plus, X } from "lucide-react";
-import {
-  fetchColorSchemes,
-  getColorSchemeStyles,
-} from "@/app/builder/utils/colorSchemeUtils";
+import { Settings } from "lucide-react";
 import DOMPurify from "dompurify";
 import menuItemsData from "@/app/builder/data/menu-items.json";
 
@@ -49,11 +27,6 @@ const headerItemStyles = `
     width: 100%;
   }
 `;
-
-// Helper function to check if a custom color scheme is being used
-const isCustomColorScheme = (schemeId?: string) => {
-  return schemeId && schemeId !== "light" && schemeId !== "dark";
-};
 
 interface HeaderLayout {
   top_left: string[];
@@ -89,9 +62,10 @@ interface HeaderSettings {
   topBarColorScheme?: string;
   mainBarColorScheme?: string; // Added for main section
   bottomBarColorScheme?: string; // Added for bottom section
+  bottomEnabled?: boolean; // Added for bottom section visibility
   topBarNavStyle?: "style1" | "style2" | "style3";
   topBarTextTransform?: "uppercase" | "capitalize" | "lowercase";
-  logo?: { text?: string; showText?: boolean };
+  logo?: { text?: string; showText?: boolean; image?: string; size?: string };
   lastSelectedSetting?: string | null; // Track the last selected setting
   lastSelectedSubmenu?: string | null; // Track the last selected submenu
   showAccount?: boolean; // Whether to show the account widget
@@ -306,11 +280,89 @@ export default function Header({
   isSelected,
   onSelect,
 }: HeaderProps) {
+  const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
+  const [isTopBarVisible, setIsTopBarVisible] = useState<boolean>(
+    settings.topBarVisible !== false
+  );
+  const [isBottomSectionVisible, setIsBottomSectionVisible] = useState<boolean>(
+    settings.bottomEnabled !== false
+  );
+
+  // Function to apply CSS variables from settings
+  const applyCSSVariables = useCallback((settings: HeaderSettings) => {
+    const layout = (settings?.layout as LayoutSettings) || {};
+
+    // Apply header layout settings
+    if (layout && layout.maxWidth) {
+      document.documentElement.style.setProperty(
+        "--header-max-width",
+        layout.maxWidth
+      );
+    }
+
+    if (layout && typeof layout.sticky === "boolean") {
+      document.documentElement.style.setProperty(
+        "--header-sticky",
+        layout.sticky ? "true" : "false"
+      );
+    }
+
+    // Apply color schemes
+    if (settings.topBarColorScheme) {
+      document.documentElement.style.setProperty(
+        "--top-bar-color-scheme",
+        settings.topBarColorScheme
+      );
+    }
+
+    if (settings.mainBarColorScheme) {
+      document.documentElement.style.setProperty(
+        "--main-bar-color-scheme",
+        settings.mainBarColorScheme
+      );
+    }
+
+    if (settings.bottomBarColorScheme) {
+      document.documentElement.style.setProperty(
+        "--bottom-bar-color-scheme",
+        settings.bottomBarColorScheme
+      );
+    }
+
+    // Apply visibility settings
+    document.documentElement.style.setProperty(
+      "--top-bar-visible",
+      settings.topBarVisible ? "flex" : "none"
+    );
+    document.documentElement.style.setProperty(
+      "--bottom-bar-visible",
+      settings.bottomEnabled ? "flex" : "none"
+    );
+
+    // Apply height settings
+    if (settings.topBarHeight) {
+      document.documentElement.style.setProperty(
+        "--top-bar-height",
+        `${settings.topBarHeight}px`
+      );
+    }
+  }, []);
+
+  // Add debug logging for logo
+  useEffect(() => {
+    if (settings.logo) {
+      console.log("Logo settings in Header:", settings.logo);
+    }
+
+    // Apply CSS variables whenever settings change
+    applyCSSVariables(settings);
+  }, [settings, applyCSSVariables]);
+
   const initHeaderSettings = useMemo(() => {
     return { ...defaultHeaderSettings, ...settings };
   }, [settings]);
 
-  // State to store the header settings
+  // State to store the header settings (KEEP THIS ONE)
   const [headerSettings, setHeaderSettings] = useState<HeaderSettings>({
     topBarVisible: true,
     topBarHeight: 40,
@@ -379,6 +431,8 @@ export default function Header({
       topBarColorScheme?: string;
       mainBarColorScheme?: string;
       bottomBarColorScheme?: string;
+      topBarVisible?: boolean;
+      bottomEnabled?: boolean;
     }) => {
       // Create scheme object with defaults
       const notifySchemes = {
@@ -394,6 +448,14 @@ export default function Header({
           schemes.bottomBarColorScheme ||
           headerSettings.bottomBarColorScheme ||
           "light",
+        topBarVisible:
+          schemes.topBarVisible !== undefined
+            ? schemes.topBarVisible
+            : headerSettings.topBarVisible !== false,
+        bottomEnabled:
+          schemes.bottomEnabled !== undefined
+            ? schemes.bottomEnabled
+            : headerSettings.bottomEnabled !== false,
       };
 
       // Create string representation for comparison
@@ -715,7 +777,9 @@ export default function Header({
           if (
             event.data.settings.topBarColorScheme !== undefined ||
             event.data.settings.mainBarColorScheme !== undefined ||
-            event.data.settings.bottomBarColorScheme !== undefined
+            event.data.settings.bottomBarColorScheme !== undefined ||
+            event.data.settings.topBarVisible !== undefined ||
+            event.data.settings.bottomEnabled !== undefined
           ) {
             // Wait for the state update to complete before notifying
             setTimeout(() => {
@@ -723,6 +787,8 @@ export default function Header({
                 topBarColorScheme: event.data.settings.topBarColorScheme,
                 mainBarColorScheme: event.data.settings.mainBarColorScheme,
                 bottomBarColorScheme: event.data.settings.bottomBarColorScheme,
+                topBarVisible: event.data.settings.topBarVisible,
+                bottomEnabled: event.data.settings.bottomEnabled,
               });
             }, 50);
           }
@@ -1344,36 +1410,9 @@ export default function Header({
   ]);
 
   // Get HTML content for a layout item (MOVE THIS FUNCTION BEFORE renderSection)
-  const getHtmlContent = React.useCallback(
-    (itemId: string): string => {
-      // Special handling for search with a unique key to force re-rendering
-      if (itemId === "search") {
-        // Generate search HTML with the current settings
-        const html = generateSearchHTML(headerSettings);
-        return DOMPurify.sanitize(`<div data-item-id="search">${html}</div>`);
-      }
-
-      // Special handling for navigation icon - handle both IDs (nav_icon and navIcon)
-      if (itemId === "navIcon" || itemId === "nav_icon") {
-        // Generate navigation icon HTML with current settings
-        const html = generateNavIconHTML(headerSettings);
-        return DOMPurify.sanitize(`<div data-item-id="nav_icon">${html}</div>`);
-      }
-
-      // Special handling for contact information
-      if (itemId === "contact") {
-        // Generate HTML based on contact settings
-        console.log(
-          "Generating contact HTML with settings:",
-          headerSettings.contact
-        );
-        const contactHTML = generateContactHTML(headerSettings);
-        console.log("Generated contact HTML:", contactHTML);
-        // Note: We don't wrap in another div because the generateContactHTML function already includes a div with data-item-id="contact"
-        return DOMPurify.sanitize(contactHTML);
-      }
-
-      // Special handling for menu items
+  const getHtmlContent = useCallback(
+    (itemId: string) => {
+      // Handle menu types first
       if (
         itemId === "mainMenu" ||
         itemId === "topBarMenu" ||
@@ -1381,14 +1420,12 @@ export default function Header({
       ) {
         // Check if we have navigation data for this menu type
         if (
-          headerSettings.navigation &&
-          headerSettings.navigation.menuType === itemId &&
-          headerSettings.navigation.items &&
-          headerSettings.navigation.items.length > 0
+          headerSettings.navigation?.menuType === itemId &&
+          headerSettings.navigation?.items?.length > 0
         ) {
           // Generate HTML from the navigation items
           return DOMPurify.sanitize(
-            generateMenuHTML(itemId, headerSettings.navigation.items)
+            generateMenuHTML(itemId, headerSettings.navigation?.items || [])
           );
         } else {
           // Use menu data from menuItems.json as fallback
@@ -1408,27 +1445,51 @@ export default function Header({
           const logoSettings = headerSettings.logo as {
             text?: string;
             showText?: boolean;
+            image?: string;
+            size?: string;
           };
+
           const logoText = logoSettings.text || "Your Brand";
           const showText = logoSettings.showText !== false;
 
-          // Create logo HTML based on settings and sanitize it
-          if (showText) {
-            return DOMPurify.sanitize(`<div class="logo-container">
-            <img src="/logo.svg" class="h-8" alt="Logo" />
-            <span class="ml-2 font-bold text-lg">${logoText}</span>
-          </div>`);
-          } else {
-            return DOMPurify.sanitize(
-              `<img src="/logo.svg" class="h-8" alt="Logo" />`
-            );
+          // Determine image source with better fallback handling
+          let logoImage = logoSettings.image;
+
+          // Debug the logo image value only when rendering actual logo
+          console.log("Rendering logo in renderHeaderItem:", {
+            logoImage,
+            hasLogoSettings: !!headerSettings.logo,
+            logoSettingsDetails: logoSettings,
+          });
+
+          // Determine logo size based on settings
+          let logoHeight = "h-8"; // Default medium size
+          if (logoSettings.size === "small") logoHeight = "h-6";
+          if (logoSettings.size === "large") logoHeight = "h-10";
+
+          // If no logo image is found in the header settings, try to use a default
+          if (!logoImage || logoImage === "") {
+            logoImage = "/logo.svg";
           }
+
+          // Create logo HTML based on settings
+          const logoHtml = `
+            <div class="logo-container flex items-center">
+              <img src="${logoImage}" class="${logoHeight}" alt="Logo" />
+              ${
+                showText
+                  ? `<span class="ml-2 font-bold text-lg">${logoText}</span>`
+                  : ""
+              }
+            </div>
+          `;
+
+          return DOMPurify.sanitize(logoHtml);
         }
 
-        // Fallback to default logo HTML
+        // If we get here, no logo settings were found, use the default logo
         return DOMPurify.sanitize(
-          HTMLContentMap.logo ||
-            '<img src="/logo.svg" class="h-8" alt="Logo" />'
+          `<img src="/logo.svg" class="h-8" alt="Logo" />`
         );
       }
 
@@ -1437,6 +1498,22 @@ export default function Header({
         // Generate HTML based on account settings
         const accountHTML = generateAccountHTML(headerSettings);
         return DOMPurify.sanitize(accountHTML);
+      }
+
+      // Special handling for search
+      if (itemId === "search") {
+        // Generate HTML based on search settings
+        const searchHTML = generateSearchHTML(headerSettings);
+        return DOMPurify.sanitize(searchHTML);
+      }
+
+      // Handle other special items
+      if (itemId === "nav_icon") {
+        return DOMPurify.sanitize(generateNavIconHTML(headerSettings));
+      }
+
+      if (itemId === "contact") {
+        return DOMPurify.sanitize(generateContactHTML(headerSettings));
       }
 
       // First check customHtml for exact match
@@ -1479,6 +1556,7 @@ export default function Header({
         return DOMPurify.sanitize(HTMLContentMap[itemId]);
       }
 
+      // Default fallback - just display the item ID
       return DOMPurify.sanitize(`<div>${itemId}</div>`);
     },
     [headerSettings, customHtml]
@@ -1881,30 +1959,54 @@ export default function Header({
         if (
           updatedSettings.topBarColorScheme !== undefined ||
           updatedSettings.mainBarColorScheme !== undefined ||
-          updatedSettings.bottomBarColorScheme !== undefined
+          updatedSettings.bottomBarColorScheme !== undefined ||
+          updatedSettings.topBarVisible !== undefined ||
+          updatedSettings.bottomEnabled !== undefined
         ) {
-          console.log("Color scheme settings update received:", {
+          console.log("Header settings update received:", {
             top: updatedSettings.topBarColorScheme,
             main: updatedSettings.mainBarColorScheme,
             bottom: updatedSettings.bottomBarColorScheme,
+            topBarVisible: updatedSettings.topBarVisible,
+            bottomEnabled: updatedSettings.bottomEnabled,
           });
 
           // Apply the settings
-          setHeaderSettings((prev) => ({
-            ...prev,
-            topBarColorScheme:
-              updatedSettings.topBarColorScheme !== undefined
-                ? updatedSettings.topBarColorScheme
-                : prev.topBarColorScheme,
-            mainBarColorScheme:
-              updatedSettings.mainBarColorScheme !== undefined
-                ? updatedSettings.mainBarColorScheme
-                : prev.mainBarColorScheme,
-            bottomBarColorScheme:
-              updatedSettings.bottomBarColorScheme !== undefined
-                ? updatedSettings.bottomBarColorScheme
-                : prev.bottomBarColorScheme,
-          }));
+          setHeaderSettings((prev) => {
+            // Create the updated state object
+            const updatedState = { ...prev };
+
+            // Update color scheme settings
+            if (updatedSettings.topBarColorScheme !== undefined) {
+              updatedState.topBarColorScheme =
+                updatedSettings.topBarColorScheme;
+            }
+            if (updatedSettings.mainBarColorScheme !== undefined) {
+              updatedState.mainBarColorScheme =
+                updatedSettings.mainBarColorScheme;
+            }
+            if (updatedSettings.bottomBarColorScheme !== undefined) {
+              updatedState.bottomBarColorScheme =
+                updatedSettings.bottomBarColorScheme;
+            }
+
+            // Handle topBarVisible separately
+            if (updatedSettings.topBarVisible !== undefined) {
+              // Convert to boolean if needed
+              if (typeof updatedSettings.topBarVisible === "string") {
+                updatedState.topBarVisible =
+                  updatedSettings.topBarVisible === "true";
+              } else {
+                updatedState.topBarVisible = !!updatedSettings.topBarVisible;
+              }
+              console.log(
+                "Updated topBarVisible to:",
+                updatedState.topBarVisible
+              );
+            }
+
+            return updatedState;
+          });
         }
 
         // Handle account settings
@@ -2204,14 +2306,15 @@ export default function Header({
   };
 
   // Add function to generate HTML for different menu types
-  const generateMenuHTML = (menuType: string, items: any[]) => {
-    if (!items || items.length === 0) return "";
+  const generateMenuHTML = (menuType: string, items: any[] = []): string => {
+    // Ensure items is always an array
+    const safeItems = Array.isArray(items) ? items : [];
 
     switch (menuType) {
       case "mainMenu":
         return `<nav class="main-menu">
           <ul class="flex gap-6">
-            ${items
+            ${safeItems
               .map(
                 (item) => `
               <li class="${
@@ -2245,7 +2348,7 @@ export default function Header({
       case "topBarMenu":
         return `<div class="top-bar-menu">
           <ul class="flex gap-3 text-sm">
-            ${items
+            ${safeItems
               .map(
                 (item) => `
               <li class="hover:underline cursor-pointer">${item.text}</li>
@@ -2258,7 +2361,7 @@ export default function Header({
       case "bottomMenu":
         return `<div class="bottom-bar-menu">
           <ul class="flex gap-4 text-sm">
-            ${items
+            ${safeItems
               .map(
                 (item) => `
               <li class="hover:underline cursor-pointer">${item.text}</li>
@@ -2716,6 +2819,207 @@ export default function Header({
     return contactHTML;
   };
 
+  // Add effect to notify parent of current color schemes
+  useEffect(() => {
+    // Helper function to notify parent about color schemes
+    const forceRepaint = () => {
+      try {
+        // If we're in an iframe, notify the parent
+        if (window !== window.parent) {
+          try {
+            // Send a message to the parent to update the color schemes
+            window.parent.postMessage(
+              {
+                type: "colorSchemeUpdated",
+                detail: {
+                  schemes: [], // This will be filled by the parent
+                  headerColorSchemes: {
+                    top: headerSettings.topBarColorScheme,
+                    main: headerSettings.mainBarColorScheme,
+                    bottom: headerSettings.bottomBarColorScheme,
+                  },
+                },
+              },
+              "*"
+            );
+
+            // For each section, send a specific event with section type
+            if (headerSettings.topBarColorScheme) {
+              window.parent.postMessage(
+                {
+                  type: "colorSchemeUpdated",
+                  detail: {
+                    schemes: [], // This will be filled by the parent
+                    sectionType: "top",
+                    schemeId: headerSettings.topBarColorScheme,
+                  },
+                },
+                "*"
+              );
+            }
+
+            if (headerSettings.mainBarColorScheme) {
+              window.parent.postMessage(
+                {
+                  type: "colorSchemeUpdated",
+                  detail: {
+                    schemes: [], // This will be filled by the parent
+                    sectionType: "main",
+                    schemeId: headerSettings.mainBarColorScheme,
+                  },
+                },
+                "*"
+              );
+            }
+
+            if (headerSettings.bottomBarColorScheme) {
+              window.parent.postMessage(
+                {
+                  type: "colorSchemeUpdated",
+                  detail: {
+                    schemes: [], // This will be filled by the parent
+                    sectionType: "bottom",
+                    schemeId: headerSettings.bottomBarColorScheme,
+                  },
+                },
+                "*"
+              );
+            }
+
+            console.log("Sent color scheme update to parent:", {
+              top: headerSettings.topBarColorScheme,
+              main: headerSettings.mainBarColorScheme,
+              bottom: headerSettings.bottomBarColorScheme,
+            });
+          } catch (e) {
+            console.warn("Could not send message to parent:", e);
+          }
+        }
+      } catch (e) {
+        console.error("Error notifying parent about color schemes:", e);
+      }
+    };
+
+    // Call immediately
+    forceRepaint();
+
+    // Also listen for direct color scheme selection messages
+    const handleColorSchemeSelection = (event: MessageEvent) => {
+      if (!event.data || typeof event.data !== "object") return;
+
+      if (event.data.type === "COLOR_SCHEME_SELECTED") {
+        const { section, schemeId } = event.data;
+
+        // Update the appropriate section's color scheme
+        if (section === "top" || section === "topBar") {
+          setHeaderSettings((prev) => ({
+            ...prev,
+            topBarColorScheme: schemeId,
+          }));
+        } else if (section === "main" || section === "mainBar") {
+          setHeaderSettings((prev) => ({
+            ...prev,
+            mainBarColorScheme: schemeId,
+          }));
+        } else if (section === "bottom" || section === "bottomBar") {
+          setHeaderSettings((prev) => ({
+            ...prev,
+            bottomBarColorScheme: schemeId,
+          }));
+        }
+
+        // Ensure the update is reflected
+        setTimeout(forceRepaint, 50);
+      }
+    };
+
+    window.addEventListener("message", handleColorSchemeSelection);
+
+    return () => {
+      window.removeEventListener("message", handleColorSchemeSelection);
+    };
+  }, [
+    headerSettings.topBarColorScheme,
+    headerSettings.mainBarColorScheme,
+    headerSettings.bottomBarColorScheme,
+  ]);
+
+  // Update the useEffect that handles settings updates
+  useEffect(() => {
+    // When component mounts, send header settings to the parent window
+    if (settings && window.parent) {
+      // Apply CSS variables for live preview
+      const layout = (settings?.layout as LayoutSettings) || {};
+
+      // Apply header layout settings
+      if (layout && layout.maxWidth) {
+        document.documentElement.style.setProperty(
+          "--header-max-width",
+          layout.maxWidth
+        );
+      }
+
+      if (layout && typeof layout.sticky === "boolean") {
+        document.documentElement.style.setProperty(
+          "--header-sticky",
+          layout.sticky ? "true" : "false"
+        );
+      }
+
+      // Apply color schemes
+      if (settings.topBarColorScheme) {
+        document.documentElement.style.setProperty(
+          "--top-bar-color-scheme",
+          settings.topBarColorScheme
+        );
+      }
+
+      if (settings.mainBarColorScheme) {
+        document.documentElement.style.setProperty(
+          "--main-bar-color-scheme",
+          settings.mainBarColorScheme
+        );
+      }
+
+      if (settings.bottomBarColorScheme) {
+        document.documentElement.style.setProperty(
+          "--bottom-bar-color-scheme",
+          settings.bottomBarColorScheme
+        );
+      }
+
+      // Apply visibility settings
+      document.documentElement.style.setProperty(
+        "--top-bar-visible",
+        settings.topBarVisible ? "flex" : "none"
+      );
+      document.documentElement.style.setProperty(
+        "--bottom-bar-visible",
+        settings.bottomEnabled ? "flex" : "none"
+      );
+
+      // Apply height settings
+      if (settings.topBarHeight) {
+        document.documentElement.style.setProperty(
+          "--top-bar-height",
+          `${settings.topBarHeight}px`
+        );
+      }
+
+      try {
+        window.parent.postMessage(
+          {
+            type: "HEADER_SETTINGS_UPDATED",
+            settings,
+          },
+          "*"
+        );
+      } catch (error) {
+        console.error("Failed to send header settings to parent:", error);
+      }
+    }
+  }, [settings]);
+
   return (
     <header
       className={`relative shadow ${isEditing ? "editing" : ""} ${
@@ -2738,32 +3042,43 @@ export default function Header({
       data-main-scheme={headerSettings.mainBarColorScheme || "light"}
       data-bottom-scheme={headerSettings.bottomBarColorScheme || "light"}
     >
-      {/* Top Bar */}
-      <div
-        className="w-full transition-all grid grid-cols-[auto_1fr_auto] justify-between items-center px-8 gap-4 py-2"
-        style={getSectionStyle("top", headerSettings.topBarColorScheme)}
-      >
-        <div className="flex items-center gap-4 justify-self-start flex-shrink-0">
-          {renderSection(layoutItems.top_left, "top_left", {
-            color: getSectionTextColor("top", headerSettings.topBarColorScheme),
-          })}
+      {/* Top Bar - Only render if topBarVisible is true */}
+      {headerSettings.topBarVisible !== false && (
+        <div
+          className="w-full nish transition-all grid grid-cols-[auto_1fr_auto] justify-between items-center px-8 gap-4 py-2"
+          style={getSectionStyle("top", headerSettings.topBarColorScheme)}
+        >
+          <div className="flex items-center gap-4 justify-self-start flex-shrink-0">
+            {renderSection(layoutItems.top_left, "top_left", {
+              color: getSectionTextColor(
+                "top",
+                headerSettings.topBarColorScheme
+              ),
+            })}
+          </div>
+          <div className="flex gap-6 justify-self-center">
+            {renderSection(layoutItems.top_center, "top_center", {
+              color: getSectionTextColor(
+                "top",
+                headerSettings.topBarColorScheme
+              ),
+            })}
+          </div>
+          <div className="flex items-center gap-4 justify-self-end flex-shrink-0">
+            {renderSection(layoutItems.top_right, "top_right", {
+              color: getSectionTextColor(
+                "top",
+                headerSettings.topBarColorScheme
+              ),
+            })}
+            {headerSettings.showTopBarButton && (
+              <button className="px-4 py-1 bg-primary text-white rounded-md text-sm hover:bg-primary-dark transition-colors">
+                Shop Now
+              </button>
+            )}
+          </div>
         </div>
-        <div className="flex gap-6 justify-self-center">
-          {renderSection(layoutItems.top_center, "top_center", {
-            color: getSectionTextColor("top", headerSettings.topBarColorScheme),
-          })}
-        </div>
-        <div className="flex items-center gap-4 justify-self-end flex-shrink-0">
-          {renderSection(layoutItems.top_right, "top_right", {
-            color: getSectionTextColor("top", headerSettings.topBarColorScheme),
-          })}
-          {headerSettings.showTopBarButton && (
-            <button className="px-4 py-1 bg-primary text-white rounded-md text-sm hover:bg-primary-dark transition-colors">
-              Shop Now
-            </button>
-          )}
-        </div>
-      </div>
+      )}
 
       {/* Main Section */}
       <div
@@ -2796,36 +3111,38 @@ export default function Header({
         </div>
       </div>
 
-      {/* Bottom Section */}
-      <div
-        className="bottom-section w-full transition-all grid grid-cols-[auto_1fr_auto] items-center px-8 gap-4 py-3"
-        style={getSectionStyle("bottom", headerSettings.bottomBarColorScheme)}
-      >
-        <div className="flex items-center gap-4 flex-shrink-0">
-          {renderSection(layoutItems.bottom_left, "bottom_left", {
-            color: getSectionTextColor(
-              "bottom",
-              headerSettings.bottomBarColorScheme
-            ),
-          })}
+      {/* Bottom Section - Only render if bottomEnabled is true */}
+      {headerSettings.bottomEnabled !== false && (
+        <div
+          className="bottom-section w-full transition-all grid grid-cols-[auto_1fr_auto] items-center px-8 gap-4 py-3"
+          style={getSectionStyle("bottom", headerSettings.bottomBarColorScheme)}
+        >
+          <div className="flex items-center gap-4 flex-shrink-0">
+            {renderSection(layoutItems.bottom_left, "bottom_left", {
+              color: getSectionTextColor(
+                "bottom",
+                headerSettings.bottomBarColorScheme
+              ),
+            })}
+          </div>
+          <div className="flex gap-6 justify-self-center">
+            {renderSection(layoutItems.bottom_center, "bottom_center", {
+              color: getSectionTextColor(
+                "bottom",
+                headerSettings.bottomBarColorScheme
+              ),
+            })}
+          </div>
+          <div className="flex items-center gap-4 justify-self-end flex-shrink-0">
+            {renderSection(layoutItems.bottom_right, "bottom_right", {
+              color: getSectionTextColor(
+                "bottom",
+                headerSettings.bottomBarColorScheme
+              ),
+            })}
+          </div>
         </div>
-        <div className="flex gap-6 justify-self-center">
-          {renderSection(layoutItems.bottom_center, "bottom_center", {
-            color: getSectionTextColor(
-              "bottom",
-              headerSettings.bottomBarColorScheme
-            ),
-          })}
-        </div>
-        <div className="flex items-center gap-4 justify-self-end flex-shrink-0">
-          {renderSection(layoutItems.bottom_right, "bottom_right", {
-            color: getSectionTextColor(
-              "bottom",
-              headerSettings.bottomBarColorScheme
-            ),
-          })}
-        </div>
-      </div>
+      )}
     </header>
   );
 }

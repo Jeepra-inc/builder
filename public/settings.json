@@ -1,30 +1,56 @@
 {
   "sections": [],
-  "footerSettings": {
-    "content": {
-      "copyright": "© 2024 Your Company. All rights reserved.",
-      "description": "Building amazing websites with ease"
-    },
-    "links": {
-      "items": [
-        {
-          "text": "About Us",
-          "url": "#"
-        },
-        {
-          "text": "Contact",
-          "url": "#"
-        },
-        {
-          "text": "Privacy Policy",
-          "url": "#"
-        }
-      ]
-    },
+  "headerSettings": {
+    "lastSelectedSubmenu": "Header Main Setting",
+    "lastSelectedSetting": "nav_icon",
     "layout": {
+      "sticky": false,
       "maxWidth": "1200px",
-      "showSocials": true,
-      "multiColumn": true
+      "currentPreset": "preset1",
+      "containers": {
+        "top_left": [
+          "html_block_5"
+        ],
+        "top_center": [
+          "html_block_2"
+        ],
+        "top_right": [
+          "contact"
+        ],
+        "middle_left": [
+          "logo"
+        ],
+        "middle_center": [],
+        "middle_right": [
+          "cart",
+          "account",
+          "nav_icon"
+        ],
+        "bottom_left": [],
+        "bottom_center": [],
+        "bottom_right": [],
+        "available": [
+          "html_block_1",
+          "html_block_3",
+          "html_block_4",
+          "topBarMenu",
+          "mainMenu",
+          "bottomMenu",
+          "search",
+          "button_1",
+          "button_2",
+          "wishlist",
+          "social_icon",
+          "divider_1",
+          "divider_2",
+          "divider_3",
+          "divider_4"
+        ]
+      }
+    },
+    "logo": {
+      "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
+      "size": "medium"
     }
   },
   "globalStyles": {
@@ -33,8 +59,8 @@
         {
           "name": "Scheme 1",
           "background": "#FFFFFF",
-          "text": "#ffffff",
-          "gradient": "linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(9,9,121,1) 35%, rgba(0,212,255,1) 100%)",
+          "text": "#121212",
+          "gradient": "linear-gradient(90deg, #00C9FF 0%, #92FE9D 100%)",
           "buttonBackground": "#121212",
           "buttonLabel": "#FFFFFF",
           "outlineButton": "#121212",
@@ -44,7 +70,7 @@
           "name": "Scheme 2",
           "background": "#F0F0F0",
           "text": "#121212",
-          "gradient": "linear-gradient(90deg, RGB(244, 204, 213) 0%, rgba(63,94,251,1) 100%)",
+          "gradient": "linear-gradient(90deg, #FC466B 0%, #3F5EFB 100%)",
           "buttonBackground": "#121212",
           "buttonLabel": "#FFFFFF",
           "outlineButton": "#121212",
@@ -61,113 +87,34 @@
           "id": "scheme-3"
         },
         {
+          "id": "scheme-4",
           "name": "Scheme 4",
-          "background": "#000000",
-          "text": "#FFFFFF",
-          "gradient": "linear-gradient(90deg, #FF9A8B 0%, #FF6A88 55%, #FF99AC 100%)",
-          "buttonBackground": "#121212",
-          "buttonLabel": "#FFFFFF",
-          "outlineButton": "#121212",
-          "id": "scheme-4"
-        },
-        {
-          "name": "Scheme 5",
-          "background": "#3366FF",
-          "text": "#FFFFFF",
-          "gradient": "linear-gradient(90deg, RGB(17, 17, 17) 0%, rgba(224,195,252,1) 100%)",
-          "buttonBackground": "#121212",
-          "buttonLabel": "#FFFFFF",
-          "outlineButton": "#121212",
-          "id": "scheme-5"
-        },
-        {
-          "id": "scheme-6",
-          "name": "Scheme 6",
-          "background": "#ff0000",
-          "text": "#a3a3a3",
+          "background": "#FFFFFF",
+          "text": "#000000",
           "gradient": "",
-          "buttonBackground": "#f5f2f2",
-          "buttonLabel": "#f30707",
-          "outlineButton": "#706969"
-        },
-        {
-          "id": "scheme-7",
-          "name": "Scheme 7",
-          "background": "#141647",
-          "text": "#ffffff",
-          "gradient": "rgba(20, 22, 71, 1)",
-          "buttonBackground": "#fcfafa",
-          "buttonLabel": "#000000",
-          "outlineButton": "#ffffff"
+          "buttonBackground": "#000000",
+          "buttonLabel": "#FFFFFF",
+          "outlineButton": "#000000"
         }
       ]
     },
+    "branding": {
+      "logoUrl": "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
+      "logoWidth": 48,
+      "faviconUrl": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
+      "backgroundColor": "#ffffff"
+    },
     "typography": {
-      "headingFont": "Lexend:800",
-      "bodyFont": "Caveat:700",
-      "headingSizeScale": 115,
-      "bodySizeScale": 79,
+      "headingFont": "Bebas Neue:400",
+      "bodyFont": "Assistant",
+      "headingSizeScale": 100,
+      "bodySizeScale": 100,
       "headingColor": "#1a1a1a"
     },
-    "customCSS": "",
-    "branding": {
-      "logoUrl": "",
-      "logoWidth": 68,
-      "faviconUrl": "",
-      "backgroundColor": "#ffffff"
-    }
+    "customCSS": ""
   },
   "version": "1.0.0",
-  "headerSettings": {
-    "layout": {
-      "sticky": false,
-      "maxWidth": "1200px",
-      "currentPreset": "preset1",
-      "containers": {
-        "top_left": [
-          "html_block_4",
-          "html_block_5"
-        ],
-        "top_center": [
-          "account",
-          "html_block_3"
-        ],
-        "top_right": [
-          "html_block_2",
-          "html_block_1"
-        ],
-        "middle_left": [
-          "logo"
-        ],
-        "middle_center": [
-          "search",
-          "button_1",
-          "button_2"
-        ],
-        "middle_right": [
-          "nav_icon",
-          "contact"
-        ],
-        "bottom_left": [
-          "bottomMenu"
-        ],
-        "bottom_center": [],
-        "bottom_right": [
-          "topBarMenu",
-          "mainMenu"
-        ],
-        "available": [
-          "cart",
-          "wishlist",
-          "social_icon",
-          "divider_1",
-          "divider_2",
-          "divider_3",
-          "divider_4"
-        ]
-      }
-    },
-    "lastSelectedSubmenu": "Header Main Setting",
-    "lastSelectedSetting": "contact"
+  "globalLayout": {
+    "pageWidth": "2500px"
   }
 }

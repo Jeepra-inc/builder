@@ -33,6 +33,8 @@ interface HeaderSettings {
   logo?: {
     text: string;
     showText: boolean;
+    image?: string;
+    size?: string;
   };
   navigation?: {
     menuType: string;
@@ -136,6 +138,8 @@ export default function IframeContent() {
     logo: {
       text: "Builder",
       showText: true,
+      image: "", // Will be populated from settings
+      size: "medium", // Default size
     },
     navigation: {
       menuType: "mainMenu",
@@ -347,6 +351,45 @@ export default function IframeContent() {
           document.body.style.backgroundColor = event.data.backgroundColor;
           break;
         }
+        case "UPDATE_CSS_VARIABLE": {
+          // Handle CSS variable updates for live preview
+          console.log(
+            "IFRAME: Updating CSS variable:",
+            event.data.variable,
+            "to",
+            event.data.value
+          );
+
+          if (event.data.variable && event.data.value) {
+            // Update the CSS variable in the iframe's document
+            document.documentElement.style.setProperty(
+              event.data.variable,
+              event.data.value
+            );
+
+            // Send confirmation back to parent
+            if (window.parent) {
+              try {
+                window.parent.postMessage(
+                  {
+                    type: "CSS_VARIABLE_UPDATED",
+                    variable: event.data.variable,
+                    value: event.data.value,
+                    success: true,
+                    timestamp: Date.now(),
+                  },
+                  event.origin || "*"
+                );
+              } catch (error) {
+                console.error(
+                  "IFRAME: Failed to send CSS variable update confirmation:",
+                  error
+                );
+              }
+            }
+          }
+          break;
+        }
         case "REORDER_SECTIONS": {
           const { sectionId, blocks } = event.data;
           dispatch({
@@ -358,6 +401,11 @@ export default function IframeContent() {
         }
         case "UPDATE_HEADER_SETTINGS": {
           const { settings } = event.data;
+
+          // Add debug for logo updates
+          if (settings.logo) {
+            console.log("IFRAME: Received logo settings:", settings.logo);
+          }
 
           // If the settings include navIcon, handle it specially
           if (settings.navIcon) {
@@ -722,6 +770,14 @@ export default function IframeContent() {
           }
 
           setHeaderSettings((prev) => ({ ...prev, ...settings }));
+
+          // Log updated header settings
+          if (settings.logo) {
+            setTimeout(() => {
+              console.log("IFRAME: Updated headerSettings:", headerSettings);
+            }, 100);
+          }
+
           break;
         }
 
@@ -1051,6 +1107,35 @@ export default function IframeContent() {
           break;
         }
 
+        case "UPDATE_LOGO": {
+          const { logoUrl, logoWidth } = event.data;
+          console.log("Handling UPDATE_LOGO message:", { logoUrl, logoWidth });
+
+          // Update the header settings with the logo information
+          setHeaderSettings((prev) => {
+            // Create a new logo object, preserving existing properties
+            const updatedLogo = {
+              ...(prev.logo || { text: "Your Brand", showText: true }),
+              image: logoUrl,
+              size: getLogoSizeFromWidth(logoWidth),
+            };
+
+            console.log("Updating header settings with logo:", updatedLogo);
+
+            return {
+              ...prev,
+              logo: updatedLogo,
+            };
+          });
+
+          // Log the update to help debug
+          setTimeout(() => {
+            console.log("Header settings after UPDATE_LOGO:", headerSettings);
+          }, 100);
+
+          break;
+        }
+
         default:
           break;
       }
@@ -1298,12 +1383,62 @@ export default function IframeContent() {
               setLocalSections(event.data.settings.sections);
             }
 
+            // Process header settings
             if (event.data.settings.headerSettings) {
+              // Check specifically for logo in header settings
+              if (event.data.settings.headerSettings.logo) {
+                console.log(
+                  "Received logo in header settings:",
+                  event.data.settings.headerSettings.logo
+                );
+              }
+
+              // Create updated header settings with merged logo info
+              const updatedHeaderSettings = {
+                ...event.data.settings.headerSettings,
+              };
+
+              // Check for additional logo info in globalStyles.branding
+              if (event.data.settings.globalStyles?.branding) {
+                const branding = event.data.settings.globalStyles.branding;
+
+                // If there's a logo in branding but not in header settings, add it
+                if (
+                  !updatedHeaderSettings.logo ||
+                  !updatedHeaderSettings.logo.image
+                ) {
+                  const logoFromBranding =
+                    branding.logoForHeader || branding.logoUrl;
+
+                  if (logoFromBranding) {
+                    console.log("Using logo from branding:", logoFromBranding);
+
+                    // Create or update logo object
+                    updatedHeaderSettings.logo = {
+                      ...(updatedHeaderSettings.logo || {}),
+                      text: "Your Brand",
+                      showText: true,
+                      image: logoFromBranding,
+                      size: branding.logoSizeForHeader || "medium",
+                    };
+                  }
+                }
+              }
+
               console.log(
-                "Setting header settings in iframe:",
-                event.data.settings.headerSettings
+                "Setting header settings in iframe with logo:",
+                updatedHeaderSettings.logo
               );
-              setHeaderSettings(event.data.settings.headerSettings);
+
+              setHeaderSettings(updatedHeaderSettings);
+
+              // After setting, log the current header settings to verify logo was applied
+              setTimeout(() => {
+                console.log(
+                  "Current header settings after update:",
+                  headerSettings
+                );
+              }, 100);
             }
 
             if (event.data.settings.footerSettings) {
@@ -1771,6 +1906,13 @@ export default function IframeContent() {
     };
   }, []);
 
+  // Add this helper function somewhere appropriate (outside the handler)
+  const getLogoSizeFromWidth = (width: number): string => {
+    if (width <= 40) return "small";
+    if (width >= 60) return "large";
+    return "medium";
+  };
+
   // ----------------- RENDER -----------------
   return (
     <>
@@ -1781,7 +1923,10 @@ export default function IframeContent() {
         onSelect={handleHeaderSelect}
       />
       <TooltipProvider>
-        <div className="relative w-full h-full" ref={scrollAreaRef}>
+        <div
+          className="relative w-full h-full page-container mx-auto"
+          ref={scrollAreaRef}
+        >
           {localSections.map((section, index) => {
             const isVisible =
               section.isVisible !== false &&

@@ -72,7 +72,7 @@
       }
     ]
   },
-  "topBarMstillenu": {
+  "topBarMenu": {
     "name": "Top Bar Navigation",
     "description": "Secondary navigation items displayed in the top bar section",
     "items": [

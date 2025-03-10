@@ -74,7 +74,7 @@ interface HeaderSettings {
   bottomBarColorScheme?: string;
   topBarNavStyle?: "style1" | "style2" | "style3";
   topBarTextTransform?: "uppercase" | "capitalize" | "lowercase";
-  logo?: { text?: string; showText?: boolean };
+  logo?: { text?: string; showText?: boolean; image?: string; size?: string };
   lastSelectedSetting?: string | null;
   lastSelectedSubmenu?: string | null;
   showAccount?: boolean;
@@ -259,7 +259,7 @@ export default function PageBuilder() {
     setGlobalSettings(initialSettings);
 
     // Apply loaded settings to state
-    if (initialSettings.sections.length > 0) {
+    if (initialSettings.sections && initialSettings.sections.length > 0) {
       setSections(initialSettings.sections);
     }
 
@@ -273,18 +273,53 @@ export default function PageBuilder() {
     setFooterSettings(initialSettings.footerSettings);
 
     // Apply global styles
-    setBackgroundColor(initialSettings.globalStyles.branding.backgroundColor);
-    setLogoUrl(initialSettings.globalStyles.branding.logoUrl);
-    setLogoWidth(initialSettings.globalStyles.branding.logoWidth);
-    setFaviconUrl(initialSettings.globalStyles.branding.faviconUrl);
-    setHeadingColor(initialSettings.globalStyles.typography.headingColor);
-    setCustomCSS(initialSettings.globalStyles.customCSS);
-    setHeadingFont(initialSettings.globalStyles.typography.headingFont);
-    setBodyFont(initialSettings.globalStyles.typography.bodyFont);
-    setHeadingSizeScale(
-      initialSettings.globalStyles.typography.headingSizeScale
-    );
-    setBodySizeScale(initialSettings.globalStyles.typography.bodySizeScale);
+    if (initialSettings.globalStyles?.branding?.backgroundColor) {
+      setBackgroundColor(initialSettings.globalStyles.branding.backgroundColor);
+    }
+    if (initialSettings.globalStyles?.branding?.logoUrl) {
+      setLogoUrl(initialSettings.globalStyles.branding.logoUrl);
+    }
+    if (initialSettings.globalStyles?.branding?.logoWidth) {
+      setLogoWidth(initialSettings.globalStyles.branding.logoWidth);
+    }
+    if (initialSettings.globalStyles?.branding?.faviconUrl) {
+      setFaviconUrl(initialSettings.globalStyles.branding.faviconUrl);
+    }
+    if (initialSettings.globalStyles?.typography?.headingColor) {
+      setHeadingColor(initialSettings.globalStyles.typography.headingColor);
+    }
+    if (initialSettings.globalStyles?.customCSS) {
+      setCustomCSS(initialSettings.globalStyles.customCSS);
+    }
+    if (initialSettings.globalStyles?.typography?.headingFont) {
+      setHeadingFont(initialSettings.globalStyles.typography.headingFont);
+    }
+    if (initialSettings.globalStyles?.typography?.bodyFont) {
+      setBodyFont(initialSettings.globalStyles.typography.bodyFont);
+    }
+    if (initialSettings.globalStyles?.typography?.headingSizeScale) {
+      setHeadingSizeScale(
+        initialSettings.globalStyles.typography.headingSizeScale
+      );
+    }
+    if (initialSettings.globalStyles?.typography?.bodySizeScale) {
+      setBodySizeScale(initialSettings.globalStyles.typography.bodySizeScale);
+    }
+
+    // Add logo from branding to headerSettings explicitly
+    if (initialSettings.globalStyles?.branding?.logoUrl) {
+      // Update the headerSettings to include the logo from global branding
+      setHeaderSettings((prev) => ({
+        ...prev,
+        logo: {
+          ...(prev?.logo || {}),
+          image: initialSettings.globalStyles.branding.logoUrl,
+          size: getLogoSizeFromWidth(
+            initialSettings.globalStyles.branding.logoWidth || 50
+          ),
+        },
+      }));
+    }
 
     // Then try to load from file asynchronously
     const loadSettingsFromFile = async () => {
@@ -293,7 +328,7 @@ export default function PageBuilder() {
         setGlobalSettings(loadedSettings);
 
         // Apply loaded settings to state
-        if (loadedSettings.sections.length > 0) {
+        if (loadedSettings.sections && loadedSettings.sections.length > 0) {
           setSections(loadedSettings.sections);
         }
 
@@ -307,20 +342,57 @@ export default function PageBuilder() {
         setFooterSettings(loadedSettings.footerSettings);
 
         // Apply global styles
-        setBackgroundColor(
-          loadedSettings.globalStyles.branding.backgroundColor
-        );
-        setLogoUrl(loadedSettings.globalStyles.branding.logoUrl);
-        setLogoWidth(loadedSettings.globalStyles.branding.logoWidth);
-        setFaviconUrl(loadedSettings.globalStyles.branding.faviconUrl);
-        setHeadingColor(loadedSettings.globalStyles.typography.headingColor);
-        setCustomCSS(loadedSettings.globalStyles.customCSS);
-        setHeadingFont(loadedSettings.globalStyles.typography.headingFont);
-        setBodyFont(loadedSettings.globalStyles.typography.bodyFont);
-        setHeadingSizeScale(
-          loadedSettings.globalStyles.typography.headingSizeScale
-        );
-        setBodySizeScale(loadedSettings.globalStyles.typography.bodySizeScale);
+        if (loadedSettings.globalStyles?.branding?.backgroundColor) {
+          setBackgroundColor(
+            loadedSettings.globalStyles.branding.backgroundColor
+          );
+        }
+        if (loadedSettings.globalStyles?.branding?.logoUrl) {
+          setLogoUrl(loadedSettings.globalStyles.branding.logoUrl);
+        }
+        if (loadedSettings.globalStyles?.branding?.logoWidth) {
+          setLogoWidth(loadedSettings.globalStyles.branding.logoWidth);
+        }
+        if (loadedSettings.globalStyles?.branding?.faviconUrl) {
+          setFaviconUrl(loadedSettings.globalStyles.branding.faviconUrl);
+        }
+        if (loadedSettings.globalStyles?.typography?.headingColor) {
+          setHeadingColor(loadedSettings.globalStyles.typography.headingColor);
+        }
+        if (loadedSettings.globalStyles?.customCSS) {
+          setCustomCSS(loadedSettings.globalStyles.customCSS);
+        }
+        if (loadedSettings.globalStyles?.typography?.headingFont) {
+          setHeadingFont(loadedSettings.globalStyles.typography.headingFont);
+        }
+        if (loadedSettings.globalStyles?.typography?.bodyFont) {
+          setBodyFont(loadedSettings.globalStyles.typography.bodyFont);
+        }
+        if (loadedSettings.globalStyles?.typography?.headingSizeScale) {
+          setHeadingSizeScale(
+            loadedSettings.globalStyles.typography.headingSizeScale
+          );
+        }
+        if (loadedSettings.globalStyles?.typography?.bodySizeScale) {
+          setBodySizeScale(
+            loadedSettings.globalStyles.typography.bodySizeScale
+          );
+        }
+
+        // Add logo from branding to headerSettings explicitly
+        if (loadedSettings.globalStyles?.branding?.logoUrl) {
+          // Update the headerSettings to include the logo from global branding
+          setHeaderSettings((prev) => ({
+            ...prev,
+            logo: {
+              ...(prev?.logo || {}),
+              image: loadedSettings.globalStyles.branding.logoUrl,
+              size: getLogoSizeFromWidth(
+                loadedSettings.globalStyles.branding.logoWidth || 50
+              ),
+            },
+          }));
+        }
       } catch (error) {
         console.error("Failed to load settings from file:", error);
       }
@@ -406,6 +478,25 @@ export default function PageBuilder() {
             logo: {
               text: "Your Brand",
               showText: true,
+              // Add logo image and size from globalSettings if available
+              image: globalSettings.globalStyles?.branding?.logoUrl || "",
+              size: getLogoSizeFromWidth(
+                globalSettings.globalStyles?.branding?.logoWidth || 50
+              ),
+            },
+          };
+
+          // Ensure branding logo is included in settings
+          const globalStylesWithLogo = {
+            ...globalSettings.globalStyles,
+            branding: {
+              ...globalSettings.globalStyles?.branding,
+              // Make sure logo is accessible for the iframe
+              logoForHeader:
+                globalSettings.globalStyles?.branding?.logoUrl || "",
+              logoSizeForHeader: getLogoSizeFromWidth(
+                globalSettings.globalStyles?.branding?.logoWidth || 50
+              ),
             },
           };
 
@@ -416,7 +507,7 @@ export default function PageBuilder() {
                 sections,
                 headerSettings: effectiveHeaderSettings,
                 footerSettings,
-                globalStyles: globalSettings.globalStyles,
+                globalStyles: globalStylesWithLogo,
               },
             },
             "*"
@@ -437,8 +528,28 @@ export default function PageBuilder() {
 
     // Handle iframe load event to send settings immediately
     const handleIframeLoad = () => {
-      // console.log("Iframe loaded, sending settings immediately");
-      sendSettingsImmediately();
+      console.log("iframe loaded, sending settings immediately");
+
+      // Check if our settings are already loaded
+      if (globalSettings) {
+        sendSettingsImmediately();
+
+        // Also update CSS variables when iframe loads
+        import("./utils/settingsStorage").then(({ updateCSSVariables }) => {
+          updateCSSVariables(globalSettings)
+            .then(() => console.log("CSS variables updated on iframe load"))
+            .catch((error) =>
+              console.error(
+                "Failed to update CSS variables on iframe load:",
+                error
+              )
+            );
+        });
+      } else {
+        console.log("Settings not loaded yet, loading from file");
+        // Call the existing function to load settings
+        loadSettings();
+      }
     };
 
     // Set up load event listener
@@ -446,7 +557,7 @@ export default function PageBuilder() {
       contentRef.current.addEventListener("load", handleIframeLoad);
 
       // Also try immediately in case the iframe is already loaded
-      sendSettingsImmediately();
+      handleIframeLoad();
     }
 
     // For subsequent updates, use the debounced version
@@ -686,16 +797,63 @@ export default function PageBuilder() {
       );
     };
 
-    // Handler for saving preset changes from the HeaderLayoutsPanel
     // Handler for saving color scheme changes
     const handleColorSchemeUpdated = (event: CustomEvent) => {
       console.log("🎨 [PAGE] Received colorSchemeUpdated event:", event);
-      const { schemes } = event.detail;
+      const { schemes, sectionType, schemeId } = event.detail;
       console.log("🎨 [PAGE] Schemes from event:", {
         schemeCount: schemes?.length,
         isArray: Array.isArray(schemes),
         firstScheme: schemes?.[0],
+        sectionType,
+        schemeId,
       });
+
+      // Check if this is a header section color scheme update
+      if (
+        sectionType &&
+        schemeId &&
+        ["top", "main", "bottom"].includes(sectionType)
+      ) {
+        // Update the appropriate header color scheme setting
+        let updatedHeaderSettings = { ...headerSettings };
+
+        if (sectionType === "top") {
+          updatedHeaderSettings.topBarColorScheme = schemeId;
+          console.log("🎨 [PAGE] Updated top bar color scheme:", schemeId);
+        } else if (sectionType === "main") {
+          updatedHeaderSettings.mainBarColorScheme = schemeId;
+          console.log("🎨 [PAGE] Updated main bar color scheme:", schemeId);
+        } else if (sectionType === "bottom") {
+          updatedHeaderSettings.bottomBarColorScheme = schemeId;
+          console.log("🎨 [PAGE] Updated bottom bar color scheme:", schemeId);
+        }
+
+        // Update state
+        setHeaderSettings(updatedHeaderSettings);
+
+        // Create complete settings object for saving
+        const headerSchemeUpdatedSettings = {
+          sections,
+          headerSettings: updatedHeaderSettings,
+          footerSettings,
+          globalStyles: globalSettings.globalStyles,
+          version: globalSettings.version || "1.0.0",
+        };
+
+        console.log(
+          "🎨 [PAGE] Saving header settings with updated color schemes:",
+          updatedHeaderSettings
+        );
+
+        // Save settings to persist header color scheme changes
+        saveSettings(headerSchemeUpdatedSettings).catch((err) => {
+          console.error(
+            "🚨 [PAGE] Failed to save header color scheme settings:",
+            err
+          );
+        });
+      }
 
       if (schemes && Array.isArray(schemes)) {
         // First, create a complete copy of the current globalSettings
@@ -1009,8 +1167,32 @@ export default function PageBuilder() {
         const saveEvent = new CustomEvent("requestSaveHeaderLayout");
         window.dispatchEvent(saveEvent);
 
-        // Short delay to ensure the headerSettings state is updated with the latest layout
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        // Trigger notification for other components to prepare their settings
+        const saveSettingsEvent = new CustomEvent("requestSaveSettings");
+        window.dispatchEvent(saveSettingsEvent);
+
+        // Short delay to ensure all state is updated with the latest settings
+        await new Promise((resolve) => setTimeout(resolve, 200));
+
+        // Get any stored page width from localStorage
+        let globalLayout = {
+          pageWidth: globalSettings.globalLayout?.pageWidth || "1200px",
+          ...globalSettings.globalLayout,
+        };
+
+        try {
+          const settings = JSON.parse(
+            localStorage.getItem("visual-builder-settings") || "{}"
+          );
+          if (settings.globalLayout?.pageWidth) {
+            globalLayout = {
+              ...globalLayout,
+              pageWidth: settings.globalLayout.pageWidth,
+            };
+          }
+        } catch (error) {
+          console.error("Error loading global layout settings:", error);
+        }
 
         // Update global settings with current state
         const updatedSettings: GlobalSettings = {
@@ -1018,6 +1200,7 @@ export default function PageBuilder() {
           sections,
           headerSettings,
           footerSettings,
+          globalLayout,
           globalStyles: {
             ...globalSettings.globalStyles,
             branding: {
@@ -1092,20 +1275,42 @@ export default function PageBuilder() {
       setFooterSettings(importedSettings.footerSettings);
 
       // Apply global styles
-      setBackgroundColor(
-        importedSettings.globalStyles.branding.backgroundColor
-      );
-      setLogoUrl(importedSettings.globalStyles.branding.logoUrl);
-      setLogoWidth(importedSettings.globalStyles.branding.logoWidth);
-      setFaviconUrl(importedSettings.globalStyles.branding.faviconUrl);
-      setHeadingColor(importedSettings.globalStyles.typography.headingColor);
-      setCustomCSS(importedSettings.globalStyles.customCSS);
-      setHeadingFont(importedSettings.globalStyles.typography.headingFont);
-      setBodyFont(importedSettings.globalStyles.typography.bodyFont);
-      setHeadingSizeScale(
-        importedSettings.globalStyles.typography.headingSizeScale
-      );
-      setBodySizeScale(importedSettings.globalStyles.typography.bodySizeScale);
+      if (importedSettings.globalStyles?.branding?.backgroundColor) {
+        setBackgroundColor(
+          importedSettings.globalStyles.branding.backgroundColor
+        );
+      }
+      if (importedSettings.globalStyles?.branding?.logoUrl) {
+        setLogoUrl(importedSettings.globalStyles.branding.logoUrl);
+      }
+      if (importedSettings.globalStyles?.branding?.logoWidth) {
+        setLogoWidth(importedSettings.globalStyles.branding.logoWidth);
+      }
+      if (importedSettings.globalStyles?.branding?.faviconUrl) {
+        setFaviconUrl(importedSettings.globalStyles.branding.faviconUrl);
+      }
+      if (importedSettings.globalStyles?.typography?.headingColor) {
+        setHeadingColor(importedSettings.globalStyles.typography.headingColor);
+      }
+      if (importedSettings.globalStyles?.customCSS) {
+        setCustomCSS(importedSettings.globalStyles.customCSS);
+      }
+      if (importedSettings.globalStyles?.typography?.headingFont) {
+        setHeadingFont(importedSettings.globalStyles.typography.headingFont);
+      }
+      if (importedSettings.globalStyles?.typography?.bodyFont) {
+        setBodyFont(importedSettings.globalStyles.typography.bodyFont);
+      }
+      if (importedSettings.globalStyles?.typography?.headingSizeScale) {
+        setHeadingSizeScale(
+          importedSettings.globalStyles.typography.headingSizeScale
+        );
+      }
+      if (importedSettings.globalStyles?.typography?.bodySizeScale) {
+        setBodySizeScale(
+          importedSettings.globalStyles.typography.bodySizeScale
+        );
+      }
 
       // Update iframe with new settings
       contentRef.current?.contentWindow?.postMessage(
@@ -1220,6 +1425,13 @@ export default function PageBuilder() {
       );
     };
   }, []);
+
+  // Add this helper function somewhere at the appropriate scope
+  const getLogoSizeFromWidth = (width: number): string => {
+    if (width <= 40) return "small";
+    if (width >= 60) return "large";
+    return "medium";
+  };
 
   return (
     <TooltipProvider>

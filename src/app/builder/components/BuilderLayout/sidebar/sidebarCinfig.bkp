@@ -51,11 +51,45 @@ export const createMenuConfig = (
   handleSelectPreset: (presetId: string) => void,
   currentPreset: string
 ) => {
-  // Modify how header and footer menu items are defined - remove back button wrappers
+  // Create wrapper components with built-in back buttons
+  const withBackButton = (
+    Component: React.ComponentType<any>,
+    title: string
+  ) => {
+    return (props: any) => (
+      <div className="h-full flex flex-col">
+        <div className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
+          <div className="flex items-center gap-2 p-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => {
+                // Go back to Design panel
+                window.dispatchEvent(
+                  new CustomEvent("switchTab", {
+                    detail: { targetTab: "Design" },
+                  })
+                );
+              }}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-md font-medium">{title}</span>
+          </div>
+        </div>
+        <div className="flex-grow overflow-auto">
+          <Component {...props} />
+        </div>
+      </div>
+    );
+  };
+
+  // Modify how header and footer menu items are defined - add back button wrappers
   const headerMenuItems = [
     {
       title: "Layout",
-      component: HeaderLayoutsPanel,
+      component: withBackButton(HeaderLayoutsPanel, "Header Layout"),
       componentProps: {
         onSelectPreset: handleSelectPreset,
         currentPreset,
@@ -65,61 +99,61 @@ export const createMenuConfig = (
     },
     {
       title: "Top Bar Setting",
-      component: TopBarSettingsPanel,
+      component: withBackButton(TopBarSettingsPanel, "Header - Top Bar"),
       icon: AppWindowIcon,
       parent: "Header",
     },
     {
       title: "Header Main Setting",
-      component: HeaderMainSettings,
+      component: withBackButton(HeaderMainSettings, "Header - Main"),
       icon: TypeIcon,
       parent: "Header",
     },
     {
       title: "Header Bottom Setting",
-      component: HeaderBottomSettings,
+      component: withBackButton(HeaderBottomSettings, "Header - Bottom"),
       icon: ImageIcon,
       parent: "Header",
     },
     {
       title: "Header Search Setting",
-      component: HeaderSearchSettings,
+      component: withBackButton(HeaderSearchSettings, "Header - Search"),
       icon: SettingsIcon,
       parent: "Header",
     },
     {
       title: "Navigation Icon",
-      component: HeaderNavIconSettings,
+      component: withBackButton(HeaderNavIconSettings, "Header - Navigation"),
       icon: MenuIcon,
       parent: "Header",
     },
     {
       title: "Contact",
-      component: HeaderContactSettings,
+      component: withBackButton(HeaderContactSettings, "Header - Contact"),
       icon: PhoneIcon,
       parent: "Header",
     },
     {
       title: "Account Setting",
-      component: HeaderAccountSettings,
+      component: withBackButton(HeaderAccountSettings, "Header - Account"),
       icon: UserIcon,
       parent: "Header",
     },
     {
       title: "Buttons",
-      component: HeaderButtonSettings,
+      component: withBackButton(HeaderButtonSettings, "Header - Buttons"),
       icon: ImageIcon,
       parent: "Header",
     },
     {
       title: "Social",
-      component: HeaderSocialSettings,
+      component: withBackButton(HeaderSocialSettings, "Header - Social"),
       icon: LayoutPanelIcon,
       parent: "Header",
     },
     {
       title: "HTML",
-      component: HeaderHtmlSettings,
+      component: withBackButton(HeaderHtmlSettings, "Header - HTML"),
       icon: AppWindowIcon,
       parent: "Header",
     },
@@ -128,7 +162,7 @@ export const createMenuConfig = (
   const footerMenuItems = [
     {
       title: "Footer Settings",
-      component: FooterSettingsPanel,
+      component: withBackButton(FooterSettingsPanel, "Footer Settings"),
       icon: PanelRightIcon,
       parent: "Footer",
     },
@@ -205,6 +239,63 @@ export const createMenuConfig = (
     );
   };
 
+  // Add wrapper for the first level menus - Header and Footer
+  const withFirstLevelBackButton = (title: string, items: any[]) => {
+    return {
+      title,
+      items,
+      component: (props: any) => (
+        <div className="h-full flex flex-col">
+          <div className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
+            <div className="flex items-center gap-2 p-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => {
+                  // Go back to Design panel
+                  window.dispatchEvent(
+                    new CustomEvent("switchTab", {
+                      detail: { targetTab: "Design" },
+                    })
+                  );
+                }}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-md font-medium">{title} Settings</span>
+            </div>
+          </div>
+          <div className="p-4">
+            <ul className="space-y-2">
+              {items.map((item) => (
+                <li key={item.title}>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start flex items-center"
+                    onClick={() => {
+                      window.dispatchEvent(
+                        new CustomEvent("switchTab", {
+                          detail: {
+                            targetTab: title,
+                            targetSubmenu: item.title,
+                          },
+                        })
+                      );
+                    }}
+                  >
+                    {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+                    <span>{item.title}</span>
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      ),
+    };
+  };
+
   const initialMenu = {
     title: "Main Menu",
     items: [
@@ -215,18 +306,16 @@ export const createMenuConfig = (
         onClick: () => toggleNarrowSidebar("layers"),
       },
       {
-        title: "Header",
-        subMenu: headerMenuItems,
+        ...withFirstLevelBackButton("Header", headerMenuItems),
         icon: HeaderIcon,
         onClick: () => toggleNarrowSidebar("header-settings"),
-        hidden: true,
+        hidden: true, // Hidden from main menu, accessed via Design panel
       },
       {
-        title: "Footer",
-        subMenu: footerMenuItems,
+        ...withFirstLevelBackButton("Footer", footerMenuItems),
         icon: FooterIcon,
         onClick: () => toggleNarrowSidebar("layers"),
-        hidden: true,
+        hidden: true, // Hidden from main menu, accessed via Design panel
       },
       {
         title: "Global Settings",

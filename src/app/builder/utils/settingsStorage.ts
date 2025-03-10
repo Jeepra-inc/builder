@@ -5,6 +5,10 @@ export interface GlobalSettings {
   sections: Section[];
   headerSettings: any;
   footerSettings: any;
+  globalLayout?: {
+    pageWidth: string;
+    [key: string]: any;
+  };
   globalStyles: {
     colors: any;
     typography: {
@@ -44,6 +48,9 @@ export const defaultSettings: GlobalSettings = {
       sticky: true,
       maxWidth: "1200px",
     },
+  },
+  globalLayout: {
+    pageWidth: "1200px",
   },
   footerSettings: {
     content: {
@@ -93,7 +100,25 @@ export const saveSettings = async (settings: GlobalSettings): Promise<void> => {
   try {
     // Make sure we have the proper structure for color schemes
     if (!settings.globalStyles) {
-      settings.globalStyles = {};
+      settings.globalStyles = {
+        colors: {
+          schemes: [],
+        },
+        typography: {
+          headingFont: "Assistant",
+          bodyFont: "Assistant",
+          headingSizeScale: 100,
+          bodySizeScale: 100,
+          headingColor: "#1a1a1a",
+        },
+        customCSS: "",
+        branding: {
+          logoUrl: "",
+          logoWidth: 90,
+          faviconUrl: "",
+          backgroundColor: "#ffffff",
+        },
+      };
     }
 
     if (!settings.globalStyles.colors) {
@@ -121,6 +146,12 @@ export const saveSettings = async (settings: GlobalSettings): Promise<void> => {
     console.log(" [saveSettings] Calling saveSettingsToFile...");
     await saveSettingsToFile(settings);
     console.log(" [saveSettings] Settings saved to file successfully");
+
+    // Update CSS variables
+    console.log(" [saveSettings] Updating CSS variables...");
+    await updateCSSVariables(settings);
+    console.log(" [saveSettings] CSS variables updated successfully");
+
     return Promise.resolve();
   } catch (error) {
     console.error(" [saveSettings] Failed to save settings:", error);
@@ -343,4 +374,47 @@ export const validateSettings = (settings: any): settings is GlobalSettings => {
   }
 
   return true;
+};
+
+// Update CSS variables in main.css file
+export const updateCSSVariables = async (
+  settings: GlobalSettings
+): Promise<void> => {
+  try {
+    console.log(
+      " [updateCSSVariables] Starting API call to update CSS variables..."
+    );
+
+    const response = await fetch("/api/css-variables", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(settings),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(" [updateCSSVariables] API response not OK:", {
+        status: response.status,
+        statusText: response.statusText,
+        responseText: errorText,
+      });
+      throw new Error(
+        `Failed to update CSS variables: ${response.statusText} - ${errorText}`
+      );
+    }
+
+    const responseData = await response.json();
+    console.log(
+      " [updateCSSVariables] CSS variables updated successfully:",
+      responseData
+    );
+  } catch (error) {
+    console.error(
+      " [updateCSSVariables] Failed to update CSS variables:",
+      error
+    );
+    throw error;
+  }
 };

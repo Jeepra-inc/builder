@@ -54,7 +54,7 @@ export function GlobalSettingsPanel() {
                   <span>{category.label}</span>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="p-3">
+              <AccordionContent className="pb-0">
                 {SettingComponent && <SettingComponent />}
               </AccordionContent>
             </AccordionItem>

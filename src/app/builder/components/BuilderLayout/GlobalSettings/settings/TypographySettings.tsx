@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { SettingSection } from "./SettingSection";
 import { CheckCircle2, ChevronsUpDown } from "lucide-react";
 import { useBuilder } from "@/app/builder/contexts/BuilderContext";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ColSection } from "./colSection";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type FontType = "heading" | "body";
 
@@ -41,37 +49,28 @@ const FontSettingBlock = ({
   setSizeScale: (value: number) => void;
   onFontClick: () => void;
 }) => (
-  <SettingSection
-    title={title}
-    description="Selecting a different font can affect the speed of your store."
-  >
-    <div className="space-y-4">
-      <div className="flex justify-between items-center gap-4">
-        <label className="text-sm font-medium mb-2 block">Font</label>
-        <Button
-          variant="outline"
-          onClick={onFontClick}
-          className="flex items-center justify-between"
-        >
-          <span style={{ fontFamily: font.split(":")[0] }}>
-            {font.split(":")[0]}
-          </span>
-          <ChevronsUpDown size={16} className="text-zinc-400" />
-        </Button>
-      </div>
-      <div className="flex justify-between items-center gap-4">
-        <label className="text-sm font-medium mb-2 block">
-          Font size scale
-        </label>
-        <RangeSlider
-          min={50}
-          max={150}
-          value={sizeScale}
-          onValueChange={setSizeScale}
-        />
-      </div>
-    </div>
-  </SettingSection>
+  <>
+    <ColSection title={title} divider={false} className="pb-1">
+      <Button
+        variant="outline"
+        onClick={onFontClick}
+        className="flex items-center justify-between w-full"
+      >
+        <span style={{ fontFamily: font.split(":")[0] }}>
+          {font.split(":")[0]}
+        </span>
+        <ChevronsUpDown size={16} className="text-zinc-400" />
+      </Button>
+    </ColSection>
+    <ColSection title="Font size scale" divider={false}>
+      <RangeSlider
+        min={50}
+        max={150}
+        value={sizeScale}
+        onValueChange={setSizeScale}
+      />
+    </ColSection>
+  </>
 );
 
 const useFontPanel = (
@@ -465,78 +464,86 @@ export function TypographySettings() {
   };
 
   return (
-    <div className="space-y-6">
+    <>
       {fontPanel.isOpen && (
-        <div className="absolute top-0 left-0 right-0 bottom-0 bg-white z-50 flex flex-col shadow-lg">
-          <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="text-lg font-semibold">Select font</h2>
-            <Button variant="ghost" onClick={fontPanel.close}>
-              ✕
-            </Button>
-          </div>
-          <div className="p-4 border-b">
-            <input
-              type="text"
-              placeholder="Search"
-              value={fontPanel.searchTerm}
-              onChange={(e) => fontPanel.setSearchTerm(e.target.value)}
-              className="w-full p-2 border rounded"
-            />
-          </div>
-          <div
-            ref={scrollRef}
-            className="flex-1 overflow-y-auto"
-            style={{ maxHeight: "calc(100vh - 200px)" }}
-            onScroll={handleScroll}
-          >
-            <div className="p-4">
-              <h3 className="text-sm font-bold mb-2">SYSTEM FONTS</h3>
-              <p className="text-xs">
-                These fonts load faster and might appear differently on various
-                devices.
-              </p>
-            </div>
-            <Separator />
-            {systemFonts
-              .filter((f) =>
-                f.toLowerCase().includes(fontPanel.searchTerm.toLowerCase())
-              )
-              .map((font) => (
-                <FontItem key={font} font={font} isGoogle={false} />
-              ))}
+        <Dialog
+          open={fontPanel.isOpen}
+          onOpenChange={(open) => !open && fontPanel.close()}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Select font</DialogTitle>
+            </DialogHeader>
 
-            <div className="p-4">
-              <h3 className="text-sm font-bold mb-2">GOOGLE FONTS</h3>
-              <p className="text-xs">
-                These fonts are downloaded and might cause slower load times.
-              </p>
+            <div className="py-2">
+              <Input
+                type="text"
+                placeholder="Search"
+                value={fontPanel.searchTerm}
+                onChange={(e) => fontPanel.setSearchTerm(e.target.value)}
+              />
             </div>
-            <Separator />
-            {visibleFonts
-              .filter((f) =>
-                f.family
-                  .toLowerCase()
-                  .includes(fontPanel.searchTerm.toLowerCase())
-              )
-              .map(({ family }) => (
-                <FontItem key={family} font={family} isGoogle={true} />
-              ))}
 
-            {loading && (
-              <div className="text-center py-4">Loading more fonts...</div>
-            )}
-          </div>
-          <div className="border-t">
-            <div className="flex justify-end gap-2 p-4">
+            <div
+              ref={scrollRef}
+              className="max-h-[50vh] overflow-y-auto"
+              onScroll={handleScroll}
+            >
+              <div className="p-4">
+                <h3 className="text-sm font-bold mb-2">SYSTEM FONTS</h3>
+                <p className="text-xs">
+                  These fonts load faster and might appear differently on
+                  various devices.
+                </p>
+              </div>
+              <Separator />
+              {systemFonts
+                .filter((f) =>
+                  f.toLowerCase().includes(fontPanel.searchTerm.toLowerCase())
+                )
+                .map((font) => (
+                  <FontItem key={font} font={font} isGoogle={false} />
+                ))}
+
+              <div className="p-4">
+                <h3 className="text-sm font-bold mb-2">GOOGLE FONTS</h3>
+                <p className="text-xs">
+                  These fonts are downloaded and might cause slower load times.
+                </p>
+              </div>
+              <Separator />
+              {fontPanel.searchTerm
+                ? googleFonts
+                    .filter((f) =>
+                      f.family
+                        .toLowerCase()
+                        .includes(fontPanel.searchTerm.toLowerCase())
+                    )
+                    .map(({ family }) => {
+                      loadFont(family, "400");
+                      return (
+                        <FontItem key={family} font={family} isGoogle={true} />
+                      );
+                    })
+                : visibleFonts.map(({ family }) => (
+                    <FontItem key={family} font={family} isGoogle={true} />
+                  ))}
+
+              {loading && !fontPanel.searchTerm && (
+                <div className="text-center py-4">Loading more fonts...</div>
+              )}
+            </div>
+
+            <DialogFooter className="border-t pt-4">
               <Button variant="ghost" size="sm" onClick={fontPanel.close}>
                 Cancel
               </Button>
               <Button variant="outline" size="sm" onClick={fontPanel.confirm}>
                 Select
               </Button>
-            </div>
-          </div>
-        </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
 
       <FontSettingBlock
@@ -556,6 +563,6 @@ export function TypographySettings() {
         setSizeScale={setBodySizeScale}
         onFontClick={() => fontPanel.open("body")}
       />
-    </div>
+    </>
   );
 }

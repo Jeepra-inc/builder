@@ -12,6 +12,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ColSection } from "./colSection";
 
 interface CustomCSS {
   mobile: string;
@@ -175,35 +176,23 @@ export function CustomCSSSettings() {
   }
 
   return (
-    <div className="space-y-6">
-      <SettingSection
-        title="Responsive CSS"
-        description="Add custom CSS for different breakpoints"
-      >
-        <div className="space-y-4">
-          <div className="flex justify-end">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={toggleDrawer}
-                    className="flex items-center gap-1 text-xs mb-2"
-                  >
-                    <Maximize2 className="h-3.5 w-3.5" />
-                    Expand Editor
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Expand Editor to Full Screen</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          {cssEditor}
-        </div>
-      </SettingSection>
-    </div>
+    <SettingSection
+      title="Responsive CSS"
+      description="Add custom CSS for different breakpoints"
+    >
+      <div className="space-y-4">
+        {cssEditor}
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleDrawer}
+          className="flex items-center gap-1 text-xs w-full justify-center mt-4"
+        >
+          <Maximize2 className="h-3.5 w-3.5 mr-1" />
+          Expand Editor
+        </Button>
+      </div>
+    </SettingSection>
   );
 }

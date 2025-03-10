@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { ChevronRight, ChevronLeft, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnimatePresence, motion } from "framer-motion";
 
 type MenuItem = {
   title: string;
@@ -35,6 +36,7 @@ interface MultiLevelSidebarProps {
   };
   onMenuItemClick?: (item: MenuItem) => void;
   defaultSubmenu?: string | null;
+  // Add any other props needed
 }
 
 const MenuItemList = ({
@@ -92,11 +94,11 @@ const BackButtonWithTitle = ({
   onBack: () => void;
 }) => (
   <div className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
-    <div className="px-4 py-3 flex items-center gap-2">
+    <div className="px-2 py-2 flex items-center gap-2">
       <Button
         variant="ghost"
         size="icon"
-        className="rounded-md mr-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+        className="rounded-md h-7 w-7 text-gray-500 hover:text-gray-800 hover:bg-gray-200"
         onClick={onBack}
       >
         <ChevronLeft size={18} />
@@ -123,6 +125,32 @@ export default function MultiLevelSidebar({
 
   // Add a state to track whether we should skip animations during direct navigation
   const [skipTransition, setSkipTransition] = useState(false);
+
+  // Function to get the title based on active tab
+  const getActiveTabTitle = () => {
+    if (activeTab === "Header") return "Header Settings";
+    if (activeTab === "Footer") return "Footer Settings";
+    if (activeTab === "Global Settings") return "Global Settings";
+    if (activeTab === "Section Settings") return "Section Settings";
+    if (activeTab === "Design") return "Design";
+    if (activeTab === "SEO") return "SEO Settings";
+    if (activeTab === "Page Settings") return "Page Settings";
+    return "";
+  };
+
+  // Add this function near the top of the component
+  const getTitleForMenu = (
+    menuTitle: string,
+    submenu: string | null | undefined
+  ) => {
+    if (menuTitle === "Header" && submenu) {
+      return submenu;
+    }
+    if (menuTitle === "Footer" && submenu) {
+      return submenu;
+    }
+    return menuTitle;
+  };
 
   // This effect runs only once on initial load to set up default submenu if provided
   useEffect(() => {
@@ -319,24 +347,25 @@ export default function MultiLevelSidebar({
     const currentMenu = menuStack[menuStack.length - 1];
     const previousMenu = menuStack[menuStack.length - 2];
 
-    // Check if we're going back to Header or Footer main panel
+    // Handle navigation back to main menu (Design panel)
     if (menuStack.length === 2) {
-      if (previousMenu.title === "Main Menu") {
-        // We're going back to the first level
-        if (
-          currentMenu.title.includes("Header") ||
-          currentMenu.title === "Top Bar Setting" ||
-          currentMenu.title === "Header Main Setting" ||
-          currentMenu.title === "Header Bottom Setting" ||
-          currentMenu.title === "Header Search Setting" ||
-          currentMenu.title === "Buttons" ||
-          currentMenu.title === "Social" ||
-          currentMenu.title === "HTML"
-        ) {
-          setActiveTab("Header");
-        } else if (currentMenu.title.includes("Footer")) {
-          setActiveTab("Footer");
-        }
+      // When going back from a first-level submenu to main menu
+      setActiveTab("Design");
+      setMenuStack([initialMenu]);
+
+      // Also trigger the Design tab's onClick handler if it exists
+      const designItem = initialMenu.items?.find(
+        (item) => item.title === "Design"
+      );
+      if (designItem?.onClick) {
+        designItem.onClick();
+      }
+    } else if (menuStack.length > 2) {
+      // Going back from deeper levels
+      if (previousMenu?.title === "Header") {
+        setActiveTab("Header");
+      } else if (previousMenu?.title === "Footer") {
+        setActiveTab("Footer");
       }
     }
 
@@ -355,19 +384,6 @@ export default function MultiLevelSidebar({
   };
 
   const currentMenu = menuStack[menuStack.length - 1];
-
-  // Function to get the title based on active tab
-  const getActiveTabTitle = () => {
-    if (activeTab === "Header") return "Header Settings";
-    if (activeTab === "Footer") return "Footer Settings";
-    // Skip Global Settings Panel since its component has its own title
-    if (activeTab === "Global Settings Panel") return "";
-    if (activeTab === "Section Settings") return "Section Settings";
-    if (activeTab === "Design") return "Design";
-    if (activeTab === "SEO") return "SEO Settings";
-    if (activeTab === "Page Setting") return "Page Settings";
-    return "";
-  };
 
   return (
     <div className="absolute top-0 left-0 w-full h-full flex">
@@ -420,27 +436,94 @@ export default function MultiLevelSidebar({
             skipTransition ? "transition-none" : ""
           }`}
         >
-          {/* Display title based on menu level */}
-          {menuStack.length === 1 && getActiveTabTitle() ? (
+          {/* Display header for top-level Header/Footer panels */}
+          {(() => {
+            console.log("Current menu stack:", menuStack);
+            console.log("Current menu title:", currentMenu?.title);
+            console.log(
+              "Should show back button:",
+              menuStack.length === 1 &&
+                (currentMenu.title === "Header" ||
+                  currentMenu.title === "Footer")
+            );
+
+            return menuStack.length === 1 &&
+              (currentMenu.title === "Header" ||
+                currentMenu.title === "Footer") ? (
+              <div className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
+                <div className="flex items-center gap-2 p-3">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => {
+                      console.log("Back button clicked");
+                      // Go back to Design panel
+                      setActiveTab("Design");
+                      // Go back to the main menu
+                      setMenuStack([initialMenu]);
+                      // Find and click the Design tab
+                      const designItem = initialMenu.items?.find(
+                        (item) => item.title === "Design"
+                      );
+                      console.log("Found Design item:", designItem);
+                      if (designItem?.onClick) {
+                        designItem.onClick();
+                      }
+                    }}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-md font-medium">
+                    {currentMenu.title} Settings
+                  </span>
+                </div>
+              </div>
+            ) : null;
+          })()}
+
+          {/* Display title based on menu level - we'll hide this if we're showing our custom header */}
+          {menuStack.length === 1 &&
+          currentMenu.title !== "Main Menu" &&
+          currentMenu.title !== "Header" &&
+          currentMenu.title !== "Footer" ? (
             <div className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
               <h2 className="px-4 py-3 text-sm font-semibold text-gray-800">
-                {getActiveTabTitle()}
+                {currentMenu.title}
               </h2>
             </div>
-          ) : (
-            menuStack.length > 1 &&
-            // For Header/Footer first level, show back button only when not the main panel
-            // For deeper nesting, show back button with title
-            (menuStack[0].title === "Header" ||
-            menuStack[0].title === "Footer" ? (
-              // Don't show anything for the main panels (activeTab === "Header" || activeTab === "Footer")
-              activeTab === menuStack[0].title ? null : (
-                <BackButtonOnly onBack={goBack} />
-              )
-            ) : (
-              <BackButtonWithTitle title={currentMenu.title} onBack={goBack} />
-            ))
-          )}
+          ) : null}
+
+          {/* Always show back button for any submenu level */}
+          {menuStack.length > 1 && menuStack.length === 2 ? (
+            <div className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
+              <div className="flex items-center gap-2 p-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={goBack}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-md font-medium">{currentMenu.title}</span>
+              </div>
+            </div>
+          ) : menuStack.length > 2 ? (
+            <div className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
+              <div className="flex items-center gap-2 p-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={goBack}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-md font-medium">{currentMenu.title}</span>
+              </div>
+            </div>
+          ) : null}
 
           {menuStack.length === 1 && initialMenu.items ? (
             <>

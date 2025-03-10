@@ -7,7 +7,8 @@ export const useSidebarNavigation = (
 ) => {
   useEffect(() => {
     const handleSwitchTab = (event: CustomEvent) => {
-      const { targetTab, targetSubmenu, settingId, directNav } = event.detail;
+      const { targetTab, targetSubmenu, settingId, directNav, showTitle } =
+        event.detail;
 
       if (targetTab === "Header") {
         if (directNav) {
@@ -15,8 +16,18 @@ export const useSidebarNavigation = (
           if (settingId) setSelectedHeaderSetting(settingId);
         }
         toggleNarrowSidebar("header-settings");
+        setCurrentSubmenu(
+          targetSubmenu || (showTitle ? "Header Settings" : null)
+        );
+      } else if (targetTab === "Footer") {
+        // Handle Footer tab clicks
+        toggleNarrowSidebar("layers");
+        setCurrentSubmenu(
+          targetSubmenu || (showTitle ? "Footer Settings" : null)
+        );
       } else if (targetTab === "Design") {
         setCurrentSubmenu(null);
+        toggleNarrowSidebar("layers");
       } else if (targetTab === "Section Settings") {
         toggleNarrowSidebar("settings");
       }

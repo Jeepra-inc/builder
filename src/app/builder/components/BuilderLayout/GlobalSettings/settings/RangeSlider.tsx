@@ -65,18 +65,18 @@ const RangeSlider = ({
       <div className="relative h-[20px] flex-1">
         {/* Track elements */}
         <div
-          className="absolute w-full top-[7px]"
+          className="absolute w-full top-[8px]"
           style={
             {
               ["--s"]: "2px",
-              height: "6px",
+              height: "4px",
               background:
                 "radial-gradient(circle closest-side, #ddd 100%, #0000) 0 0 / var(--s) 5%, linear-gradient(90deg, #ddd 50%, #0000 0) calc(var(--s) / 2) 0 / calc(2* var(--s)) 100%",
             } as React.CSSProperties
           }
         />
         <div
-          className="absolute h-[6px] rounded-full top-1/2 transform -translate-y-1/2"
+          className="absolute h-[5px] rounded-full top-1/2 transform -translate-y-1/2"
           style={{
             width: `${percentage}%`,
             backgroundColor: color,
@@ -104,8 +104,8 @@ const RangeSlider = ({
           {`
             input[type="range"]::-webkit-slider-thumb {
               -webkit-appearance: none;
-              width: 20px;
-              height: 20px;
+              width: 15px;
+              height: 15px;
               background: var(--main-color);
               border-radius: 50%;
               cursor: pointer;
@@ -156,7 +156,7 @@ const RangeSlider = ({
           onChange={handleInput}
           style={{
             width: "100%",
-            padding: "8px 22px 8px 8px",
+            padding: "4px 22px 4px 8px",
             border: "1px solid #ddd",
             borderRadius: "4px",
             fontSize: "14px",

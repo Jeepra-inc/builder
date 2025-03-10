@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { SettingSection } from './SettingSection';
-import RangeSlider from './RangeSlider';
+import React, { useState } from "react";
+import RangeSlider from "./RangeSlider";
+import { ColSection } from "./colSection";
+import { Button } from "@/components/ui/button";
+import { Maximize2 } from "lucide-react";
 
 export function MediaSettings() {
   const [borderThickness, setBorderThickness] = useState(1);
@@ -11,99 +13,102 @@ export function MediaSettings() {
   const [verticalOffset, setVerticalOffset] = useState(4);
   const [shadowBlur, setShadowBlur] = useState(5);
 
+  const handleFullscreen = () => {
+    // Implementation for fullscreen functionality can be added here
+    console.log("Fullscreen mode requested");
+  };
+
   return (
-    <div className="space-y-6">
-      <SettingSection title="Border" description="Customize media borders">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Thickness</label>
-            <RangeSlider
-              value={borderThickness}
-              onInput={(e) => setBorderThickness(parseFloat(e.target.value))}
-              unit="px"
-              min={0}
-              max={10}
-              step={1}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Opacity</label>
-            <RangeSlider
-              value={borderOpacity}
-              onInput={(e) => setBorderOpacity(parseFloat(e.target.value))}
-              unit="%"
-              min={0}
-              max={100}
-              step={1}
-            />
-          </div>
+    <>
+      <div className="p-3 pb-0">
+        <h3 className="font-semibold">Border</h3>
+        <p className="text-xs">Customize media borders</p>
+      </div>
+      <ColSection title="Thickness" divider={false} className="pb-0">
+        <RangeSlider
+          value={borderThickness}
+          onValueChange={setBorderThickness}
+          min={0}
+          max={10}
+          step={1}
+        />
+      </ColSection>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Corner radius</label>
-            <RangeSlider
-              value={cornerRadius}
-              onInput={(e) => setCornerRadius(parseFloat(e.target.value))}
-              unit="px"
-              min={0}
-              max={30}
-              step={1}
-            />
-          </div>
-        </div>
-      </SettingSection>
+      <ColSection title="Opacity" divider={false} className="pb-0">
+        <RangeSlider
+          value={borderOpacity}
+          onValueChange={setBorderOpacity}
+          min={0}
+          max={100}
+          step={1}
+        />
+      </ColSection>
 
-      <SettingSection title="Shadow" description="Adjust media shadow properties">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Opacity</label>
-            <RangeSlider
-              value={shadowOpacity}
-              onInput={(e) => setShadowOpacity(parseFloat(e.target.value))}
-              unit="%"
-              min={0}
-              max={100}
-              step={1}
-            />
-          </div>
+      <ColSection title="Corner radius">
+        <RangeSlider
+          value={cornerRadius}
+          onValueChange={setCornerRadius}
+          min={0}
+          max={30}
+          step={1}
+        />
+      </ColSection>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Horizontal offset</label>
-            <RangeSlider
-              value={horizontalOffset}
-              onInput={(e) => setHorizontalOffset(parseFloat(e.target.value))}
-              unit="px"
-              min={-30}
-              max={30}
-              step={1}
-            />
-          </div>
+      <div className="p-3 pb-0">
+        <h3 className="font-semibold">Shadow</h3>
+        <p className="text-xs">Adjust media shadow properties</p>
+      </div>
+      <ColSection title="Opacity" divider={false} className="pb-0">
+        <RangeSlider
+          value={shadowOpacity}
+          onValueChange={setShadowOpacity}
+          min={0}
+          max={100}
+          step={1}
+        />
+      </ColSection>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Vertical offset</label>
-            <RangeSlider
-              value={verticalOffset}
-              onInput={(e) => setVerticalOffset(parseFloat(e.target.value))}
-              unit="px"
-              min={-30}
-              max={30}
-              step={1}
-            />
-          </div>
+      <ColSection title="Horizontal offset" divider={false} className="pb-0">
+        <RangeSlider
+          value={horizontalOffset}
+          onValueChange={setHorizontalOffset}
+          min={-30}
+          max={30}
+          step={1}
+        />
+      </ColSection>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Blur</label>
-            <RangeSlider
-              value={shadowBlur}
-              onInput={(e) => setShadowBlur(parseFloat(e.target.value))}
-              unit="px"
-              min={0}
-              max={30}
-              step={1}
-            />
-          </div>
-        </div>
-      </SettingSection>
-    </div>
+      <ColSection title="Vertical offset" divider={false} className="pb-0">
+        <RangeSlider
+          value={verticalOffset}
+          onValueChange={setVerticalOffset}
+          min={-30}
+          max={30}
+          step={1}
+        />
+      </ColSection>
+
+      <ColSection title="Blur">
+        <RangeSlider
+          value={shadowBlur}
+          onValueChange={setShadowBlur}
+          min={0}
+          max={30}
+          step={1}
+        />
+      </ColSection>
+
+      <div className="mt-6 px-4 pb-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleFullscreen}
+          className="flex items-center gap-1 text-xs w-full justify-center"
+        >
+          <Maximize2 className="h-3.5 w-3.5 mr-1" />
+          Fullscreen Editor
+        </Button>
+      </div>
+    </>
   );
 }
