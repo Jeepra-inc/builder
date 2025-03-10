@@ -38,6 +38,8 @@ export function LogoSettingsPanel({
           type: "UPDATE_HEADER_SETTINGS",
           settings: {
             logo: settings.logo,
+            logoWidth: getSizeInPixels(settings.logo.size || "medium"),
+            logoUrl: settings.logo.image || "",
           },
         },
         "*"
@@ -51,6 +53,12 @@ export function LogoSettingsPanel({
           logoWidth: getSizeInPixels(settings.logo.size || "medium"),
         },
         "*"
+      );
+
+      // Now also update the CSS variable in the parent window
+      document.documentElement.style.setProperty(
+        "--logo-width",
+        `${getSizeInPixels(settings.logo.size || "medium")}px`
       );
     }
   }, [settings.logo]);

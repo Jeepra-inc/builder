@@ -398,11 +398,22 @@ export function TypographySettings() {
         "+"
       )}:wght@${weight}&display=swap`;
       link.rel = "stylesheet";
-
-      link.onload = () => setLoadedFonts((prev) => new Set(prev).add(fontKey));
-      link.onerror = () => console.error(`Failed to load font: ${font}`);
-
       document.head.appendChild(link);
+
+      // Also load in the iframe
+      const iframe = document.querySelector("iframe");
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.postMessage(
+          {
+            type: "LOAD_GOOGLE_FONT",
+            fontFamily: font,
+            fontWeight: weight,
+          },
+          "*"
+        );
+      }
+
+      setLoadedFonts((prev) => new Set([...prev, fontKey]));
     }
   };
 

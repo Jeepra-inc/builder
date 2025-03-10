@@ -1,57 +1,27 @@
 {
-  "sections": [],
-  "headerSettings": {
-    "lastSelectedSubmenu": "Header Main Setting",
-    "lastSelectedSetting": "nav_icon",
-    "layout": {
-      "sticky": false,
-      "maxWidth": "1200px",
-      "currentPreset": "preset1",
-      "containers": {
-        "top_left": [
-          "html_block_5"
-        ],
-        "top_center": [
-          "html_block_2"
-        ],
-        "top_right": [
-          "contact"
-        ],
-        "middle_left": [
-          "logo"
-        ],
-        "middle_center": [],
-        "middle_right": [
-          "cart",
-          "account",
-          "nav_icon"
-        ],
-        "bottom_left": [],
-        "bottom_center": [],
-        "bottom_right": [],
-        "available": [
-          "html_block_1",
-          "html_block_3",
-          "html_block_4",
-          "topBarMenu",
-          "mainMenu",
-          "bottomMenu",
-          "search",
-          "button_1",
-          "button_2",
-          "wishlist",
-          "social_icon",
-          "divider_1",
-          "divider_2",
-          "divider_3",
-          "divider_4"
-        ]
-      }
-    },
-    "logo": {
-      "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
-      "size": "medium"
+  "sections": [
+    {
+      "id": "section_1741645528470_jd3fykqvx",
+      "type": "newbanner",
+      "content": [
+        "Example content"
+      ],
+      "settings": {}
     }
+  ],
+  "headerSettings": {
+    "layout": {
+      "currentPreset": "preset1"
+    },
+    "lastSelectedSetting": null,
+    "lastSelectedSubmenu": null,
+    "logo": {
+      "text": "Your Brand",
+      "showText": true,
+      "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
+      "size": "large"
+    },
+    "headerHeight": 59
   },
   "globalStyles": {
     "colors": {
@@ -100,21 +70,21 @@
     },
     "branding": {
       "logoUrl": "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
-      "logoWidth": 48,
+      "logoWidth": 138,
       "faviconUrl": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
       "backgroundColor": "#ffffff"
     },
     "typography": {
-      "headingFont": "Bebas Neue:400",
-      "bodyFont": "Assistant",
-      "headingSizeScale": 100,
-      "bodySizeScale": 100,
+      "headingFont": "Cinzel:800",
+      "bodyFont": "Cuprum:400",
+      "headingSizeScale": 97,
+      "bodySizeScale": 54,
       "headingColor": "#1a1a1a"
     },
     "customCSS": ""
   },
   "version": "1.0.0",
   "globalLayout": {
-    "pageWidth": "2500px"
+    "pageWidth": "1010px"
   }
 }

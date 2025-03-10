@@ -326,62 +326,78 @@ export default function PageBuilder() {
       try {
         const loadedSettings = await loadSettings();
         setGlobalSettings(loadedSettings);
+        console.log("Settings loaded from file:", loadedSettings);
 
-        // Apply loaded settings to state
         if (loadedSettings.sections && loadedSettings.sections.length > 0) {
           setSections(loadedSettings.sections);
         }
 
         setHeaderSettings(loadedSettings.headerSettings);
-        // Set the current header preset if available in the settings
+
         if (loadedSettings.headerSettings?.layout?.currentPreset) {
           setCurrentHeaderPreset(
             loadedSettings.headerSettings.layout.currentPreset
           );
         }
+
         setFooterSettings(loadedSettings.footerSettings);
 
-        // Apply global styles
         if (loadedSettings.globalStyles?.branding?.backgroundColor) {
           setBackgroundColor(
             loadedSettings.globalStyles.branding.backgroundColor
           );
         }
+
         if (loadedSettings.globalStyles?.branding?.logoUrl) {
           setLogoUrl(loadedSettings.globalStyles.branding.logoUrl);
         }
+
         if (loadedSettings.globalStyles?.branding?.logoWidth) {
           setLogoWidth(loadedSettings.globalStyles.branding.logoWidth);
         }
+
         if (loadedSettings.globalStyles?.branding?.faviconUrl) {
           setFaviconUrl(loadedSettings.globalStyles.branding.faviconUrl);
         }
+
         if (loadedSettings.globalStyles?.typography?.headingColor) {
           setHeadingColor(loadedSettings.globalStyles.typography.headingColor);
         }
+
         if (loadedSettings.globalStyles?.customCSS) {
           setCustomCSS(loadedSettings.globalStyles.customCSS);
         }
+
         if (loadedSettings.globalStyles?.typography?.headingFont) {
           setHeadingFont(loadedSettings.globalStyles.typography.headingFont);
+          // Load the heading font
+          const [fontFamily, weight] =
+            loadedSettings.globalStyles.typography.headingFont.split(":");
+          loadGoogleFont(fontFamily, weight || "400");
         }
+
         if (loadedSettings.globalStyles?.typography?.bodyFont) {
           setBodyFont(loadedSettings.globalStyles.typography.bodyFont);
+          // Load the body font
+          const [fontFamily, weight] =
+            loadedSettings.globalStyles.typography.bodyFont.split(":");
+          loadGoogleFont(fontFamily, weight || "400");
         }
+
         if (loadedSettings.globalStyles?.typography?.headingSizeScale) {
           setHeadingSizeScale(
             loadedSettings.globalStyles.typography.headingSizeScale
           );
         }
+
         if (loadedSettings.globalStyles?.typography?.bodySizeScale) {
           setBodySizeScale(
             loadedSettings.globalStyles.typography.bodySizeScale
           );
         }
 
-        // Add logo from branding to headerSettings explicitly
+        // Extra check for logo URL/settings in the header
         if (loadedSettings.globalStyles?.branding?.logoUrl) {
-          // Update the headerSettings to include the logo from global branding
           setHeaderSettings((prev) => ({
             ...prev,
             logo: {
@@ -393,8 +409,10 @@ export default function PageBuilder() {
             },
           }));
         }
+
+        console.log("Settings loaded and applied successfully");
       } catch (error) {
-        console.error("Failed to load settings from file:", error);
+        console.error("Error loading settings:", error);
       }
     };
 
@@ -545,6 +563,60 @@ export default function PageBuilder() {
               )
             );
         });
+
+        // Explicitly send typography settings to ensure fonts are loaded
+        if (
+          contentRef.current?.contentWindow &&
+          globalSettings.globalStyles?.typography
+        ) {
+          console.log("Sending explicit typography settings to iframe");
+          const {
+            headingFont,
+            bodyFont,
+            headingSizeScale,
+            bodySizeScale,
+            headingColor,
+          } = globalSettings.globalStyles.typography;
+
+          contentRef.current.contentWindow.postMessage(
+            {
+              type: "UPDATE_TYPOGRAPHY",
+              settings: {
+                headingFont,
+                bodyFont,
+                headingSizeScale,
+                bodySizeScale,
+                headingColor,
+              },
+            },
+            "*"
+          );
+
+          // Also send direct font load requests for both fonts
+          if (headingFont) {
+            const [fontFamily, weight] = headingFont.split(":");
+            contentRef.current.contentWindow.postMessage(
+              {
+                type: "LOAD_GOOGLE_FONT",
+                fontFamily,
+                fontWeight: weight || "400",
+              },
+              "*"
+            );
+          }
+
+          if (bodyFont) {
+            const [fontFamily, weight] = bodyFont.split(":");
+            contentRef.current.contentWindow.postMessage(
+              {
+                type: "LOAD_GOOGLE_FONT",
+                fontFamily,
+                fontWeight: weight || "400",
+              },
+              "*"
+            );
+          }
+        }
       } else {
         console.log("Settings not loaded yet, loading from file");
         // Call the existing function to load settings
@@ -1431,6 +1503,44 @@ export default function PageBuilder() {
     if (width <= 40) return "small";
     if (width >= 60) return "large";
     return "medium";
+  };
+
+  // Add a utility function for loading Google Fonts in the parent window
+  const loadGoogleFont = (fontFamily: string, weight: string = "400") => {
+    // Skip system fonts
+    const systemFonts = [
+      "Arial",
+      "Times New Roman",
+      "Helvetica",
+      "Courier",
+      "Verdana",
+      "Georgia",
+    ];
+    if (systemFonts.some((font) => fontFamily.includes(font))) {
+      return;
+    }
+
+    // Create a unique ID for the font link
+    const fontId = `google-font-${fontFamily
+      .replace(/\s+/g, "-")
+      .toLowerCase()}-${weight}`;
+
+    // Check if this font is already loaded
+    if (!document.getElementById(fontId)) {
+      const link = document.createElement("link");
+      link.id = fontId;
+      link.rel = "stylesheet";
+      link.href = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(
+        /\s+/g,
+        "+"
+      )}:wght@${weight}&display=swap`;
+
+      // Add the link to the document head
+      document.head.appendChild(link);
+      console.log(
+        `Builder: Loaded Google Font: ${fontFamily} (weight: ${weight})`
+      );
+    }
   };
 
   return (

@@ -95,9 +95,18 @@ export const defaultSettings: GlobalSettings = {
 // Storage key for localStorage
 const STORAGE_KEY = "visual-builder-settings";
 
+// Flag to track when settings are being saved explicitly
+let isExplicitSave = false;
+
 // Save settings to localStorage and file
-export const saveSettings = async (settings: GlobalSettings): Promise<void> => {
+export const saveSettings = async (
+  settings: GlobalSettings,
+  options?: { skipCSSUpdate?: boolean }
+): Promise<void> => {
   try {
+    // Mark that we're in an explicit save operation
+    isExplicitSave = true;
+
     // Make sure we have the proper structure for color schemes
     if (!settings.globalStyles) {
       settings.globalStyles = {
@@ -147,15 +156,24 @@ export const saveSettings = async (settings: GlobalSettings): Promise<void> => {
     await saveSettingsToFile(settings);
     console.log(" [saveSettings] Settings saved to file successfully");
 
-    // Update CSS variables
-    console.log(" [saveSettings] Updating CSS variables...");
-    await updateCSSVariables(settings);
-    console.log(" [saveSettings] CSS variables updated successfully");
+    // Update CSS variables ONLY during explicit save operations and if not skipped
+    if (!options?.skipCSSUpdate) {
+      console.log(
+        " [saveSettings] Updating CSS variables during explicit save..."
+      );
+      await updateCSSVariables(settings);
+      console.log(" [saveSettings] CSS variables updated successfully");
+    } else {
+      console.log(" [saveSettings] Skipping CSS variables update as requested");
+    }
 
     return Promise.resolve();
   } catch (error) {
     console.error(" [saveSettings] Failed to save settings:", error);
     return Promise.reject(error);
+  } finally {
+    // Reset the explicit save flag
+    isExplicitSave = false;
   }
 };
 
@@ -380,6 +398,14 @@ export const validateSettings = (settings: any): settings is GlobalSettings => {
 export const updateCSSVariables = async (
   settings: GlobalSettings
 ): Promise<void> => {
+  // Only allow updates during explicit save operations
+  if (!isExplicitSave) {
+    console.log(
+      " [updateCSSVariables] Skipping - not an explicit save operation"
+    );
+    return Promise.resolve();
+  }
+
   try {
     console.log(
       " [updateCSSVariables] Starting API call to update CSS variables..."

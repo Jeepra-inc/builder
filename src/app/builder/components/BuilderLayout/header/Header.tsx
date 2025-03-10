@@ -1462,20 +1462,19 @@ export default function Header({
             logoSettingsDetails: logoSettings,
           });
 
-          // Determine logo size based on settings
-          let logoHeight = "h-8"; // Default medium size
-          if (logoSettings.size === "small") logoHeight = "h-6";
-          if (logoSettings.size === "large") logoHeight = "h-10";
+          // We're no longer determining height based on size
+          // Instead, we'll use the CSS variable for width
+          // The --logo-width CSS variable is set globally
 
           // If no logo image is found in the header settings, try to use a default
           if (!logoImage || logoImage === "") {
             logoImage = "/logo.svg";
           }
 
-          // Create logo HTML based on settings
+          // Create logo HTML based on settings, using the CSS variable for width
           const logoHtml = `
             <div class="logo-container flex items-center">
-              <img src="${logoImage}" class="${logoHeight}" alt="Logo" />
+              <img src="${logoImage}" style="width: var(--logo-width);" alt="Logo" />
               ${
                 showText
                   ? `<span class="ml-2 font-bold text-lg">${logoText}</span>`
@@ -3045,101 +3044,107 @@ export default function Header({
       {/* Top Bar - Only render if topBarVisible is true */}
       {headerSettings.topBarVisible !== false && (
         <div
-          className="w-full nish transition-all grid grid-cols-[auto_1fr_auto] justify-between items-center px-8 gap-4 py-2"
+          className="w-full"
           style={getSectionStyle("top", headerSettings.topBarColorScheme)}
         >
-          <div className="flex items-center gap-4 justify-self-start flex-shrink-0">
-            {renderSection(layoutItems.top_left, "top_left", {
-              color: getSectionTextColor(
-                "top",
-                headerSettings.topBarColorScheme
-              ),
-            })}
-          </div>
-          <div className="flex gap-6 justify-self-center">
-            {renderSection(layoutItems.top_center, "top_center", {
-              color: getSectionTextColor(
-                "top",
-                headerSettings.topBarColorScheme
-              ),
-            })}
-          </div>
-          <div className="flex items-center gap-4 justify-self-end flex-shrink-0">
-            {renderSection(layoutItems.top_right, "top_right", {
-              color: getSectionTextColor(
-                "top",
-                headerSettings.topBarColorScheme
-              ),
-            })}
-            {headerSettings.showTopBarButton && (
-              <button className="px-4 py-1 bg-primary text-white rounded-md text-sm hover:bg-primary-dark transition-colors">
-                Shop Now
-              </button>
-            )}
+          <div className="container transition-all grid grid-cols-[auto_1fr_auto] justify-between items-center px-8 gap-4 py-2">
+            <div className="flex items-center gap-4 justify-self-start flex-shrink-0">
+              {renderSection(layoutItems.top_left, "top_left", {
+                color: getSectionTextColor(
+                  "top",
+                  headerSettings.topBarColorScheme
+                ),
+              })}
+            </div>
+            <div className="flex gap-6 justify-self-center">
+              {renderSection(layoutItems.top_center, "top_center", {
+                color: getSectionTextColor(
+                  "top",
+                  headerSettings.topBarColorScheme
+                ),
+              })}
+            </div>
+            <div className="flex items-center gap-4 justify-self-end flex-shrink-0">
+              {renderSection(layoutItems.top_right, "top_right", {
+                color: getSectionTextColor(
+                  "top",
+                  headerSettings.topBarColorScheme
+                ),
+              })}
+              {headerSettings.showTopBarButton && (
+                <button className="px-4 py-1 bg-primary text-white rounded-md text-sm hover:bg-primary-dark transition-colors">
+                  Shop Now
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
 
       {/* Main Section */}
       <div
-        className="middle-section w-full transition-all grid grid-cols-[auto_1fr_auto] items-center px-8 gap-4 py-4"
+        className="w-full"
         style={getSectionStyle("main", headerSettings.mainBarColorScheme)}
       >
-        <div className="flex items-center gap-4 flex-shrink-0">
-          {renderSection(layoutItems.middle_left, "middle_left", {
-            color: getSectionTextColor(
-              "main",
-              headerSettings.mainBarColorScheme
-            ),
-          })}
-        </div>
-        <div className="flex gap-6 justify-self-center">
-          {renderSection(layoutItems.middle_center, "middle_center", {
-            color: getSectionTextColor(
-              "main",
-              headerSettings.mainBarColorScheme
-            ),
-          })}
-        </div>
-        <div className="flex items-center gap-4 justify-self-end flex-shrink-0">
-          {renderSection(layoutItems.middle_right, "middle_right", {
-            color: getSectionTextColor(
-              "main",
-              headerSettings.mainBarColorScheme
-            ),
-          })}
+        <div className="middle-section container transition-all grid grid-cols-[auto_1fr_auto] items-center px-8 gap-4 py-4">
+          <div className="flex items-center gap-4 flex-shrink-0">
+            {renderSection(layoutItems.middle_left, "middle_left", {
+              color: getSectionTextColor(
+                "main",
+                headerSettings.mainBarColorScheme
+              ),
+            })}
+          </div>
+          <div className="flex gap-6 justify-self-center">
+            {renderSection(layoutItems.middle_center, "middle_center", {
+              color: getSectionTextColor(
+                "main",
+                headerSettings.mainBarColorScheme
+              ),
+            })}
+          </div>
+          <div className="flex items-center gap-4 justify-self-end flex-shrink-0">
+            {renderSection(layoutItems.middle_right, "middle_right", {
+              color: getSectionTextColor(
+                "main",
+                headerSettings.mainBarColorScheme
+              ),
+            })}
+          </div>
         </div>
       </div>
 
       {/* Bottom Section - Only render if bottomEnabled is true */}
       {headerSettings.bottomEnabled !== false && (
         <div
-          className="bottom-section w-full transition-all grid grid-cols-[auto_1fr_auto] items-center px-8 gap-4 py-3"
+          className="w-full"
           style={getSectionStyle("bottom", headerSettings.bottomBarColorScheme)}
         >
-          <div className="flex items-center gap-4 flex-shrink-0">
-            {renderSection(layoutItems.bottom_left, "bottom_left", {
-              color: getSectionTextColor(
-                "bottom",
-                headerSettings.bottomBarColorScheme
-              ),
-            })}
-          </div>
-          <div className="flex gap-6 justify-self-center">
-            {renderSection(layoutItems.bottom_center, "bottom_center", {
-              color: getSectionTextColor(
-                "bottom",
-                headerSettings.bottomBarColorScheme
-              ),
-            })}
-          </div>
-          <div className="flex items-center gap-4 justify-self-end flex-shrink-0">
-            {renderSection(layoutItems.bottom_right, "bottom_right", {
-              color: getSectionTextColor(
-                "bottom",
-                headerSettings.bottomBarColorScheme
-              ),
-            })}
+          <div className="bottom-section container transition-all grid grid-cols-[auto_1fr_auto] items-center px-8 gap-4 py-3">
+            <div className="flex items-center gap-4 flex-shrink-0">
+              {renderSection(layoutItems.bottom_left, "bottom_left", {
+                color: getSectionTextColor(
+                  "bottom",
+                  headerSettings.bottomBarColorScheme
+                ),
+              })}
+            </div>
+            <div className="flex gap-6 justify-self-center">
+              {renderSection(layoutItems.bottom_center, "bottom_center", {
+                color: getSectionTextColor(
+                  "bottom",
+                  headerSettings.bottomBarColorScheme
+                ),
+              })}
+            </div>
+            <div className="flex items-center gap-4 justify-self-end flex-shrink-0">
+              {renderSection(layoutItems.bottom_right, "bottom_right", {
+                color: getSectionTextColor(
+                  "bottom",
+                  headerSettings.bottomBarColorScheme
+                ),
+              })}
+            </div>
           </div>
         </div>
       )}

@@ -56,6 +56,8 @@ export function BrandingSettings() {
       {/* Logo Width Setting */}
       <ColSection title="Height">
         <RangeSlider
+          min={50}
+          max={250}
           value={logoWidth}
           onValueChange={(value) => setLogoWidth(value)}
         />

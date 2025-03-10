@@ -5,6 +5,11 @@ import path from "path";
 // File path for the main CSS file
 const CSS_FILE_PATH = path.join(process.cwd(), "public", "main.css");
 
+// Add cache for last updated time and content hash to prevent excessive file writes
+let lastUpdateTime = 0;
+let lastContentHash = "";
+const UPDATE_COOLDOWN = 5000; // 5 seconds between updates
+
 // Function to generate CSS variables from settings
 function generateCSSVariables(settings: any): string {
   // Extract values from settings
@@ -18,10 +23,15 @@ function generateCSSVariables(settings: any): string {
   const globalLayout = settings.globalLayout || {};
   const pageWidth = globalLayout.pageWidth || "1200px";
 
-  console.log("Generating CSS variables with page width:", pageWidth);
+  // Only log once per cooldown period
+  const now = Date.now();
+  if (now - lastUpdateTime > UPDATE_COOLDOWN) {
+    console.log("Generating CSS variables with page width:", pageWidth);
+  }
 
   // Create CSS variables string
-  return `:root {
+  return `/* Generated at ${new Date().toISOString()} */
+:root {
   /* Global Layout Settings */
   --page-width: ${pageWidth};
   
@@ -56,7 +66,7 @@ function generateCSSVariables(settings: any): string {
   /* Colors */
   --background-color: ${branding.backgroundColor || "#ffffff"};
   
-  /* Theme variables */
+  /* Added as theme variables that can be referenced in components */
   --theme-primary: #3b82f6;
   --theme-secondary: #6b7280;
   --theme-accent: #f59e0b;
@@ -69,7 +79,9 @@ function generateCSSVariables(settings: any): string {
   --theme-ring: #3b82f6;
   --theme-radius: 0.5rem;
 }
-
+*{
+font-family:var(--body-font);
+}
 /* Helper classes that use CSS variables */
 .max-width-container {
   width: 100%;
@@ -109,7 +121,7 @@ body {
 }
 
 /* Custom container class that respects page width */
-.nish {
+.container {
   width: 100%;
   max-width: var(--page-width);
   margin-left: auto;
@@ -127,6 +139,41 @@ h1, h2, h3, h4, h5, h6 {
 // Function to update CSS variables in the CSS file
 async function updateCSSFile(cssContent: string): Promise<void> {
   try {
+    // Create a simple hash of the content to check if it's changed
+    const contentHash = Buffer.from(cssContent).toString("base64").slice(0, 20);
+
+    // Check if we're still in the cooldown period or content hasn't changed
+    const now = Date.now();
+    const isInCooldown = now - lastUpdateTime < UPDATE_COOLDOWN;
+    const isSameContent = contentHash === lastContentHash;
+
+    if (isInCooldown) {
+      if (isSameContent) {
+        // Skip update - both in cooldown period and content is the same
+        console.log("Skipping CSS update - in cooldown period and no changes");
+        return;
+      } else {
+        // In cooldown but content changed - log but still skip
+        console.log(
+          "Skipping CSS update - in cooldown period (but changes detected)"
+        );
+        return;
+      }
+    }
+
+    // If we get here, we're either past cooldown or content has changed or both
+
+    if (isSameContent) {
+      // Past cooldown but no changes
+      console.log("Skipping CSS update - no changes detected");
+      return;
+    }
+
+    // Update our tracking variables
+    lastContentHash = contentHash;
+    lastUpdateTime = now;
+
+    // Write the file with the new content
     await writeFile(CSS_FILE_PATH, cssContent, "utf-8");
     console.log("CSS variables updated successfully");
   } catch (error) {
@@ -146,6 +193,7 @@ export async function POST(request: NextRequest) {
     // Update the CSS file
     await updateCSSFile(cssContent);
 
+    // Always return success even if we skipped the update
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error updating CSS variables:", error);

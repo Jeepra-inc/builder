@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import RangeSlider from "./RangeSlider";
 import { ColSection } from "./colSection";
 import { useBuilder } from "@/app/builder/contexts/BuilderContext";
 import { Input } from "@/components/ui/input";
 
-// Simple debounce hook implementation
+// Simple debounce hook implementation with longer delay
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
@@ -32,7 +32,19 @@ export function LayoutSettings() {
   // State for page width
   const [pageWidth, setPageWidth] = useState(numericPageWidth);
   const [pageWidthText, setPageWidthText] = useState(defaultPageWidth);
-  const debouncedPageWidth = useDebounce(pageWidth, 100);
+  // Increase debounce delay to reduce update frequency
+  const debouncedPageWidth = useDebounce(pageWidth, 500);
+
+  // Add a ref to track the last sent width value to prevent duplicate updates
+  const lastSentWidthRef = useRef<number>(numericPageWidth);
+  // Add a ref to track if an update is in progress
+  const updateInProgressRef = useRef<boolean>(false);
+  // Track if component is mounted to prevent updates after unmount
+  const isMountedRef = useRef<boolean>(true);
+  // Store the latest width value in a ref instead of localStorage for efficiency
+  const latestWidthRef = useRef<string>(`${numericPageWidth}px`);
+  // Minimum time between updates (in ms)
+  const UPDATE_THROTTLE = 300;
 
   // Load page width from localStorage on mount
   useEffect(() => {
@@ -46,16 +58,46 @@ export function LayoutSettings() {
           const savedWidth = parseInt(match[0]);
           setPageWidth(savedWidth);
           setPageWidthText(settings.globalLayout.pageWidth);
+          // Initialize the last sent width
+          lastSentWidthRef.current = savedWidth;
+          // Initialize the latest width ref
+          latestWidthRef.current = settings.globalLayout.pageWidth;
         }
       }
     } catch (error) {
       console.error("Failed to load page width from settings:", error);
     }
+
+    // Set mounted flag
+    isMountedRef.current = true;
+
+    // Clean up on unmount
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
-  // Send updates to the iframe for live preview
-  const sendPageWidthToIframe = (width: number) => {
-    // Update parent document CSS variables
+  // Send updates to the iframe for live preview - but only update DOM, not the API
+  const updatePageWidth = (width: number) => {
+    // Skip if this width was already sent or an update is in progress
+    if (
+      lastSentWidthRef.current === width ||
+      updateInProgressRef.current ||
+      !isMountedRef.current
+    ) {
+      return;
+    }
+
+    // Mark that an update is in progress
+    updateInProgressRef.current = true;
+
+    // Update the last sent width
+    lastSentWidthRef.current = width;
+
+    // Update the latest width ref for save operations
+    latestWidthRef.current = `${width}px`;
+
+    // Update parent document CSS variables (DOM only, no API call)
     document.documentElement.style.setProperty("--page-width", `${width}px`);
 
     // Send to iframe for live preview
@@ -77,31 +119,38 @@ export function LayoutSettings() {
           iframe.contentWindow.postMessage(message, "*");
         }
       }
-      console.log("Sent live preview update:", message);
+      console.log("Local CSS update: page-width =", width);
     } catch (error) {
       console.error("Failed to send live preview update:", error);
+    } finally {
+      // Clear the update flag with a small delay to prevent rapid updates
+      setTimeout(() => {
+        if (isMountedRef.current) {
+          updateInProgressRef.current = false;
+        }
+      }, 100);
     }
   };
 
-  // Update CSS variables when page width changes (visual feedback)
+  // Update CSS variables when debounced page width changes (visual feedback only)
   useEffect(() => {
+    if (!isMountedRef.current) return;
+
     // Update the text field
     setPageWidthText(`${debouncedPageWidth}px`);
 
-    // Send update to iframe for live preview
-    sendPageWidthToIframe(debouncedPageWidth);
-
-    // Store the current value in localStorage so it can be retrieved by the save function
-    const key = "pageWidth_temp";
-    localStorage.setItem(key, `${debouncedPageWidth}px`);
-  }, [debouncedPageWidth, contentRef]);
+    // Update CSS variables in DOM only (no API call)
+    updatePageWidth(debouncedPageWidth);
+  }, [debouncedPageWidth]);
 
   // Listen for the save event from the topbar save button
   useEffect(() => {
     const handleSaveSettings = () => {
+      if (!isMountedRef.current) return;
+
       try {
-        // Get current width value
-        const currentWidthPx = `${debouncedPageWidth}px`;
+        // Get current width value from our ref
+        const currentWidthPx = latestWidthRef.current;
 
         // Get current settings
         const settings = JSON.parse(
@@ -113,16 +162,19 @@ export function LayoutSettings() {
           settings.globalLayout = {};
         }
 
-        // Update the page width
-        settings.globalLayout.pageWidth = currentWidthPx;
+        // Only update if the value has changed
+        if (settings.globalLayout.pageWidth !== currentWidthPx) {
+          // Update the page width
+          settings.globalLayout.pageWidth = currentWidthPx;
 
-        // Save back to localStorage (this will be picked up by the actual save function)
-        localStorage.setItem(
-          "visual-builder-settings",
-          JSON.stringify(settings)
-        );
+          // Save back to localStorage (this will be picked up by the actual save function)
+          localStorage.setItem(
+            "visual-builder-settings",
+            JSON.stringify(settings)
+          );
 
-        console.log("Page width prepared for saving:", currentWidthPx);
+          console.log("Page width prepared for saving:", currentWidthPx);
+        }
       } catch (error) {
         console.error("Failed to prepare page width for saving:", error);
       }
@@ -135,7 +187,7 @@ export function LayoutSettings() {
     return () => {
       window.removeEventListener("requestSaveSettings", handleSaveSettings);
     };
-  }, [debouncedPageWidth]);
+  }, []);
 
   // Handle manual text input
   const handlePageWidthTextChange = (
@@ -156,7 +208,10 @@ export function LayoutSettings() {
 
   // Handle slider value change
   const handleSliderChange = (newValue: number) => {
-    setPageWidth(newValue);
+    setPageWidth((newWidth) => {
+      // Only update if the value has changed
+      return newWidth !== newValue ? newValue : newWidth;
+    });
   };
 
   return (
@@ -184,16 +239,14 @@ export function LayoutSettings() {
               className="w-24"
             />
             <div className="text-xs text-gray-500 italic ml-2">
-              Changes saved when you click the save button in the top bar
+              Changes will be saved when you click the save button in the top
+              bar
             </div>
           </div>
         </div>
       </ColSection>
-      <ColSection title="Space between sections">
-        <RangeSlider unit="px" min={0} max={100} step={1} />
-      </ColSection>
-      <h4 className="px-4 pt-3">Grid Mode</h4>
-      <ColSection title="Horizontal space">
+      <h4 className="px-3 pt-3">Grid Mode</h4>
+      <ColSection title="Horizontal space" className="pb-0" divider={false}>
         <RangeSlider unit="px" min={0} max={100} step={1} />
       </ColSection>
       <ColSection title="Vertical space" divider={false}>

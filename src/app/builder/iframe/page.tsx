@@ -348,45 +348,100 @@ export default function IframeContent() {
 
       switch (type) {
         case "UPDATE_BACKGROUND_COLOR": {
-          document.body.style.backgroundColor = event.data.backgroundColor;
+          const { color } = event.data;
+          document.body.style.backgroundColor = color;
+          break;
+        }
+
+        // Add a handler for LOAD_SETTINGS
+        case "LOAD_SETTINGS": {
+          const { settings } = event.data;
+          console.log("Received LOAD_SETTINGS message:", settings);
+
+          // Update our local state
+          if (settings.sections) {
+            dispatch({ type: "SET_SECTIONS", payload: settings.sections });
+          }
+
+          if (settings.headerSettings) {
+            setHeaderSettings((prev) => ({
+              ...prev,
+              ...settings.headerSettings,
+            }));
+          }
+
+          if (settings.footerSettings) {
+            setFooterSettings((prev) => ({
+              ...prev,
+              ...settings.footerSettings,
+            }));
+          }
+
+          // Directly handle typography settings to ensure fonts load
+          if (settings.globalStyles?.typography) {
+            const {
+              headingFont,
+              bodyFont,
+              headingColor,
+              headingSizeScale,
+              bodySizeScale,
+            } = settings.globalStyles.typography;
+
+            // Apply CSS variables directly
+            const root = document.documentElement;
+
+            if (headingFont) {
+              const [fontFamily, weight] = headingFont.split(":");
+              root.style.setProperty(
+                "--heading-font",
+                `'${fontFamily}', sans-serif`
+              );
+              loadGoogleFont(fontFamily, weight || "400");
+            }
+
+            if (bodyFont) {
+              const [fontFamily, weight] = bodyFont.split(":");
+              root.style.setProperty(
+                "--body-font",
+                `'${fontFamily}', sans-serif`
+              );
+              loadGoogleFont(fontFamily, weight || "400");
+            }
+
+            if (headingColor) {
+              root.style.setProperty("--heading-color", headingColor);
+            }
+
+            if (headingSizeScale) {
+              root.style.setProperty(
+                "--heading-size-scale",
+                `${headingSizeScale / 100}`
+              );
+            }
+
+            if (bodySizeScale) {
+              root.style.setProperty(
+                "--body-size-scale",
+                `${bodySizeScale / 100}`
+              );
+            }
+
+            console.log("Typography initialized from LOAD_SETTINGS", {
+              headingFont,
+              bodyFont,
+            });
+          }
+
           break;
         }
         case "UPDATE_CSS_VARIABLE": {
-          // Handle CSS variable updates for live preview
-          console.log(
-            "IFRAME: Updating CSS variable:",
-            event.data.variable,
-            "to",
-            event.data.value
-          );
-
+          // Handle CSS variable updates for live preview silently
           if (event.data.variable && event.data.value) {
-            // Update the CSS variable in the iframe's document
+            // Silently update the CSS variable without logging
             document.documentElement.style.setProperty(
               event.data.variable,
               event.data.value
             );
-
-            // Send confirmation back to parent
-            if (window.parent) {
-              try {
-                window.parent.postMessage(
-                  {
-                    type: "CSS_VARIABLE_UPDATED",
-                    variable: event.data.variable,
-                    value: event.data.value,
-                    success: true,
-                    timestamp: Date.now(),
-                  },
-                  event.origin || "*"
-                );
-              } catch (error) {
-                console.error(
-                  "IFRAME: Failed to send CSS variable update confirmation:",
-                  error
-                );
-              }
-            }
           }
           break;
         }
@@ -1128,11 +1183,113 @@ export default function IframeContent() {
             };
           });
 
+          // Update the CSS variable for logo width
+          document.documentElement.style.setProperty(
+            "--logo-width",
+            `${logoWidth}px`
+          );
+
           // Log the update to help debug
           setTimeout(() => {
             console.log("Header settings after UPDATE_LOGO:", headerSettings);
           }, 100);
 
+          break;
+        }
+
+        case "HEADER_SETTINGS_UPDATED": {
+          const { settings } = event.data;
+
+          if (settings) {
+            const header = document.querySelector("header");
+            if (header) {
+              if (settings.backgroundColor) {
+                header.style.backgroundColor = settings.backgroundColor;
+              }
+              const logo = header.querySelector("img");
+              if (logo && settings.logoUrl) {
+                logo.src = settings.logoUrl;
+                // Update the CSS variable instead of direct styling
+                if (settings.logoWidth) {
+                  document.documentElement.style.setProperty(
+                    "--logo-width",
+                    `${settings.logoWidth}px`
+                  );
+                }
+              }
+            }
+          }
+          break;
+        }
+
+        case "UPDATE_TYPOGRAPHY": {
+          const { settings } = event.data;
+          const root = document.documentElement;
+
+          // Apply typography settings to CSS variables
+          if (settings.headingColor) {
+            root.style.setProperty("--heading-color", settings.headingColor);
+          }
+
+          // Handle font updates
+          if (settings.headingFont) {
+            const [headingFontFamily, headingFontWeight] =
+              settings.headingFont.split(":");
+            root.style.setProperty(
+              "--heading-font",
+              `'${headingFontFamily}', sans-serif`
+            );
+
+            // Load the heading font if it's not a system font
+            loadGoogleFont(headingFontFamily, headingFontWeight || "400");
+          }
+
+          if (settings.bodyFont) {
+            const [bodyFontFamily, bodyFontWeight] =
+              settings.bodyFont.split(":");
+            root.style.setProperty(
+              "--body-font",
+              `'${bodyFontFamily}', sans-serif`
+            );
+
+            // Load the body font if it's not a system font
+            loadGoogleFont(bodyFontFamily, bodyFontWeight || "400");
+          }
+
+          // Apply font size scales
+          if (settings.headingSizeScale) {
+            root.style.setProperty(
+              "--heading-size-scale",
+              `${settings.headingSizeScale / 100}`
+            );
+          }
+
+          if (settings.bodySizeScale) {
+            root.style.setProperty(
+              "--body-size-scale",
+              `${settings.bodySizeScale / 100}`
+            );
+          }
+
+          break;
+        }
+
+        case "UPDATE_FOOTER_SETTINGS": {
+          const { settings } = event.data;
+          setFooterSettings((prev) => ({ ...prev, ...settings }));
+          break;
+        }
+
+        case "LOAD_GOOGLE_FONT": {
+          const { fontFamily, fontWeight } = event.data;
+          if (fontFamily) {
+            loadGoogleFont(fontFamily, fontWeight || "400");
+            console.log(
+              `Loaded Google Font from parent request: ${fontFamily} (weight: ${
+                fontWeight || "400"
+              })`
+            );
+          }
           break;
         }
 
@@ -1320,17 +1477,7 @@ export default function IframeContent() {
             const logo = header.querySelector("img");
             if (logo && settings.logoUrl) {
               logo.src = settings.logoUrl;
-              logo.style.width = `${settings.logoWidth}px`;
             }
-          }
-          break;
-        }
-
-        case "UPDATE_TYPOGRAPHY": {
-          const { settings } = event.data;
-          const root = document.documentElement;
-          if (settings.headingColor) {
-            root.style.setProperty("--heading-color", settings.headingColor);
           }
           break;
         }
@@ -1341,12 +1488,6 @@ export default function IframeContent() {
           if (customStyleElement) {
             customStyleElement.textContent = settings.customCSS;
           }
-          break;
-        }
-
-        case "UPDATE_FOOTER_SETTINGS": {
-          const { settings } = event.data;
-          setFooterSettings((prev) => ({ ...prev, ...settings }));
           break;
         }
 
@@ -1912,6 +2053,180 @@ export default function IframeContent() {
     if (width >= 60) return "large";
     return "medium";
   };
+
+  // Track loading fonts
+  const loadingFonts = new Set<string>();
+
+  const loadGoogleFont = (fontFamily: string, weight: string = "400") => {
+    // Skip system fonts
+    const systemFonts = [
+      "Arial",
+      "Times New Roman",
+      "Helvetica",
+      "Courier",
+      "Verdana",
+      "Georgia",
+    ];
+    if (systemFonts.some((font) => fontFamily.includes(font))) {
+      return;
+    }
+
+    // Create a unique ID for the font link
+    const fontId = `google-font-${fontFamily
+      .replace(/\s+/g, "-")
+      .toLowerCase()}-${weight}`;
+
+    // If already loading this font, don't try again
+    if (loadingFonts.has(fontId)) {
+      return;
+    }
+
+    // Mark as loading
+    loadingFonts.add(fontId);
+
+    // Check if this font is already loaded
+    if (!document.getElementById(fontId)) {
+      try {
+        const link = document.createElement("link");
+        link.id = fontId;
+        link.rel = "stylesheet";
+        link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(
+          fontFamily.replace(/\s+/g, "+")
+        )}:wght@${weight}&display=swap`;
+
+        // Set up load callbacks
+        link.onload = () => {
+          console.log(
+            `Successfully loaded Google Font: ${fontFamily} (weight: ${weight})`
+          );
+          loadingFonts.delete(fontId);
+
+          // Force a repaint to ensure the font is applied
+          document.body.style.opacity = "0.99";
+          setTimeout(() => {
+            document.body.style.opacity = "1";
+          }, 50);
+        };
+
+        link.onerror = () => {
+          console.error(
+            `Failed to load Google Font: ${fontFamily} (weight: ${weight})`
+          );
+          loadingFonts.delete(fontId);
+        };
+
+        // Add the link to the document head
+        document.head.appendChild(link);
+        console.log(`Loading Google Font: ${fontFamily} (weight: ${weight})`);
+      } catch (error) {
+        console.error(`Error loading font ${fontFamily}:`, error);
+        loadingFonts.delete(fontId);
+      }
+    }
+  };
+
+  // Add effect to load initial fonts from CSS variables
+  useEffect(() => {
+    // There might be CSS variables already set in the document
+    // from the initial CSS load, so let's check for them
+    const computedStyle = getComputedStyle(document.documentElement);
+    const headingFontFamily = computedStyle.getPropertyValue("--heading-font");
+    const bodyFontFamily = computedStyle.getPropertyValue("--body-font");
+
+    // Extract font family from the CSS value format "'Font Name', sans-serif"
+    const extractFontFamily = (fontValue: string) => {
+      const match = fontValue.match(/'([^']+)'/);
+      return match ? match[1] : null;
+    };
+
+    const headingFont = extractFontFamily(headingFontFamily);
+    const bodyFont = extractFontFamily(bodyFontFamily);
+
+    // Load the fonts if they exist
+    if (headingFont) {
+      loadGoogleFont(headingFont);
+      console.log(`Loaded initial heading font: ${headingFont}`);
+    }
+
+    if (bodyFont) {
+      loadGoogleFont(bodyFont);
+      console.log(`Loaded initial body font: ${bodyFont}`);
+    }
+  }, []);
+
+  // Add function to initialize CSS variables from settings
+  const initializeTypographyFromSettings = () => {
+    // Try to fetch settings.json directly (for initial load)
+    fetch("/settings.json")
+      .then((response) => response.json())
+      .then((settings) => {
+        console.log("Initializing typography from settings.json");
+        if (settings?.globalStyles?.typography) {
+          const {
+            headingFont,
+            bodyFont,
+            headingColor,
+            headingSizeScale,
+            bodySizeScale,
+          } = settings.globalStyles.typography;
+
+          // Apply CSS variables directly
+          const root = document.documentElement;
+
+          if (headingFont) {
+            const [fontFamily, weight] = headingFont.split(":");
+            root.style.setProperty(
+              "--heading-font",
+              `'${fontFamily}', sans-serif`
+            );
+            loadGoogleFont(fontFamily, weight || "400");
+          }
+
+          if (bodyFont) {
+            const [fontFamily, weight] = bodyFont.split(":");
+            root.style.setProperty(
+              "--body-font",
+              `'${fontFamily}', sans-serif`
+            );
+            loadGoogleFont(fontFamily, weight || "400");
+          }
+
+          if (headingColor) {
+            root.style.setProperty("--heading-color", headingColor);
+          }
+
+          if (headingSizeScale) {
+            root.style.setProperty(
+              "--heading-size-scale",
+              `${headingSizeScale / 100}`
+            );
+          }
+
+          if (bodySizeScale) {
+            root.style.setProperty(
+              "--body-size-scale",
+              `${bodySizeScale / 100}`
+            );
+          }
+
+          console.log("Typography initialized from settings.json", {
+            headingFont,
+            bodyFont,
+          });
+        }
+      })
+      .catch((error) => {
+        console.error(
+          "Error loading settings.json for typography initialization:",
+          error
+        );
+      });
+  };
+
+  // Initialize CSS variables on mount
+  useEffect(() => {
+    initializeTypographyFromSettings();
+  }, []);
 
   // ----------------- RENDER -----------------
   return (
