@@ -1,7 +1,7 @@
-/* Generated at 2025-03-10T22:36:35.278Z */
+/* Generated at 2025-03-11T18:36:39.965Z */
 :root {
   /* Global Layout Settings */
-  --page-width: 800px;
+  --page-width: 1200px;
   
   /* Layout Settings */
   --header-max-width: 1200px;
@@ -22,11 +22,11 @@
   --bottom-bar-height: 50px;
   
   /* Logo Settings */
-  --logo-width: 87px;
+  --logo-width: 50px;
   
   /* Typography */
-  --heading-font: 'Caveat:700', sans-serif;
-  --body-font: 'Yatra One:400', sans-serif;
+  --heading-font: 'Secular One:400', sans-serif;
+  --body-font: 'Bai Jamjuree:600', sans-serif;
   --heading-size-scale: 97%;
   --body-size-scale: 54%;
   --heading-color: #1a1a1a;

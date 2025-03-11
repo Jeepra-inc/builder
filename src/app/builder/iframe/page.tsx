@@ -1065,17 +1065,19 @@ export default function IframeContent() {
                 }),
                 currentPreset:
                   presetId || prevSettings.layout?.currentPreset || "default",
-                // Store all layout data from the preset
-                topLeft: layoutData.top_left || [],
-                topCenter: layoutData.top_center || [],
-                topRight: layoutData.top_right || [],
-                middleLeft: layoutData.middle_left || [],
-                middleCenter: layoutData.middle_center || [],
-                middleRight: layoutData.middle_right || [],
-                bottomLeft: layoutData.bottom_left || [],
-                bottomCenter: layoutData.bottom_center || [],
-                bottomRight: layoutData.bottom_right || [],
-                available: layoutData.available || [],
+                // Store layout data in the containers property as expected by Header.tsx
+                containers: {
+                  top_left: layoutData.top_left || [],
+                  top_center: layoutData.top_center || [],
+                  top_right: layoutData.top_right || [],
+                  middle_left: layoutData.middle_left || [],
+                  middle_center: layoutData.middle_center || [],
+                  middle_right: layoutData.middle_right || [],
+                  bottom_left: layoutData.bottom_left || [],
+                  bottom_center: layoutData.bottom_center || [],
+                  bottom_right: layoutData.bottom_right || [],
+                  available: layoutData.available || [],
+                },
               },
             }));
 

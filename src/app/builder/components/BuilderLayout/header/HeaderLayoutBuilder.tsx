@@ -16,6 +16,7 @@ import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { Info, Settings } from "lucide-react";
 import { HeaderItem } from "../data/headerItems";
+import { HeaderLayout } from "./types";
 
 // Define the layout context type
 interface LayoutContextType {
@@ -558,19 +559,7 @@ const DroppableZone = ({
 };
 
 // Define the type for the layout structure
-interface HeaderLayout {
-  [key: string]: string[] | undefined;
-  top_left: string[];
-  top_center: string[];
-  top_right: string[];
-  middle_left: string[];
-  middle_center: string[];
-  middle_right: string[];
-  bottom_left: string[];
-  bottom_center: string[];
-  bottom_right: string[];
-  available: string[];
-}
+// interface HeaderLayout has been moved to types.ts
 
 export function HeaderLayoutBuilder({
   isOpen,

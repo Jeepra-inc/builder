@@ -1,8 +1,16 @@
 {
   "sections": [
     {
-      "id": "section_1741645528470_jd3fykqvx",
-      "type": "newbanner",
+      "id": "section_1741713559014_klmaako35",
+      "type": "hero",
+      "content": [
+        "Example content"
+      ],
+      "settings": {}
+    },
+    {
+      "id": "section_1741713549195_0qoqybqgk",
+      "type": "modernbanner",
       "content": [
         "Example content"
       ],
@@ -11,17 +19,57 @@
   ],
   "headerSettings": {
     "layout": {
-      "currentPreset": "preset1"
+      "currentPreset": "preset1",
+      "containers": {
+        "top_left": [
+          "html_block_3"
+        ],
+        "top_center": [],
+        "top_right": [
+          "contact",
+          "html_block_2",
+          "html_block_4"
+        ],
+        "middle_left": [
+          "logo"
+        ],
+        "middle_center": [],
+        "middle_right": [
+          "cart"
+        ],
+        "bottom_left": [
+          "account",
+          "nav_icon"
+        ],
+        "bottom_center": [],
+        "bottom_right": [
+          "bottomMenu"
+        ],
+        "available": [
+          "html_block_1",
+          "html_block_5",
+          "topBarMenu",
+          "mainMenu",
+          "search",
+          "button_1",
+          "button_2",
+          "wishlist",
+          "social_icon",
+          "divider_1",
+          "divider_2",
+          "divider_3",
+          "divider_4"
+        ]
+      }
     },
-    "lastSelectedSetting": null,
-    "lastSelectedSubmenu": null,
+    "lastSelectedSetting": "logo",
+    "lastSelectedSubmenu": "Header Main Setting",
     "logo": {
       "text": "Your Brand",
       "showText": true,
-      "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
-      "size": "large"
-    },
-    "headerHeight": 59
+      "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
+      "size": "medium"
+    }
   },
   "globalStyles": {
     "colors": {
@@ -30,7 +78,7 @@
           "name": "Scheme 1",
           "background": "#FFFFFF",
           "text": "#121212",
-          "gradient": "linear-gradient(90deg, #00C9FF 0%, #92FE9D 100%)",
+          "gradient": "linear-gradient(90deg, RGB(26, 255, 255) 0%, rgba(146,254,157,1) 100%)",
           "buttonBackground": "#121212",
           "buttonLabel": "#FFFFFF",
           "outlineButton": "#121212",
@@ -69,14 +117,14 @@
       ]
     },
     "branding": {
-      "logoUrl": "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
-      "logoWidth": 138,
+      "logoUrl": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
+      "logoWidth": 50,
       "faviconUrl": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
       "backgroundColor": "#ffffff"
     },
     "typography": {
-      "headingFont": "Cinzel:800",
-      "bodyFont": "Cuprum:400",
+      "headingFont": "Secular One:400",
+      "bodyFont": "Bai Jamjuree:600",
       "headingSizeScale": 97,
       "bodySizeScale": 54,
       "headingColor": "#1a1a1a"
@@ -85,6 +133,6 @@
   },
   "version": "1.0.0",
   "globalLayout": {
-    "pageWidth": "1010px"
+    "pageWidth": "1200px"
   }
 }
