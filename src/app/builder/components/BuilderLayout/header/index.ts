@@ -13,7 +13,6 @@ export * from "./cssUtils";
 export * from "./styleUtils";
 export * from "./searchSettings";
 export * from "./menuUtils";
-export * from "./headerDefaults";
 export * from "./notifications";
 
 // HTML Generators

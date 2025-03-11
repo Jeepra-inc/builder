@@ -102,35 +102,59 @@ export default function Header({
   isSelected,
   onSelect,
 }: HeaderProps) {
+  // Log the settings received by the Header component
+  console.log("Header component received settings:", settings);
+
   // Use the custom hooks
   useCssVariables(settings);
 
+  // Merge default settings with provided settings
   const initHeaderSettings = useMemo(() => {
-    return { ...defaultHeaderSettings, ...settings };
+    console.log(
+      "Merging default settings with provided settings:",
+      defaultHeaderSettings,
+      settings
+    );
+
+    // Create a deep copy of the default settings to prevent reference issues
+    const defaultSettingsCopy = JSON.parse(
+      JSON.stringify(defaultHeaderSettings)
+    );
+
+    // Create a deep merged object
+    const mergedSettings = {
+      ...defaultSettingsCopy,
+      ...settings,
+    };
+
+    // Ensure layout exists
+    if (!mergedSettings.layout) {
+      mergedSettings.layout = defaultSettingsCopy.layout || {};
+    }
+
+    // Ensure containers exist and have proper structure
+    if (!mergedSettings.layout.containers) {
+      mergedSettings.layout.containers = {
+        top_left: [],
+        top_center: [],
+        top_right: ["contact"],
+        middle_left: ["logo"],
+        middle_center: ["mainMenu"],
+        middle_right: ["account", "cart"],
+        bottom_left: [],
+        bottom_center: [],
+        bottom_right: [],
+        available: [],
+      };
+    }
+
+    console.log("Merged header settings:", mergedSettings);
+    return mergedSettings as HeaderSettings;
   }, [settings]);
 
   // State to store the header settings
-  const [headerSettings, setHeaderSettings] = useState<HeaderSettings>({
-    topBarVisible: true,
-    topBarHeight: 40,
-    showTopBarButton: false,
-    topBarColorScheme: "light",
-    mainBarColorScheme: "light",
-    bottomBarColorScheme: "light",
-    search: {
-      show: true,
-      type: "form",
-      placeholder: "Search...",
-      rounded: 4,
-      showText: true,
-      behavior: "inline",
-      design: "standard",
-    },
-    navigation: {
-      menuType: "mainMenu",
-      items: menuItemsData.mainMenu.items,
-    },
-  });
+  const [headerSettings, setHeaderSettings] =
+    useState<HeaderSettings>(initHeaderSettings);
 
   // Track the last received settings to prevent reprocessing identical settings
   const lastReceivedSettingsRef = useRef<string>("");
