@@ -651,14 +651,6 @@ export default function Header({
         }
       });
 
-      // Apply height settings
-      if (settings.topBarHeight) {
-        document.documentElement.style.setProperty(
-          "--top-bar-height",
-          `${settings.topBarHeight}px`
-        );
-      }
-
       try {
         window.parent.postMessage(
           {
@@ -761,6 +753,17 @@ export default function Header({
     });
   }, [isEditing, onSelect]);
 
+  // Helper function to check if a container has at least one item
+  const hasItemsInContainers = useCallback(
+    (containers: string[]): boolean => {
+      return containers.some((container) => {
+        const items = layoutItems[container as keyof HeaderLayout];
+        return Array.isArray(items) && items.length > 0;
+      });
+    },
+    [layoutItems]
+  );
+
   return (
     <header
       className={`relative shadow ${isEditing ? "editing" : ""} ${
@@ -771,21 +774,25 @@ export default function Header({
       data-main-scheme={headerSettings.mainBarColorScheme || "light"}
       data-bottom-scheme={headerSettings.bottomBarColorScheme || "light"}
     >
-      {/* Top Bar - Only render if topBarVisible is true */}
-      {headerSettings.topBarVisible !== false && (
-        <div
-          className="w-full"
-          style={getSectionStyle("top", headerSettings.topBarColorScheme)}
-        >
-          <Section
-            position="top"
-            scheme={headerSettings.topBarColorScheme || "light"}
-            className="py-2"
-          />
-        </div>
-      )}
+      {/* Top Bar - Only render if topBarVisible is true AND has at least one item */}
+      {headerSettings.topBarVisible !== false &&
+        hasItemsInContainers(["top_left", "top_center", "top_right"]) && (
+          <div
+            className="w-full"
+            data-section="top"
+            style={{
+              ...getSectionStyle("top", headerSettings.topBarColorScheme),
+            }}
+          >
+            <Section
+              position="top"
+              scheme={headerSettings.topBarColorScheme || "light"}
+              className="py-2"
+            />
+          </div>
+        )}
 
-      {/* Main Section */}
+      {/* Main Section - Always render */}
       <div
         className="w-full"
         style={getSectionStyle("main", headerSettings.mainBarColorScheme)}
@@ -797,19 +804,27 @@ export default function Header({
         />
       </div>
 
-      {/* Bottom Section - Only render if bottomEnabled is true */}
-      {headerSettings.bottomEnabled !== false && (
-        <div
-          className="w-full"
-          style={getSectionStyle("bottom", headerSettings.bottomBarColorScheme)}
-        >
-          <Section
-            position="bottom"
-            scheme={headerSettings.bottomBarColorScheme || "light"}
-            className="bottom-section"
-          />
-        </div>
-      )}
+      {/* Bottom Section - Only render if bottomEnabled is true AND has at least one item */}
+      {headerSettings.bottomEnabled !== false &&
+        hasItemsInContainers([
+          "bottom_left",
+          "bottom_center",
+          "bottom_right",
+        ]) && (
+          <div
+            className="w-full"
+            style={getSectionStyle(
+              "bottom",
+              headerSettings.bottomBarColorScheme
+            )}
+          >
+            <Section
+              position="bottom"
+              scheme={headerSettings.bottomBarColorScheme || "light"}
+              className="bottom-section"
+            />
+          </div>
+        )}
     </header>
   );
 }
