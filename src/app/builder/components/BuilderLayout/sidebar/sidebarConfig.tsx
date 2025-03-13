@@ -59,6 +59,10 @@ export const createMenuConfig = (
       componentProps: {
         onSelectPreset: handleSelectPreset,
         currentPreset,
+        onBack: () => {
+          // Handle back navigation if needed
+          console.log("Going back from header layout panel");
+        },
       },
       icon: LayoutPanelIcon,
       parent: "Header",

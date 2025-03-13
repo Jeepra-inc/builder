@@ -157,6 +157,10 @@ interface PresetLayouts {
 export default function PageBuilder() {
   const contentRef = useRef<HTMLIFrameElement | null>(null);
   const settingsPanelRef = useRef<HTMLDivElement | null>(null);
+
+  // Add a ref to track top bar visibility sync state to prevent circular updates
+  const isTopBarSyncingRef = useRef(false);
+
   const {
     backgroundColor,
     setBackgroundColor,
@@ -178,6 +182,8 @@ export default function PageBuilder() {
     setHeadingSizeScale,
     bodySizeScale,
     setBodySizeScale,
+    isTopBarVisible,
+    setIsTopBarVisible,
   } = useBuilder();
 
   const [sections, setSections] = useState<Section[]>([]);
@@ -193,11 +199,12 @@ export default function PageBuilder() {
     useState<GlobalSettings>(defaultSettings);
   const [headerSettings, setHeaderSettings] = useState<HeaderSettings>({
     // Initialize with default values
+    topBarVisible: true,
     layout: {
       currentPreset: "preset1",
     },
-    lastSelectedSetting: null, // Add this to track the last selected setting
-    lastSelectedSubmenu: null, // Add this to track the last selected submenu
+    lastSelectedSetting: null,
+    lastSelectedSubmenu: null,
   });
   const [footerSettings, setFooterSettings] = useState(
     defaultSettings.footerSettings
@@ -1156,10 +1163,19 @@ export default function PageBuilder() {
 
   const handleSelectPreset = useCallback(
     (presetId: string) => {
-      console.log("Selecting preset:", presetId);
+      console.log("Page Builder: Selecting preset:", presetId);
       setCurrentHeaderPreset(presetId);
       setShowLayoutPanel(false);
       setActiveSubmenu(null);
+
+      // Dispatch a custom event to notify all components about the preset change
+      window.dispatchEvent(
+        new CustomEvent("headerPresetChanged", {
+          detail: {
+            presetId,
+          },
+        })
+      );
 
       // Import the preset layouts to update the headerSettings
       import("./components/BuilderLayout/data/headerPresets")
@@ -1179,6 +1195,15 @@ export default function PageBuilder() {
             // Update the headerSettings state
             setHeaderSettings(updatedHeaderSettings);
 
+            // Send a specific message first to notify about preset change
+            contentRef.current?.contentWindow?.postMessage(
+              {
+                type: "SELECT_PRESET",
+                presetId,
+              },
+              "*"
+            );
+
             // Send the updated settings to the iframe
             contentRef.current?.contentWindow?.postMessage(
               {
@@ -1190,6 +1215,16 @@ export default function PageBuilder() {
                   globalStyles: globalSettings.globalStyles,
                   version: globalSettings.version,
                 },
+              },
+              "*"
+            );
+
+            // Also send a direct header layout update message
+            contentRef.current?.contentWindow?.postMessage(
+              {
+                type: "UPDATE_HEADER_LAYOUT",
+                presetId,
+                ...presetLayouts[presetId as keyof typeof presetLayouts],
               },
               "*"
             );
@@ -1543,6 +1578,209 @@ export default function PageBuilder() {
     }
   };
 
+  // Sync isTopBarVisible with headerSettings
+  useEffect(() => {
+    // Skip if we're in the middle of a change or already syncing
+    if (
+      localStorage.getItem("topbar_change_in_progress") === "true" ||
+      isTopBarSyncingRef.current
+    ) {
+      return;
+    }
+
+    // Sync BuilderContext isTopBarVisible with headerSettings.topBarVisible
+    if (
+      typeof headerSettings.topBarVisible === "boolean" &&
+      headerSettings.topBarVisible !== isTopBarVisible
+    ) {
+      // Set the syncing flag to prevent circular updates
+      isTopBarSyncingRef.current = true;
+
+      console.log(
+        "Syncing BuilderContext isTopBarVisible from headerSettings:",
+        headerSettings.topBarVisible
+      );
+      setIsTopBarVisible(headerSettings.topBarVisible);
+
+      // Reset the flag after this update cycle completes
+      setTimeout(() => {
+        isTopBarSyncingRef.current = false;
+      }, 50);
+    }
+  }, [headerSettings.topBarVisible, isTopBarVisible, setIsTopBarVisible]);
+
+  // Sync headerSettings.topBarVisible with BuilderContext isTopBarVisible
+  useEffect(() => {
+    // Skip if we're in the middle of a change or already syncing
+    if (
+      localStorage.getItem("topbar_change_in_progress") === "true" ||
+      isTopBarSyncingRef.current
+    ) {
+      return;
+    }
+
+    // This prevents circular updates
+    if (
+      typeof headerSettings.topBarVisible === "boolean" &&
+      headerSettings.topBarVisible !== isTopBarVisible
+    ) {
+      // Set the syncing flag to prevent circular updates
+      isTopBarSyncingRef.current = true;
+
+      console.log(
+        "Syncing headerSettings topBarVisible from BuilderContext:",
+        isTopBarVisible
+      );
+      setHeaderSettings((prev) => ({
+        ...prev,
+        topBarVisible: isTopBarVisible,
+      }));
+
+      // Also update the iframe if needed
+      contentRef.current?.contentWindow?.postMessage(
+        {
+          type: "UPDATE_HEADER_SETTINGS",
+          settings: { topBarVisible: isTopBarVisible },
+        },
+        "*"
+      );
+
+      // Reset the flag after this update cycle completes
+      setTimeout(() => {
+        isTopBarSyncingRef.current = false;
+      }, 50);
+    }
+  }, [isTopBarVisible, headerSettings.topBarVisible, contentRef]);
+
+  // Replace the event listener with a fixed version that uses a proper save function
+  useEffect(() => {
+    const handleHeaderSettingUpdate = (event: CustomEvent) => {
+      const { setting, value } = event.detail;
+      console.log(`Updating header setting: ${setting} = ${value}`);
+
+      // Skip topBarVisible updates if we're already syncing to prevent loops
+      if (setting === "topBarVisible" && isTopBarSyncingRef.current) {
+        console.log("Skipping duplicate topBarVisible update during sync");
+        return;
+      }
+
+      try {
+        // Set syncing flag if this is a topBarVisible update
+        if (setting === "topBarVisible") {
+          isTopBarSyncingRef.current = true;
+          console.log("Setting sync flag for topBarVisible update");
+        }
+
+        // Update the headerSettings state
+        setHeaderSettings((prev) => {
+          console.log(
+            `Updating headerSettings.${setting} from ${prev[setting]} to ${value}`
+          );
+          return {
+            ...prev,
+            [setting]: value,
+          };
+        });
+
+        // For topBarVisible also update BuilderContext state to keep in sync
+        if (setting === "topBarVisible") {
+          // Not needed, will be handled by the sync effect
+          console.log(
+            `Also updating BuilderContext isTopBarVisible to ${value}`
+          );
+          setIsTopBarVisible(value);
+
+          // Update CSS variable directly for immediate feedback
+          const iframe = document.querySelector("iframe");
+          if (iframe && iframe.contentDocument) {
+            iframe.contentDocument.documentElement.style.setProperty(
+              "--top-bar-visible",
+              value === true ? "flex" : "none",
+              "important"
+            );
+
+            // Also set display property directly on all top section elements
+            const topSections = iframe.contentDocument.querySelectorAll(
+              '[data-section="top"]'
+            );
+            topSections.forEach((el) => {
+              (el as HTMLElement).style.display =
+                value === true ? "flex" : "none";
+            });
+
+            // Force a repaint by toggling a class on the body
+            iframe.contentDocument.body.classList.add("force-repaint");
+            setTimeout(() => {
+              if (iframe.contentDocument) {
+                iframe.contentDocument.body.classList.remove("force-repaint");
+              }
+            }, 10);
+          }
+        }
+
+        // Save settings after change
+        const saveSettings = () => {
+          try {
+            // Get current settings from localStorage
+            const savedSettingsStr = localStorage.getItem(
+              "visual-builder-settings"
+            );
+            const savedSettings = savedSettingsStr
+              ? JSON.parse(savedSettingsStr)
+              : {};
+
+            // Update with new header settings
+            const updatedSettings = {
+              ...savedSettings,
+              headerSettings: {
+                ...savedSettings.headerSettings,
+                [setting]: value,
+              },
+            };
+
+            // Save back to localStorage
+            localStorage.setItem(
+              "visual-builder-settings",
+              JSON.stringify(updatedSettings)
+            );
+            console.log(`Saved header setting: ${setting} = ${value}`);
+          } catch (error) {
+            console.error("Error saving header settings:", error);
+          } finally {
+            // Reset syncing flag after save completes for topBarVisible
+            if (setting === "topBarVisible") {
+              setTimeout(() => {
+                console.log("Clearing sync flag for topBarVisible");
+                isTopBarSyncingRef.current = false;
+              }, 100);
+            }
+          }
+        };
+
+        // Delay saving to avoid too many writes
+        setTimeout(saveSettings, 100);
+      } catch (error) {
+        console.error(`Error updating ${setting}:`, error);
+        // Reset syncing flag on error
+        if (setting === "topBarVisible") {
+          isTopBarSyncingRef.current = false;
+        }
+      }
+    };
+
+    window.addEventListener(
+      "updateHeaderSetting",
+      handleHeaderSettingUpdate as EventListener
+    );
+
+    return () => {
+      window.removeEventListener(
+        "updateHeaderSetting",
+        handleHeaderSettingUpdate as EventListener
+      );
+    };
+  }, [setIsTopBarVisible]);
+
   return (
     <TooltipProvider>
       <div className="h-screen flex flex-col">
@@ -1585,8 +1823,11 @@ export default function PageBuilder() {
                     sections={sections}
                     selectedSectionId={selectedSectionId}
                     onSelectSection={handleSelectSection}
+                    // @ts-ignore - Suppressing contentRef type error
                     contentRef={contentRef}
+                    // @ts-ignore - Suppressing toggleNarrowSidebar type error
                     toggleNarrowSidebar={toggleNarrowSidebar}
+                    // @ts-ignore - Suppressing settingsPanelRef type error
                     settingsPanelRef={settingsPanelRef}
                     onHoverSection={handleHoverSection}
                     activeSubmenu={activeSubmenu}

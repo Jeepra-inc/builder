@@ -711,27 +711,44 @@ export function HeaderLayoutBuilder({
       const savedLayout = getSavedLayout();
       if (savedLayout) {
         setLayout(sanitizeLayout(savedLayout));
+      } else if (presetLayouts[currentPreset as keyof typeof presetLayouts]) {
+        // If no saved layout, use the current preset instead
+        setLayout(
+          sanitizeLayout(
+            presetLayouts[currentPreset as keyof typeof presetLayouts]
+          )
+        );
       }
 
       isInitialMount.current = false;
       lastPresetRef.current = currentPreset;
+      // Apply the initial layout to the iframe
+      setTimeout(() => applyLayoutToIframe(), 100);
       return;
     }
 
     // This is an actual preset change initiated by the user (not a page reload)
     // Only update if the preset actually changed (not on a re-render)
     if (currentPreset !== lastPresetRef.current) {
+      console.log(
+        `HeaderLayoutBuilder: Changing preset from ${lastPresetRef.current} to ${currentPreset}`
+      );
+
       if (presetLayouts[currentPreset as keyof typeof presetLayouts]) {
         // Record that user explicitly chose a preset, then apply it
-        setLayout(
-          sanitizeLayout(
-            presetLayouts[currentPreset as keyof typeof presetLayouts]
-          )
+        const newLayout = sanitizeLayout(
+          presetLayouts[currentPreset as keyof typeof presetLayouts]
         );
+
+        setLayout(newLayout);
+        console.log("Applied new layout from preset:", newLayout);
 
         // Immediately apply this layout to the iframe and save it
         // This ensures the new preset is saved and persists on reload
-        setTimeout(() => applyLayoutToIframe(), 0);
+        setTimeout(() => {
+          applyLayoutToIframe();
+          console.log("Applied layout to iframe after preset change");
+        }, 100);
 
         // If onSelectPreset callback exists, call it
         if (onSelectPreset) {
@@ -773,11 +790,59 @@ export function HeaderLayoutBuilder({
       }
     };
 
+    // Listen for direct preset change events from the sidebar or page
+    const handlePresetChanged = (event: CustomEvent) => {
+      const { presetId } = event.detail;
+      console.log(
+        "HeaderLayoutBuilder received preset change event:",
+        presetId
+      );
+
+      if (presetId && presetId !== currentPreset) {
+        console.log(
+          `HeaderLayoutBuilder: Updating preset from ${currentPreset} to ${presetId}`
+        );
+
+        // Update currentPreset state
+        setCurrentPreset(presetId);
+
+        // Update layout if the preset exists
+        if (presetLayouts[presetId as keyof typeof presetLayouts]) {
+          const newLayout = sanitizeLayout(
+            presetLayouts[presetId as keyof typeof presetLayouts]
+          );
+
+          setLayout(newLayout);
+          console.log(
+            "HeaderLayoutBuilder: Applied new layout from preset event:",
+            newLayout
+          );
+
+          // Apply to iframe immediately
+          setTimeout(() => {
+            applyLayoutToIframe();
+            console.log(
+              "HeaderLayoutBuilder: Applied layout to iframe after preset change event"
+            );
+          }, 100);
+        }
+      }
+    };
+
     window.addEventListener("message", handleMessage);
+    window.addEventListener(
+      "headerPresetChanged",
+      handlePresetChanged as EventListener
+    );
+
     return () => {
       window.removeEventListener("message", handleMessage);
+      window.removeEventListener(
+        "headerPresetChanged",
+        handlePresetChanged as EventListener
+      );
     };
-  }, [currentPreset, setLayout]);
+  }, [currentPreset, setLayout, applyLayoutToIframe]);
 
   const handleItemClick = useCallback((itemId: string) => {
     // Skip settings for menu items
@@ -926,6 +991,7 @@ export function HeaderLayoutBuilder({
           newLayout[targetContainerId as keyof HeaderLayout] = targetContainer;
 
           // Remove from available
+          newLayout.available = newLayout.available || [];
           newLayout.available = newLayout.available.filter(
             (item) => item !== itemToMove
           );
@@ -943,6 +1009,7 @@ export function HeaderLayoutBuilder({
           });
 
           // Add to available if not already there
+          newLayout.available = newLayout.available || [];
           if (!newLayout.available.includes(itemToMove)) {
             newLayout.available.push(itemToMove);
           }
@@ -1337,7 +1404,7 @@ export function HeaderLayoutBuilder({
                 </p>
                 <DroppableZone
                   id="available"
-                  items={layout.available}
+                  items={layout.available || []}
                   moveItem={moveItem}
                   onItemClick={handleItemClick}
                   className="available-items"

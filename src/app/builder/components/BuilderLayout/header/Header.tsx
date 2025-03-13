@@ -774,23 +774,22 @@ export default function Header({
       data-main-scheme={headerSettings.mainBarColorScheme || "light"}
       data-bottom-scheme={headerSettings.bottomBarColorScheme || "light"}
     >
-      {/* Top Bar - Only render if topBarVisible is true AND has at least one item */}
-      {headerSettings.topBarVisible !== false &&
-        hasItemsInContainers(["top_left", "top_center", "top_right"]) && (
-          <div
-            className="w-full"
-            data-section="top"
-            style={{
-              ...getSectionStyle("top", headerSettings.topBarColorScheme),
-            }}
-          >
-            <Section
-              position="top"
-              scheme={headerSettings.topBarColorScheme || "light"}
-              className="py-2"
-            />
-          </div>
-        )}
+      {/* Top Bar - Only render if topBarVisible is true */}
+      {headerSettings.topBarVisible === true && (
+        <div
+          className="w-full"
+          data-section="top"
+          style={{
+            ...getSectionStyle("top", headerSettings.topBarColorScheme),
+          }}
+        >
+          <Section
+            position="top"
+            scheme={headerSettings.topBarColorScheme || "light"}
+            className="py-2"
+          />
+        </div>
+      )}
 
       {/* Main Section - Always render */}
       <div

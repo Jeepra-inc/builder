@@ -9,6 +9,43 @@ import {
 // Create a cache to track processed messages
 const processedMessages = new Map<string, number>();
 
+// Helper function to update typography settings
+const updateTypography = (typography: any) => {
+  const {
+    headingFont,
+    bodyFont,
+    headingColor,
+    headingSizeScale,
+    bodySizeScale,
+  } = typography;
+
+  const root = document.documentElement;
+
+  if (headingFont) {
+    const [fontFamily, weight] = headingFont.split(":");
+    root.style.setProperty("--heading-font", `'${fontFamily}', sans-serif`);
+    loadGoogleFont(fontFamily, weight || "400");
+  }
+
+  if (bodyFont) {
+    const [fontFamily, weight] = bodyFont.split(":");
+    root.style.setProperty("--body-font", `'${fontFamily}', sans-serif`);
+    loadGoogleFont(fontFamily, weight || "400");
+  }
+
+  if (headingColor) {
+    root.style.setProperty("--heading-color", headingColor);
+  }
+
+  if (headingSizeScale) {
+    root.style.setProperty("--heading-size-scale", `${headingSizeScale / 100}`);
+  }
+
+  if (bodySizeScale) {
+    root.style.setProperty("--body-size-scale", `${bodySizeScale / 100}`);
+  }
+};
+
 /**
  * Custom hook to handle messages from the parent window
  */
@@ -108,76 +145,87 @@ export const useMessageHandler = ({
           // Update our local state
           processingParentSettings.current = true;
 
+          // Log the topBarVisible setting for debugging purposes
+          if (settings?.headerSettings?.topBarVisible !== undefined) {
+            console.log(
+              "Processing topBarVisible setting:",
+              settings.headerSettings.topBarVisible
+            );
+          }
+
           try {
-            if (settings.sections) {
-              dispatch({ type: "SET_SECTIONS", payload: settings.sections });
-            }
-
-            if (settings.headerSettings) {
-              setHeaderSettings((prev) => ({
-                ...prev,
-                ...settings.headerSettings,
-              }));
-            }
-
-            if (settings.footerSettings) {
-              setFooterSettings((prev) => ({
-                ...prev,
-                ...settings.footerSettings,
-              }));
-            }
-
-            // Directly handle typography settings to ensure fonts load
-            if (settings.globalStyles?.typography) {
-              console.log(
-                "Typography initialized from LOAD_SETTINGS",
-                settings.globalStyles.typography
-              );
-              const {
-                headingFont,
-                bodyFont,
-                headingColor,
-                headingSizeScale,
-                bodySizeScale,
-              } = settings.globalStyles.typography;
-
-              // Apply CSS variables directly
-              const root = document.documentElement;
-
-              if (headingFont) {
-                const [fontFamily, weight] = headingFont.split(":");
-                root.style.setProperty(
-                  "--heading-font",
-                  `'${fontFamily}', sans-serif`
+            if (settings) {
+              // Initialize typography from settings
+              if (settings.globalStyles?.typography) {
+                updateTypography(settings.globalStyles.typography);
+                console.log(
+                  "Typography initialized from LOAD_SETTINGS",
+                  settings.globalStyles.typography
                 );
-                loadGoogleFont(fontFamily, weight || "400");
+                const {
+                  headingFont,
+                  bodyFont,
+                  headingColor,
+                  headingSizeScale,
+                  bodySizeScale,
+                } = settings.globalStyles.typography;
+
+                // Apply CSS variables directly
+                const root = document.documentElement;
+
+                if (headingFont) {
+                  const [fontFamily, weight] = headingFont.split(":");
+                  root.style.setProperty(
+                    "--heading-font",
+                    `'${fontFamily}', sans-serif`
+                  );
+                  loadGoogleFont(fontFamily, weight || "400");
+                }
+
+                if (bodyFont) {
+                  const [fontFamily, weight] = bodyFont.split(":");
+                  root.style.setProperty(
+                    "--body-font",
+                    `'${fontFamily}', sans-serif`
+                  );
+                  loadGoogleFont(fontFamily, weight || "400");
+                }
+
+                if (headingColor) {
+                  root.style.setProperty("--heading-color", headingColor);
+                }
+
+                if (headingSizeScale) {
+                  root.style.setProperty(
+                    "--heading-size-scale",
+                    `${headingSizeScale / 100}`
+                  );
+                }
+
+                if (bodySizeScale) {
+                  root.style.setProperty(
+                    "--body-size-scale",
+                    `${bodySizeScale / 100}`
+                  );
+                }
               }
 
-              if (bodyFont) {
-                const [fontFamily, weight] = bodyFont.split(":");
-                root.style.setProperty(
-                  "--body-font",
-                  `'${fontFamily}', sans-serif`
-                );
-                loadGoogleFont(fontFamily, weight || "400");
+              if (settings.sections) {
+                dispatch({ type: "SET_SECTIONS", payload: settings.sections });
               }
 
-              if (headingColor) {
-                root.style.setProperty("--heading-color", headingColor);
+              if (settings.headerSettings) {
+                setHeaderSettings((prev) => ({
+                  ...prev,
+                  ...settings.headerSettings,
+                }));
               }
 
-              if (headingSizeScale) {
-                root.style.setProperty(
-                  "--heading-size-scale",
-                  `${headingSizeScale / 100}`
-                );
-              }
-
-              if (bodySizeScale) {
-                root.style.setProperty(
-                  "--body-size-scale",
-                  `${bodySizeScale / 100}`
-                );
+              if (settings.footerSettings) {
+                setFooterSettings((prev) => ({
+                  ...prev,
+                  ...settings.footerSettings,
+                }));
               }
             }
           } finally {

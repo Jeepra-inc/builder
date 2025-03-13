@@ -62,11 +62,11 @@ export const applyCSSVariables = (settings: HeaderSettings): void => {
   // Apply visibility settings
   document.documentElement.style.setProperty(
     "--top-bar-visible",
-    settings.topBarVisible ? "flex" : "none"
+    settings.topBarVisible === true ? "flex" : "none"
   );
   document.documentElement.style.setProperty(
     "--bottom-bar-visible",
-    settings.bottomEnabled ? "flex" : "none"
+    settings.bottomEnabled === true ? "flex" : "none"
   );
 
   // Apply height settings

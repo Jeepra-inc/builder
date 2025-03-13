@@ -66,11 +66,31 @@ export function SidebarLeft({
 
   const handleSelectPreset = useCallback(
     (presetId: string) => {
+      console.log("Sidebar: Selected preset:", presetId);
       setCurrentPreset(presetId);
-      contentRef.current?.contentWindow?.postMessage(
-        { type: "SELECT_PRESET", presetId },
-        "*"
+
+      // Dispatch a custom event for direct communication with the header layout builder
+      window.dispatchEvent(
+        new CustomEvent("headerPresetChanged", {
+          detail: {
+            presetId,
+          },
+        })
       );
+
+      // Make sure we have a valid contentRef before sending messages
+      if (contentRef.current?.contentWindow) {
+        contentRef.current.contentWindow.postMessage(
+          { type: "SELECT_PRESET", presetId },
+          "*"
+        );
+
+        console.log("Sidebar: Sent SELECT_PRESET message to iframe");
+      } else {
+        console.warn(
+          "Sidebar: contentRef is not available for sending messages"
+        );
+      }
     },
     [contentRef]
   );

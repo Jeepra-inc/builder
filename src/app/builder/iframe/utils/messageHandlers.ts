@@ -117,6 +117,13 @@ export const createLoadSettingsHandler =
             // Create updated header settings
             const updatedHeaderSettings = { ...settings.headerSettings };
 
+            // Ensure we respect the topBarVisible setting - DO NOT override it
+            // This fixes the issue where topBarVisible was being forced to true
+            console.log(
+              "Respecting topBarVisible setting:",
+              updatedHeaderSettings.topBarVisible
+            );
+
             // Process additional branding information if needed
             if (settings.globalStyles?.branding) {
               // This would need to be expanded based on the actual implementation

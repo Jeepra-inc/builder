@@ -1,60 +1,56 @@
 {
   "sections": [
     {
-      "id": "section_1741713559014_klmaako35",
-      "type": "hero",
-      "content": [
-        "Example content"
-      ],
-      "settings": {}
-    },
-    {
-      "id": "section_1741713549195_0qoqybqgk",
-      "type": "modernbanner",
-      "content": [
-        "Example content"
-      ],
-      "settings": {}
+      "id": "ame0mQ9jldfbIlVXmz7dr",
+      "type": "newarrival",
+      "content": {},
+      "settings": {
+        "paddingTop": 20,
+        "paddingBottom": 20,
+        "textAlignment": "right",
+        "colorScheme": "scheme-3"
+      }
     }
   ],
   "headerSettings": {
     "layout": {
-      "currentPreset": "preset1",
+      "currentPreset": "mobile_centered",
       "containers": {
         "top_left": [
-          "html_block_3"
+          "html_block_4"
         ],
         "top_center": [],
         "top_right": [
-          "contact",
-          "html_block_2",
-          "html_block_4"
+          "html_block_1"
         ],
         "middle_left": [
+          "nav_icon",
+          "mainMenu"
+        ],
+        "middle_center": [
           "logo"
         ],
-        "middle_center": [],
         "middle_right": [
-          "cart"
+          "search"
         ],
         "bottom_left": [
-          "account",
-          "nav_icon"
+          "topBarMenu"
         ],
         "bottom_center": [],
         "bottom_right": [
-          "bottomMenu"
+          "social_icon"
         ],
         "available": [
-          "html_block_1",
+          "html_block_2",
+          "html_block_3",
           "html_block_5",
-          "topBarMenu",
-          "mainMenu",
-          "search",
+          "account",
+          "cart",
+          "bottomMenu",
+          "contact",
           "button_1",
           "button_2",
           "wishlist",
-          "social_icon",
           "divider_1",
           "divider_2",
           "divider_3",
@@ -62,13 +58,56 @@
         ]
       }
     },
-    "lastSelectedSetting": "logo",
-    "lastSelectedSubmenu": "Header Main Setting",
+    "lastSelectedSetting": "header",
+    "lastSelectedSubmenu": "General",
+    "topBarVisible": true,
     "logo": {
-      "text": "Your Brand",
-      "showText": true,
-      "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
-      "size": "medium"
+      "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+      "size": "large"
+    },
+    "topBarColorScheme": "light",
+    "topBarHeight": 59,
+    "navIcon": {
+      "show": true,
+      "type": "hamburger",
+      "showText": false,
+      "text": "Menu",
+      "position": "right",
+      "drawerEffect": "slide",
+      "drawerDirection": "left",
+      "iconSize": "24px",
+      "iconColor": "#333333",
+      "textColor": "#333333"
+    },
+    "bottomEnabled": true,
+    "topBarNavStyle": "style1",
+    "topBarTextTransform": "capitalize"
+  },
+  "footerSettings": {
+    "content": {
+      "copyright": " 2024 Your Company. All rights reserved.",
+      "description": "Building amazing websites with ease"
+    },
+    "links": {
+      "items": [
+        {
+          "text": "About Us",
+          "url": "#"
+        },
+        {
+          "text": "Contact",
+          "url": "#"
+        },
+        {
+          "text": "Privacy Policy",
+          "url": "#"
+        }
+      ]
+    },
+    "layout": {
+      "maxWidth": "1200px",
+      "showSocials": true,
+      "multiColumn": true
     }
   },
   "globalStyles": {
@@ -78,7 +117,7 @@
           "name": "Scheme 1",
           "background": "#FFFFFF",
           "text": "#121212",
-          "gradient": "linear-gradient(90deg, RGB(26, 255, 255) 0%, rgba(146,254,157,1) 100%)",
+          "gradient": "linear-gradient(90deg, #00C9FF 0%, #92FE9D 100%)",
           "buttonBackground": "#121212",
           "buttonLabel": "#FFFFFF",
           "outlineButton": "#121212",
@@ -116,20 +155,20 @@
         }
       ]
     },
-    "branding": {
-      "logoUrl": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
-      "logoWidth": 50,
-      "faviconUrl": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
-      "backgroundColor": "#ffffff"
-    },
     "typography": {
-      "headingFont": "Secular One:400",
-      "bodyFont": "Bai Jamjuree:600",
-      "headingSizeScale": 97,
-      "bodySizeScale": 54,
+      "headingFont": "Assistant",
+      "bodyFont": "Assistant",
+      "headingSizeScale": 100,
+      "bodySizeScale": 100,
       "headingColor": "#1a1a1a"
     },
-    "customCSS": ""
+    "customCSS": "",
+    "branding": {
+      "logoUrl": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+      "logoWidth": 99,
+      "faviconUrl": "",
+      "backgroundColor": "#ffffff"
+    }
   },
   "version": "1.0.0",
   "globalLayout": {
