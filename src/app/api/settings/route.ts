@@ -1,10 +1,25 @@
-import { writeFile, readFile, access } from 'fs/promises';
-import { constants } from 'fs';
-import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
+import { writeFile, readFile, access } from "fs/promises";
+import { constants } from "fs";
+import { NextRequest, NextResponse } from "next/server";
+import path from "path";
+
+// Define types for our settings
+interface HeaderSettings {
+  topBarVisible?: boolean;
+  topBarHeight?: number;
+  topBarColorScheme?: string;
+  topBarNavStyle?: string;
+  topBarTextTransform?: string;
+  [key: string]: any; // Allow other properties
+}
+
+interface GlobalSettings {
+  headerSettings?: HeaderSettings;
+  [key: string]: any; // Allow other properties
+}
 
 // File path for the settings JSON file
-const SETTINGS_FILE_PATH = path.join(process.cwd(), 'public', 'settings.json');
+const SETTINGS_FILE_PATH = path.join(process.cwd(), "public", "settings.json");
 
 // Check if a file exists
 async function fileExists(filePath: string): Promise<boolean> {
@@ -21,18 +36,18 @@ export async function GET() {
   try {
     // Check if the file exists first
     const exists = await fileExists(SETTINGS_FILE_PATH);
-    
+
     if (!exists) {
       // If the file doesn't exist, return an empty object
       // This prevents errors on first load
       return NextResponse.json({});
     }
-    
-    const fileContent = await readFile(SETTINGS_FILE_PATH, 'utf-8');
+
+    const fileContent = await readFile(SETTINGS_FILE_PATH, "utf-8");
     const settings = JSON.parse(fileContent);
     return NextResponse.json(settings);
   } catch (error) {
-    console.error('Error reading settings file:', error);
+    console.error("Error reading settings file:", error);
     // Return empty object instead of error to avoid disrupting the UI
     return NextResponse.json({});
   }
@@ -41,23 +56,80 @@ export async function GET() {
 // POST handler to save settings to the file
 export async function POST(request: NextRequest) {
   try {
-    const settings = await request.json();
-    
+    // Get the partial settings from the request
+    const partialSettings = (await request.json()) as GlobalSettings;
+    console.log("[API] Received settings update:", partialSettings);
+
+    // First, load existing settings
+    let existingSettings: GlobalSettings = {};
+    try {
+      if (await fileExists(SETTINGS_FILE_PATH)) {
+        const fileContent = await readFile(SETTINGS_FILE_PATH, "utf-8");
+        existingSettings = JSON.parse(fileContent) as GlobalSettings;
+        console.log("[API] Loaded existing settings");
+      } else {
+        console.log("[API] No existing settings file found, creating new one");
+      }
+    } catch (error) {
+      console.log(
+        "[API] Error reading existing settings, creating new file:",
+        error
+      );
+    }
+
+    // Merge the partial settings with existing settings
+    const updatedSettings: GlobalSettings = {
+      ...existingSettings,
+    };
+
+    // Deep merge headerSettings if provided
+    if (partialSettings.headerSettings) {
+      if (!updatedSettings.headerSettings) {
+        updatedSettings.headerSettings = {};
+      }
+
+      updatedSettings.headerSettings = {
+        ...(existingSettings.headerSettings || {}),
+        ...partialSettings.headerSettings,
+      };
+
+      // Ensure topBarVisible is a proper boolean
+      if (
+        updatedSettings.headerSettings &&
+        "topBarVisible" in updatedSettings.headerSettings
+      ) {
+        updatedSettings.headerSettings.topBarVisible =
+          updatedSettings.headerSettings.topBarVisible === true;
+
+        console.log(
+          "[API] Saving topBarVisible as:",
+          updatedSettings.headerSettings.topBarVisible
+        );
+      }
+    }
+
     // Create the directory if it doesn't exist
     const dirPath = path.dirname(SETTINGS_FILE_PATH);
-    
+
     // Save settings to a JSON file in the public directory
     await writeFile(
       SETTINGS_FILE_PATH,
-      JSON.stringify(settings, null, 2),
-      'utf-8'
+      JSON.stringify(updatedSettings, null, 2),
+      "utf-8"
     );
-    
-    return NextResponse.json({ success: true });
+
+    return NextResponse.json({
+      success: true,
+      headerSettingsTopBarVisible:
+        updatedSettings?.headerSettings?.topBarVisible,
+    });
   } catch (error) {
-    console.error('Error saving settings file:', error);
+    console.error("Error saving settings file:", error);
     return NextResponse.json(
-      { error: 'Failed to save settings file', message: error instanceof Error ? error.message : String(error) },
+      {
+        error: "Failed to save settings file",
+        message: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

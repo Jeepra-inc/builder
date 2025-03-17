@@ -37,6 +37,9 @@ export function TopBar({
     setSaveError(false);
 
     try {
+      // Save top bar settings by triggering the event
+      document.dispatchEvent(new Event("saveTopBarSettings"));
+
       // Call the handleSave function provided from the parent
       await handleSave();
 

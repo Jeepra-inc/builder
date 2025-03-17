@@ -1,56 +1,51 @@
 {
-  "sections": [
-    {
-      "id": "ame0mQ9jldfbIlVXmz7dr",
-      "type": "newarrival",
-      "content": {},
-      "settings": {
-        "paddingTop": 20,
-        "paddingBottom": 20,
-        "textAlignment": "right",
-        "colorScheme": "scheme-3"
-      }
-    }
-  ],
   "headerSettings": {
+    "logo": {
+      "text": "Builder",
+      "showText": true,
+      "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
+      "size": "medium"
+    },
+    "navigation": {
+      "menuType": "mainMenu",
+      "items": []
+    },
     "layout": {
-      "currentPreset": "mobile_centered",
+      "currentPreset": "preset1",
       "containers": {
-        "top_left": [
-          "html_block_4"
-        ],
-        "top_center": [],
-        "top_right": [
-          "html_block_1"
-        ],
-        "middle_left": [
-          "nav_icon",
-          "mainMenu"
-        ],
-        "middle_center": [
-          "logo"
-        ],
-        "middle_right": [
-          "search"
-        ],
-        "bottom_left": [
+        "top_left": [],
+        "top_center": [
           "topBarMenu"
         ],
-        "bottom_center": [],
-        "bottom_right": [
-          "social_icon"
+        "top_right": [
+          "contact"
         ],
+        "middle_left": [
+          "logo"
+        ],
+        "middle_center": [
+          "mainMenu"
+        ],
+        "middle_right": [
+          "account",
+          "cart"
+        ],
+        "bottom_left": [],
+        "bottom_center": [],
+        "bottom_right": [],
         "available": [
+          "html_block_1",
           "html_block_2",
           "html_block_3",
+          "html_block_4",
           "html_block_5",
-          "account",
-          "cart",
+          "nav_icon",
           "bottomMenu",
-          "contact",
+          "search",
           "button_1",
           "button_2",
           "wishlist",
+          "social_icon",
           "divider_1",
           "divider_2",
           "divider_3",
@@ -58,120 +53,28 @@
         ]
       }
     },
+    "search": {
+      "show": true,
+      "type": "form",
+      "placeholder": "Search...",
+      "showText": true,
+      "behavior": "inline",
+      "design": "standard"
+    },
+    "account": {
+      "showText": true,
+      "text": "Account",
+      "showIcon": true
+    },
+    "contact": {
+      "show": true
+    },
+    "topBarVisible": true,
     "lastSelectedSetting": "header",
     "lastSelectedSubmenu": "General",
-    "topBarVisible": true,
-    "logo": {
-      "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
-      "size": "large"
-    },
     "topBarColorScheme": "light",
-    "topBarHeight": 59,
-    "navIcon": {
-      "show": true,
-      "type": "hamburger",
-      "showText": false,
-      "text": "Menu",
-      "position": "right",
-      "drawerEffect": "slide",
-      "drawerDirection": "left",
-      "iconSize": "24px",
-      "iconColor": "#333333",
-      "textColor": "#333333"
-    },
-    "bottomEnabled": true,
-    "topBarNavStyle": "style1",
+    "topBarHeight": 69,
+    "topBarNavStyle": "style4",
     "topBarTextTransform": "capitalize"
-  },
-  "footerSettings": {
-    "content": {
-      "copyright": " 2024 Your Company. All rights reserved.",
-      "description": "Building amazing websites with ease"
-    },
-    "links": {
-      "items": [
-        {
-          "text": "About Us",
-          "url": "#"
-        },
-        {
-          "text": "Contact",
-          "url": "#"
-        },
-        {
-          "text": "Privacy Policy",
-          "url": "#"
-        }
-      ]
-    },
-    "layout": {
-      "maxWidth": "1200px",
-      "showSocials": true,
-      "multiColumn": true
-    }
-  },
-  "globalStyles": {
-    "colors": {
-      "schemes": [
-        {
-          "name": "Scheme 1",
-          "background": "#FFFFFF",
-          "text": "#121212",
-          "gradient": "linear-gradient(90deg, #00C9FF 0%, #92FE9D 100%)",
-          "buttonBackground": "#121212",
-          "buttonLabel": "#FFFFFF",
-          "outlineButton": "#121212",
-          "id": "scheme-1"
-        },
-        {
-          "name": "Scheme 2",
-          "background": "#F0F0F0",
-          "text": "#121212",
-          "gradient": "linear-gradient(90deg, #FC466B 0%, #3F5EFB 100%)",
-          "buttonBackground": "#121212",
-          "buttonLabel": "#FFFFFF",
-          "outlineButton": "#121212",
-          "id": "scheme-2"
-        },
-        {
-          "name": "Scheme 3",
-          "background": "#333333",
-          "text": "#FFFFFF",
-          "gradient": "linear-gradient(90deg, #FDBB2D 0%, #22C1C3 100%)",
-          "buttonBackground": "#121212",
-          "buttonLabel": "#FFFFFF",
-          "outlineButton": "#121212",
-          "id": "scheme-3"
-        },
-        {
-          "id": "scheme-4",
-          "name": "Scheme 4",
-          "background": "#FFFFFF",
-          "text": "#000000",
-          "gradient": "",
-          "buttonBackground": "#000000",
-          "buttonLabel": "#FFFFFF",
-          "outlineButton": "#000000"
-        }
-      ]
-    },
-    "typography": {
-      "headingFont": "Assistant",
-      "bodyFont": "Assistant",
-      "headingSizeScale": 100,
-      "bodySizeScale": 100,
-      "headingColor": "#1a1a1a"
-    },
-    "customCSS": "",
-    "branding": {
-      "logoUrl": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
-      "logoWidth": 99,
-      "faviconUrl": "",
-      "backgroundColor": "#ffffff"
-    }
-  },
-  "version": "1.0.0",
-  "globalLayout": {
-    "pageWidth": "1200px"
   }
 }

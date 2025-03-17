@@ -1270,6 +1270,11 @@ export default function PageBuilder() {
   const handleSave = useCallback((): Promise<void> => {
     return new Promise(async (resolve, reject) => {
       try {
+        console.log("Starting save process, current headerSettings:", {
+          ...headerSettings,
+          topBarVisible: headerSettings.topBarVisible,
+        });
+
         // Trigger saving of header layout before continuing
         const saveEvent = new CustomEvent("requestSaveHeaderLayout");
         window.dispatchEvent(saveEvent);
@@ -1301,11 +1306,25 @@ export default function PageBuilder() {
           console.error("Error loading global layout settings:", error);
         }
 
+        // Ensure headerSettings has the latest topBarVisible value
+        const currentHeaderSettings = {
+          ...headerSettings,
+          // Ensure topBarVisible is a strict boolean
+          topBarVisible: headerSettings.topBarVisible === true,
+        };
+
+        console.log("Saving with headerSettings:", {
+          ...currentHeaderSettings,
+          topBarVisible: `${
+            currentHeaderSettings.topBarVisible
+          } (${typeof currentHeaderSettings.topBarVisible})`,
+        });
+
         // Update global settings with current state
         const updatedSettings: GlobalSettings = {
           ...globalSettings,
           sections,
-          headerSettings,
+          headerSettings: currentHeaderSettings,
           footerSettings,
           globalLayout,
           globalStyles: {
@@ -1329,6 +1348,11 @@ export default function PageBuilder() {
           },
         };
 
+        console.log(
+          "About to save settings with topBarVisible:",
+          updatedSettings.headerSettings.topBarVisible
+        );
+
         // Save to localStorage and file
         await saveSettings(updatedSettings);
         setGlobalSettings(updatedSettings);
@@ -1339,6 +1363,7 @@ export default function PageBuilder() {
         setShowFeedback(true);
 
         console.log("Settings saved successfully", {
+          headerTopBarVisible: updatedSettings.headerSettings.topBarVisible,
           hasColors: !!updatedSettings.globalStyles?.colors,
           hasSchemes: !!updatedSettings.globalStyles?.colors?.schemes,
           schemeCount: updatedSettings.globalStyles?.colors?.schemes?.length,
@@ -1656,7 +1681,13 @@ export default function PageBuilder() {
   useEffect(() => {
     const handleHeaderSettingUpdate = (event: CustomEvent) => {
       const { setting, value } = event.detail;
-      console.log(`Updating header setting: ${setting} = ${value}`);
+
+      // For debugging, log the exact type and value
+      console.log(
+        `🔄 Updating header setting: ${setting} = ${value} (${typeof value}, ${Object.prototype.toString.call(
+          value
+        )})`
+      );
 
       // Skip topBarVisible updates if we're already syncing to prevent loops
       if (setting === "topBarVisible" && isTopBarSyncingRef.current) {
@@ -1671,31 +1702,42 @@ export default function PageBuilder() {
           console.log("Setting sync flag for topBarVisible update");
         }
 
-        // Update the headerSettings state
+        // Ensure topBarVisible is always a proper boolean
+        let processedValue = value;
+        if (setting === "topBarVisible") {
+          // Use strict equality to ensure value is treated correctly
+          processedValue = value === true || value === "true";
+          console.log(
+            `Processed topBarVisible value: ${processedValue} (${typeof processedValue})`
+          );
+        }
+
+        // Update the headerSettings state with the processed value
         setHeaderSettings((prev) => {
           console.log(
-            `Updating headerSettings.${setting} from ${prev[setting]} to ${value}`
+            `Updating headerSettings.${setting} from ${
+              prev[setting]
+            } to ${processedValue} (${typeof processedValue})`
           );
+
           return {
             ...prev,
-            [setting]: value,
+            [setting]: processedValue,
           };
         });
 
-        // For topBarVisible also update BuilderContext state to keep in sync
+        // For topBarVisible, also update BuilderContext state
         if (setting === "topBarVisible") {
-          // Not needed, will be handled by the sync effect
-          console.log(
-            `Also updating BuilderContext isTopBarVisible to ${value}`
-          );
-          setIsTopBarVisible(value);
+          // Use the processed boolean value
+          console.log(`Updating isTopBarVisible to ${processedValue}`);
+          setIsTopBarVisible(processedValue);
 
           // Update CSS variable directly for immediate feedback
           const iframe = document.querySelector("iframe");
           if (iframe && iframe.contentDocument) {
             iframe.contentDocument.documentElement.style.setProperty(
               "--top-bar-visible",
-              value === true ? "flex" : "none",
+              processedValue ? "flex" : "none",
               "important"
             );
 
@@ -1704,8 +1746,9 @@ export default function PageBuilder() {
               '[data-section="top"]'
             );
             topSections.forEach((el) => {
-              (el as HTMLElement).style.display =
-                value === true ? "flex" : "none";
+              (el as HTMLElement).style.display = processedValue
+                ? "flex"
+                : "none";
             });
 
             // Force a repaint by toggling a class on the body
@@ -1718,32 +1761,57 @@ export default function PageBuilder() {
           }
         }
 
-        // Save settings after change
-        const saveSettings = () => {
+        // Save settings after change - ensure persistent updates to global settings
+        const saveToGlobalSettings = () => {
           try {
-            // Get current settings from localStorage
-            const savedSettingsStr = localStorage.getItem(
-              "visual-builder-settings"
+            // Log what we're about to save
+            console.log(
+              `Saving setting ${setting} with value: ${processedValue} (${typeof processedValue})`
             );
-            const savedSettings = savedSettingsStr
-              ? JSON.parse(savedSettingsStr)
-              : {};
 
-            // Update with new header settings
-            const updatedSettings = {
-              ...savedSettings,
-              headerSettings: {
-                ...savedSettings.headerSettings,
-                [setting]: value,
-              },
-            };
+            // Update global settings to include this header setting
+            setGlobalSettings((prevGlobalSettings) => {
+              const updatedGlobalSettings = {
+                ...prevGlobalSettings,
+                headerSettings: {
+                  ...prevGlobalSettings.headerSettings,
+                  [setting]: processedValue,
+                },
+              };
 
-            // Save back to localStorage
-            localStorage.setItem(
-              "visual-builder-settings",
-              JSON.stringify(updatedSettings)
-            );
-            console.log(`Saved header setting: ${setting} = ${value}`);
+              // Also update localStorage for immediate persistence
+              const savedSettingsStr = localStorage.getItem(
+                "visual-builder-settings"
+              );
+
+              // Add proper type annotation for savedSettings
+              let savedSettings: any = {};
+              try {
+                if (savedSettingsStr) {
+                  savedSettings = JSON.parse(savedSettingsStr);
+                }
+              } catch (error) {
+                console.error("Error parsing localStorage settings:", error);
+              }
+
+              // Make sure headerSettings exists
+              if (!savedSettings.headerSettings) {
+                savedSettings.headerSettings = {};
+              }
+
+              // Update the setting and save back to localStorage
+              savedSettings.headerSettings[setting] = processedValue;
+
+              localStorage.setItem(
+                "visual-builder-settings",
+                JSON.stringify(savedSettings)
+              );
+
+              console.log(
+                `Saved header setting to localStorage: ${setting} = ${processedValue}`
+              );
+              return updatedGlobalSettings;
+            });
           } catch (error) {
             console.error("Error saving header settings:", error);
           } finally {
@@ -1758,7 +1826,7 @@ export default function PageBuilder() {
         };
 
         // Delay saving to avoid too many writes
-        setTimeout(saveSettings, 100);
+        setTimeout(saveToGlobalSettings, 100);
       } catch (error) {
         console.error(`Error updating ${setting}:`, error);
         // Reset syncing flag on error
@@ -1779,7 +1847,7 @@ export default function PageBuilder() {
         handleHeaderSettingUpdate as EventListener
       );
     };
-  }, [setIsTopBarVisible]);
+  }, [setIsTopBarVisible, setGlobalSettings]);
 
   return (
     <TooltipProvider>

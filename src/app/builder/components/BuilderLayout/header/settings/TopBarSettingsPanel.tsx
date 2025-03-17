@@ -5,7 +5,14 @@ import { Switch } from "@/components/ui/switch";
 import { useBuilder } from "@/app/builder/contexts/BuilderContext";
 import { SettingSection } from "../../GlobalSettings/settings/SettingSection";
 import RangeSlider from "../../GlobalSettings/settings/RangeSlider";
-import { CaseLower, CaseSensitive, CaseUpper } from "lucide-react";
+import {
+  CaseLower,
+  CaseSensitive,
+  CaseUpper,
+  Save,
+  Check,
+  Loader2,
+} from "lucide-react";
 import RadioButtonGroup from "./RadioButtonGroup";
 import { ColorSchemeSelector } from "@/app/builder/components/ColorSchemeSelector";
 import { ColSection } from "../../GlobalSettings/settings/colSection";
@@ -14,133 +21,110 @@ import {
   saveColorSchemeToStorage,
   sendColorSchemeUpdateToIframe,
 } from "./LivePreviewUtils";
+import { saveSettings } from "@/app/builder/utils/settingsStorage";
 
-interface TopBarSettingsPanelProps {
-  settings?: any;
-  onUpdateSettings?: (settings: any) => void;
+interface TopBarSettings {
+  topBarVisible?: boolean;
+  topBarHeight?: number;
+  topBarNavStyle?: string;
+  topBarTextTransform?: string;
+  topBarColorScheme?: string;
 }
 
-// Iframe communication utilities
-const iframeUtils = {
-  getIframe: () => document.querySelector("iframe") as HTMLIFrameElement | null,
+interface TopBarSettingsPanelProps {
+  settings?: TopBarSettings;
+  onUpdateSettings?: (settings: TopBarSettings) => void;
+}
 
-  updateCSSVariable: (
-    variable: string,
-    value: string,
-    important: boolean = true
-  ) => {
-    const iframe = iframeUtils.getIframe();
-    if (!iframe?.contentWindow) return;
+// Get iframe element
+const getIframe = () =>
+  document.querySelector("iframe") as HTMLIFrameElement | null;
 
-    try {
-      // Try to access the iframe directly
-      if (iframe.contentDocument) {
-        // Same-origin access is available
-        iframe.contentDocument.documentElement.style.setProperty(
-          variable,
-          value,
-          important ? "important" : ""
+// Update CSS variable in iframe
+const updateIframeCss = (
+  variable: string,
+  value: string,
+  important: boolean = true
+) => {
+  const iframe = getIframe();
+  if (!iframe?.contentWindow) return;
+
+  try {
+    // Try direct document access first
+    if (iframe.contentDocument) {
+      iframe.contentDocument.documentElement.style.setProperty(
+        variable,
+        value,
+        important ? "important" : ""
+      );
+
+      // Special case for top bar visibility
+      if (variable === "--top-bar-visible") {
+        const topBars = iframe.contentDocument.querySelectorAll(
+          '[data-section="top"]'
         );
+        topBars.forEach((topBar) => {
+          (topBar as HTMLElement).style.display =
+            value === "flex" ? "flex" : "none";
+        });
+      }
+    } else {
+      // Fallback to postMessage
+      iframe.contentWindow.postMessage(
+        {
+          type: "DIRECT_CSS_UPDATE",
+          cssVariable: variable,
+          value,
+          important,
+          timestamp: Date.now(),
+        },
+        "*"
+      );
 
-        // Special handling for top bar visibility
-        if (variable === "--top-bar-visible") {
-          // Find all top-bar elements and set their display directly
-          const topBars = iframe.contentDocument.querySelectorAll(
-            '[data-section="top"]'
-          );
-          topBars.forEach((topBar) => {
-            (topBar as HTMLElement).style.display =
-              value === "flex" ? "flex" : "none";
-          });
-        }
-      } else {
-        // Same-origin access not available, use postMessage
+      if (variable === "--top-bar-visible") {
         iframe.contentWindow.postMessage(
           {
-            type: "DIRECT_CSS_UPDATE",
-            cssVariable: variable,
-            value,
-            important,
+            type: "DIRECT_ELEMENT_STYLE",
+            selector: '[data-section="top"]',
+            style: { display: value === "flex" ? "flex" : "none" },
             timestamp: Date.now(),
           },
           "*"
         );
-
-        // For top bar visibility, send a specific message to handle display property directly
-        if (variable === "--top-bar-visible") {
-          iframe.contentWindow.postMessage(
-            {
-              type: "DIRECT_ELEMENT_STYLE",
-              selector: '[data-section="top"]',
-              style: {
-                display: value === "flex" ? "flex" : "none",
-              },
-              timestamp: Date.now(),
-            },
-            "*"
-          );
-        }
-
-        // Also send a specific message for CSS variables
-        iframe.contentWindow.postMessage(
-          {
-            type: "UPDATE_CSS_VARIABLE",
-            variable,
-            value,
-            important,
-          },
-          "*"
-        );
       }
-    } catch (e) {
-      // Error updating CSS in iframe
-      console.error("Error updating CSS in iframe:", e);
-    }
-  },
 
-  updateTopBarHeight: (height: number) => {
-    iframeUtils.updateCSSVariable("--top-bar-height", `${height}px`);
-  },
-
-  sendMessage: (settings: any) => {
-    const iframe = iframeUtils.getIframe();
-    if (!iframe?.contentWindow) return;
-
-    // Create a message with timestamp to avoid duplicates
-    const message = {
-      type: "UPDATE_HEADER_SETTINGS",
-      settings,
-      timestamp: Date.now(),
-    };
-
-    // Send the message to the iframe
-    iframe.contentWindow.postMessage(message, "*");
-
-    // For topBarHeight, also directly update the CSS
-    // if (settings.topBarHeight !== undefined) {
-    //   iframeUtils.updateTopBarHeight(settings.topBarHeight);
-    // }
-
-    // For topBarVisible, force immediate update in the DOM
-    if (settings.topBarVisible !== undefined) {
-      iframeUtils.updateCSSVariable(
-        "--top-bar-visible",
-        settings.topBarVisible ? "flex" : "none"
+      iframe.contentWindow.postMessage(
+        { type: "UPDATE_CSS_VARIABLE", variable, value, important },
+        "*"
       );
     }
-  },
+  } catch (e) {
+    console.error("Error updating CSS in iframe:", e);
+  }
+};
 
-  updateColorScheme: (section: string, value: string) => {
-    // Save to localStorage for persistence
-    saveColorSchemeToStorage(section, value);
+// Send settings to iframe
+const syncSettingsToIframe = (settings: TopBarSettings) => {
+  const iframe = getIframe();
+  if (!iframe?.contentWindow) return;
 
-    // Apply changes to iframe
-    const iframe = iframeUtils.getIframe();
-    if (iframe) {
-      applyColorSchemeToIframe(iframe, section, value);
-      sendColorSchemeUpdateToIframe(iframe, section, value);
-    }
-  },
+  // Send settings message
+  iframe.contentWindow.postMessage(
+    { type: "UPDATE_HEADER_SETTINGS", settings, timestamp: Date.now() },
+    "*"
+  );
+
+  // Update CSS variables
+  if (settings.topBarVisible !== undefined) {
+    updateIframeCss(
+      "--top-bar-visible",
+      settings.topBarVisible ? "flex" : "none"
+    );
+  }
+
+  if (settings.topBarHeight !== undefined) {
+    updateIframeCss("--top-bar-height", `${settings.topBarHeight}px`);
+  }
 };
 
 export function TopBarSettingsPanel({
@@ -148,362 +132,251 @@ export function TopBarSettingsPanel({
   onUpdateSettings,
 }: TopBarSettingsPanelProps) {
   const { isTopBarVisible, setIsTopBarVisible } = useBuilder();
-  const [navStyle, setNavStyle] = useState(settings.topBarNavStyle || "style1");
-  const [textTransform, setTextTransform] = useState(
-    settings.topBarTextTransform || "capitalize"
-  );
-  const [colorScheme, setColorScheme] = useState(
-    settings.topBarColorScheme || "light"
-  );
-  // Add the ref at the component level
-  const hasInitializedRef = React.useRef(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Ensure topBarHeight is always a number
-  // const initialHeight =
-  //   typeof settings.topBarHeight === "number"
-  //     ? settings.topBarHeight
-  //     : settings.topBarHeight
-  //     ? Number(settings.topBarHeight)
-  //     : 40;
+  // Consolidated state
+  const [topBarSettings, setTopBarSettings] = useState<TopBarSettings>({
+    topBarVisible: isTopBarVisible,
+    topBarNavStyle: settings.topBarNavStyle || "style1",
+    topBarTextTransform: settings.topBarTextTransform || "capitalize",
+    topBarColorScheme: settings.topBarColorScheme || "light",
+    topBarHeight:
+      typeof settings.topBarHeight === "number"
+        ? settings.topBarHeight
+        : settings.topBarHeight
+        ? Number(settings.topBarHeight)
+        : 40,
+  });
 
-  // const [topBarHeight, setTopBarHeight] = useState(initialHeight);
-
-  // Update a setting and propagate changes
-  const handleSettingUpdate = (key: string) => (value: string | number) => {
-    // Create settings update object
-    const settingUpdate = { [key]: value };
-
-    // Update parent component settings
-    onUpdateSettings?.(settingUpdate);
-
-    // Send to iframe
-    iframeUtils.sendMessage(settingUpdate);
-
-    // Handle special cases
-    // if (key === "topBarHeight") {
-    //   const numValue =
-    //     typeof value === "number" ? value : parseInt(String(value), 10);
-    //   setTopBarHeight(numValue);
-    //   iframeUtils.updateTopBarHeight(numValue);
-    // } else if (key === "topBarColorScheme") {
-    //   const schemeValue = String(value);
-    //   setColorScheme(schemeValue);
-    //   iframeUtils.updateColorScheme("top", schemeValue);
-    // }
-  };
-
-  // Sync with settings when they change
-  useEffect(() => {
-    // Skip if there's no settings object
-    if (!settings) return;
-
-    // Get current target state if in progress
-    const targetStateInLocalStorage = localStorage.getItem(
-      "topbar_target_state"
-    );
-
-    // Check if a toggle change is in progress - if so, don't override it
-    if (localStorage.getItem("topbar_change_in_progress") === "true") {
-      // If we have a target state saved, make sure our local state matches it
-      if (targetStateInLocalStorage) {
-        const targetState = targetStateInLocalStorage === "true";
-        if (isTopBarVisible !== targetState) {
-          setIsTopBarVisible(targetState);
-        }
-      }
-      return;
-    }
-
-    // Only update BuilderContext state if it's different from incoming settings
-    // and not in the middle of a change
-    if (
-      typeof settings.topBarVisible === "boolean" &&
-      settings.topBarVisible !== isTopBarVisible
-    ) {
-      console.log(
-        "Syncing topBarVisible from settings:",
-        settings.topBarVisible
-      );
-      setIsTopBarVisible(settings.topBarVisible);
-
-      // Immediately apply CSS changes after state update to prevent delay
-      iframeUtils.updateCSSVariable(
-        "--top-bar-visible",
-        settings.topBarVisible ? "flex" : "none"
-      );
-    }
-
-    // Sync all state values with incoming settings
-    setNavStyle(settings.topBarNavStyle || "style1");
-    setTextTransform(settings.topBarTextTransform || "capitalize");
-    setColorScheme(settings.topBarColorScheme || "light");
-  }, [settings, setIsTopBarVisible, isTopBarVisible]);
-
-  // Unified effect for initialization, color scheme, and event listeners
-  useEffect(() => {
-    // Don't send initial settings updates if we're in the middle of a change
-    if (localStorage.getItem("topbar_change_in_progress") === "true") {
-      return;
-    }
-
-    // Function to collect and save all current settings
-    const saveAllSettings = () => {
-      const settingsToSave = {
-        topBarVisible: isTopBarVisible,
-        topBarNavStyle: navStyle,
-        topBarTextTransform: textTransform,
-        topBarColorScheme: colorScheme,
-      };
-
-      // Update parent component settings
-      onUpdateSettings?.(settingsToSave);
-
-      // Also directly update the iframe with all values
-      iframeUtils.sendMessage(settingsToSave);
-    };
-
-    // 1. Initial setup - Send current settings to iframe
-    // Only do this once on mount, not on every state change
-    // The ref is now declared at the component level
-    if (!hasInitializedRef.current) {
-      iframeUtils.sendMessage({
-        topBarVisible: isTopBarVisible,
-        topBarColorScheme: colorScheme,
-      });
-      hasInitializedRef.current = true;
-    }
-
-    // 2. Try to get saved color scheme from localStorage
-    const savedColorScheme = localStorage.getItem(
-      "topbar_color_scheme_preview"
-    );
-    if (savedColorScheme && savedColorScheme !== colorScheme) {
-      setColorScheme(savedColorScheme);
-
-      // Apply to iframe if different from settings
-      if (settings.topBarColorScheme !== savedColorScheme) {
-        const iframe = iframeUtils.getIframe();
-        if (iframe?.contentDocument) {
-          iframe.contentDocument.documentElement.style.setProperty(
-            "--top-bar-color-scheme",
-            savedColorScheme,
-            "important"
-          );
-
-          const header = iframe.contentDocument.querySelector("header");
-          if (header) {
-            header.setAttribute("data-top-scheme", savedColorScheme);
-          }
-        }
-      }
-    }
-
-    // 3. Add event listeners
-    const handleSaveRequest = () => saveAllSettings();
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (
-        e.key === "topbar_color_scheme_preview" &&
-        e.newValue &&
-        e.newValue !== colorScheme
-      ) {
-        setColorScheme(e.newValue);
-      }
-    };
-
-    window.addEventListener("requestSaveSettings", handleSaveRequest);
-    window.addEventListener("storage", handleStorageChange);
-
-    // Clean up event listeners
-    return () => {
-      window.removeEventListener("requestSaveSettings", handleSaveRequest);
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, [
-    isTopBarVisible,
-    onUpdateSettings,
-    navStyle,
-    textTransform,
-    colorScheme,
-    settings.topBarColorScheme,
-  ]);
-
-  // Clean up any stale flags on component mount
-  useEffect(() => {
-    // Check if there are stale flags (older than 5 seconds)
-    const flagTimestampStr = localStorage.getItem("topbar_change_timestamp");
-    const flagTimestamp = flagTimestampStr ? parseInt(flagTimestampStr, 10) : 0;
-    const now = Date.now();
-
-    if (
-      now - flagTimestamp > 5000 &&
-      localStorage.getItem("topbar_change_in_progress") === "true"
-    ) {
-      console.log("Clearing stale topbar change flags");
-      localStorage.removeItem("topbar_change_in_progress");
-      localStorage.removeItem("topbar_target_state");
-      localStorage.removeItem("topbar_change_timestamp");
-    }
-
-    return () => {
-      // Clean up on unmount to prevent flags from persisting between sessions
-      if (localStorage.getItem("topbar_change_in_progress") === "true") {
-        localStorage.removeItem("topbar_change_in_progress");
-        localStorage.removeItem("topbar_target_state");
-        localStorage.removeItem("topbar_change_timestamp");
-      }
-    };
-  }, []);
-
-  // Toggle top bar visibility handler
-  const handleTopBarVisibilityToggle = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    console.log("TopBarVisibilityToggle clicked", {
-      current: isTopBarVisible,
-      event: e.type,
-      target: e.target,
-      currentTarget: e.currentTarget,
+  // Update a single setting
+  const updateSetting = (key: keyof TopBarSettings, value: any) => {
+    // Update local state
+    setTopBarSettings((prev) => {
+      const updated = { ...prev, [key]: value };
+      return updated;
     });
 
-    // Already handled by the component and div wrapper, so don't double-toggle
-    if (e.currentTarget !== e.target) {
-      console.log("Skipping toggle due to event bubbling");
-      return;
+    // Update React context if it's the visibility
+    if (key === "topBarVisible") {
+      setIsTopBarVisible(value);
     }
 
-    // Force clear any stuck flags that might be older than 3 seconds
-    const flagTimestampStr = localStorage.getItem("topbar_change_timestamp");
-    const flagTimestamp = flagTimestampStr ? parseInt(flagTimestampStr, 10) : 0;
-    const now = Date.now();
-
-    if (
-      now - flagTimestamp > 3000 &&
-      localStorage.getItem("topbar_change_in_progress") === "true"
-    ) {
-      console.log("Clearing stuck topbar change flags before toggle");
-      localStorage.removeItem("topbar_change_in_progress");
-      localStorage.removeItem("topbar_target_state");
-      localStorage.removeItem("topbar_change_timestamp");
+    // Apply visual update to iframe immediately for better UX
+    if (key === "topBarHeight") {
+      updateIframeCss("--top-bar-height", `${value}px`);
+    } else if (key === "topBarVisible") {
+      updateIframeCss("--top-bar-visible", value ? "flex" : "none");
+    } else if (key === "topBarColorScheme") {
+      const iframe = getIframe();
+      if (iframe) {
+        saveColorSchemeToStorage("topBar", value);
+        applyColorSchemeToIframe(iframe, "topBar", value);
+        sendColorSchemeUpdateToIframe(iframe, "topBar", value);
+      }
     }
 
-    // Check if a toggle is already in progress
-    if (localStorage.getItem("topbar_change_in_progress") === "true") {
-      console.log("Ignoring toggle, change already in progress");
-      return;
+    // Notify parent component about the change
+    if (onUpdateSettings) {
+      onUpdateSettings({ [key]: value });
+    }
+  };
+
+  // Get global settings from localStorage
+  const getGlobalSettings = () => {
+    // Try to get settings from localStorage
+    const settingsStr = localStorage.getItem("visual-builder-settings");
+
+    // Default settings
+    const defaultSettings = {
+      headerSettings: {
+        topBarVisible: true,
+        topBarHeight: 40,
+        topBarColorScheme: "light",
+        topBarNavStyle: "style1",
+        topBarTextTransform: "capitalize",
+      },
+    };
+
+    if (settingsStr) {
+      try {
+        const parsedSettings = JSON.parse(settingsStr);
+
+        // Ensure headerSettings exists
+        if (!parsedSettings.headerSettings) {
+          parsedSettings.headerSettings = defaultSettings.headerSettings;
+        }
+
+        return parsedSettings;
+      } catch (e) {
+        console.error("Error parsing settings from localStorage:", e);
+      }
     }
 
-    // Toggle the state directly
-    const newValue = !isTopBarVisible;
-    console.log("Toggling top bar visibility to:", newValue);
+    return defaultSettings;
+  };
 
-    // First, immediately apply DOM changes to show visual feedback
-    iframeUtils.updateCSSVariable(
-      "--top-bar-visible",
-      newValue ? "flex" : "none"
-    );
+  // Save all settings to both API and file - this will be called from the global save button
+  const saveAllSettings = async () => {
+    setIsSaving(true);
+    setSaveSuccess(false);
 
-    // Create a flag in localStorage to block future overrides temporarily
-    localStorage.setItem("topbar_change_in_progress", "true");
-    localStorage.setItem("topbar_target_state", String(newValue));
-    localStorage.setItem("topbar_change_timestamp", String(Date.now()));
+    try {
+      // Get current global settings
+      const globalSettings = getGlobalSettings();
 
-    // First update local state
-    setIsTopBarVisible(newValue);
+      // Create final settings structure
+      const updatedSettings = {
+        ...globalSettings,
+        headerSettings: {
+          ...(globalSettings.headerSettings || {}),
+          ...topBarSettings,
+        },
+      };
 
-    // Force update all top bar DOM elements directly for immediate feedback
-    const iframe = iframeUtils.getIframe();
-    if (iframe?.contentDocument) {
-      const topSections = iframe.contentDocument.querySelectorAll(
-        '[data-section="top"]'
-      );
-      console.log(`Found ${topSections.length} top bar sections to update`);
-      topSections.forEach((section) => {
-        (section as HTMLElement).style.display = newValue ? "flex" : "none";
-        console.log(
-          `Updated top section display to: ${newValue ? "flex" : "none"}`
-        );
+      console.log("Saving settings to file:", updatedSettings);
+
+      // 1. Save settings using the utils function which handles localStorage
+      await saveSettings(updatedSettings);
+
+      // 2. Direct API call to ensure settings.json is updated
+      const response = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedSettings),
       });
 
-      // Also update the CSS variable
-      iframe.contentDocument.documentElement.style.setProperty(
-        "--top-bar-visible",
-        newValue ? "flex" : "none",
-        "important"
-      );
-      console.log(
-        `Updated --top-bar-visible CSS variable to: ${
-          newValue ? "flex" : "none"
-        }`
-      );
-    } else {
-      console.log(
-        "Could not access iframe content document for direct DOM updates"
-      );
-    }
-
-    // Small delay before sending iframe message to ensure React state has updated
-    setTimeout(() => {
-      console.log("Executing delayed updates for topBarVisible:", newValue);
-      // Then update settings and send messages
-      iframeUtils.sendMessage({ topBarVisible: newValue });
-
-      // Only update settings if the callback exists
-      if (onUpdateSettings) {
-        console.log("Calling onUpdateSettings with:", {
-          topBarVisible: newValue,
-        });
-        onUpdateSettings({ topBarVisible: newValue });
-
-        // Also dispatch an event for the page component to save the setting globally
-        console.log("Dispatching updateHeaderSetting event");
-        window.dispatchEvent(
-          new CustomEvent("updateHeaderSetting", {
-            detail: {
-              setting: "topBarVisible",
-              value: newValue,
-            },
-          })
+      if (!response.ok) {
+        throw new Error(
+          `API returned ${response.status}: ${await response.text()}`
         );
-      } else {
-        console.log("onUpdateSettings callback not available");
       }
 
-      // Clear the flag after a longer delay to ensure all updates have completed
-      setTimeout(() => {
-        localStorage.removeItem("topbar_change_in_progress");
-        localStorage.removeItem("topbar_target_state");
-        localStorage.removeItem("topbar_change_timestamp");
-        console.log("Topbar change completed and flags cleared");
-      }, 1000);
-    }, 50);
+      // Update iframe
+      syncSettingsToIframe(topBarSettings);
+
+      console.log("All settings saved successfully!");
+      setSaveSuccess(true);
+
+      // Reset success feedback after 3 seconds
+      setTimeout(() => setSaveSuccess(false), 3000);
+
+      return true;
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      alert("Failed to save settings. Please try again.");
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  // Handle radio button change for navigation style
-  const handleNavStyleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setNavStyle(newValue);
-    handleSettingUpdate("topBarNavStyle")(newValue);
-  };
+  // Register a global save handler
+  useEffect(() => {
+    // Define custom event for saving top bar settings
+    const handleSaveRequest = (event: Event) => {
+      console.log("Received save request from TopBar");
+      saveAllSettings();
+    };
 
-  // Handle radio button change for text transform
-  const handleTextTransformChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const newValue = e.target.value;
-    setTextTransform(newValue);
-    handleSettingUpdate("topBarTextTransform")(newValue);
-  };
+    // Listen for save request from TopBar
+    document.addEventListener("saveTopBarSettings", handleSaveRequest);
 
-  // Handle color scheme change
-  const handleColorSchemeChange = (value: string) => {
-    // Update local state immediately
-    setColorScheme(value);
+    // Initial sync to iframe
+    syncSettingsToIframe(topBarSettings);
 
-    // Update through general settings flow
-    handleSettingUpdate("topBarColorScheme")(value);
-  };
+    // Set up event listener for global save requests
+    window.addEventListener("requestSaveSettings", handleSaveRequest);
+
+    return () => {
+      window.removeEventListener("requestSaveSettings", handleSaveRequest);
+      document.removeEventListener("saveTopBarSettings", handleSaveRequest);
+    };
+  }, [topBarSettings]);
+
+  // Sync with parent settings changes
+  useEffect(() => {
+    if (!settings) return;
+
+    const updatedSettings: Partial<TopBarSettings> = {};
+    let hasChanges = false;
+
+    // Check each setting for changes
+    if (
+      typeof settings.topBarVisible === "boolean" &&
+      settings.topBarVisible !== topBarSettings.topBarVisible
+    ) {
+      updatedSettings.topBarVisible = settings.topBarVisible;
+      hasChanges = true;
+    }
+
+    if (
+      settings.topBarNavStyle &&
+      settings.topBarNavStyle !== topBarSettings.topBarNavStyle
+    ) {
+      updatedSettings.topBarNavStyle = settings.topBarNavStyle;
+      hasChanges = true;
+    }
+
+    if (
+      settings.topBarTextTransform &&
+      settings.topBarTextTransform !== topBarSettings.topBarTextTransform
+    ) {
+      updatedSettings.topBarTextTransform = settings.topBarTextTransform;
+      hasChanges = true;
+    }
+
+    if (
+      settings.topBarColorScheme &&
+      settings.topBarColorScheme !== topBarSettings.topBarColorScheme
+    ) {
+      updatedSettings.topBarColorScheme = settings.topBarColorScheme;
+      hasChanges = true;
+    }
+
+    if (
+      settings.topBarHeight &&
+      Number(settings.topBarHeight) !== topBarSettings.topBarHeight
+    ) {
+      updatedSettings.topBarHeight = Number(settings.topBarHeight);
+      hasChanges = true;
+    }
+
+    // Update state if changes detected
+    if (hasChanges) {
+      setTopBarSettings((prev) => {
+        const updated = {
+          ...prev,
+          ...updatedSettings,
+        };
+        return updated;
+      });
+
+      // Update visibility in context if needed
+      if (updatedSettings.topBarVisible !== undefined) {
+        setIsTopBarVisible(updatedSettings.topBarVisible);
+      }
+
+      // Update iframe
+      syncSettingsToIframe(updatedSettings);
+    }
+  }, [settings]);
+
+  // Integration with TopBar's save function
+  useEffect(() => {
+    // Expose the current settings for the TopBar save function
+    const getCurrentTopBarSettings = () => {
+      return topBarSettings;
+    };
+
+    // Store the function in a globally accessible place
+    (window as any)._getTopBarSettings = getCurrentTopBarSettings;
+
+    return () => {
+      // Clean up
+      delete (window as any)._getTopBarSettings;
+    };
+  }, [topBarSettings]);
 
   return (
     <>
@@ -513,53 +386,12 @@ export function TopBarSettingsPanel({
         description="Toggle the visibility of the top bar section"
         className="flex gap-2 items-center justify-between"
       >
-        <div
-          className="relative cursor-pointer"
-          onClick={handleTopBarVisibilityToggle}
-        >
+        <div className="relative">
           <Switch
-            checked={isTopBarVisible}
-            onCheckedChange={() => {
-              // Direct toggle without the event object
-              console.log("Switch toggled directly");
-
-              // Skip if a toggle is already in progress
-              if (
-                localStorage.getItem("topbar_change_in_progress") === "true"
-              ) {
-                console.log(
-                  "Ignoring direct toggle, change already in progress"
-                );
-                return;
-              }
-
-              // Toggle the value directly
-              const newValue = !isTopBarVisible;
-
-              // Update state and send changes
-              setIsTopBarVisible(newValue);
-
-              // Update the CSS directly
-              iframeUtils.updateCSSVariable(
-                "--top-bar-visible",
-                newValue ? "flex" : "none"
-              );
-
-              // Update settings
-              if (onUpdateSettings) {
-                onUpdateSettings({ topBarVisible: newValue });
-
-                // Dispatch the event to update global state
-                window.dispatchEvent(
-                  new CustomEvent("updateHeaderSetting", {
-                    detail: {
-                      setting: "topBarVisible",
-                      value: newValue,
-                    },
-                  })
-                );
-              }
-            }}
+            checked={topBarSettings.topBarVisible}
+            onCheckedChange={(checked) =>
+              updateSetting("topBarVisible", Boolean(checked))
+            }
             aria-label="Toggle top bar visibility"
             className="cursor-pointer"
           />
@@ -567,7 +399,7 @@ export function TopBarSettingsPanel({
       </SettingSection>
 
       {/* Only show other settings if top bar is visible */}
-      {isTopBarVisible && (
+      {topBarSettings.topBarVisible && (
         <>
           {/* Color Scheme Selection */}
           <ColSection
@@ -577,38 +409,38 @@ export function TopBarSettingsPanel({
           >
             <div className="flex flex-col space-y-2">
               <ColorSchemeSelector
-                value={colorScheme}
-                onChange={handleColorSchemeChange}
+                value={topBarSettings.topBarColorScheme || "light"}
+                onChange={(value) => updateSetting("topBarColorScheme", value)}
                 width="w-full"
               />
             </div>
           </ColSection>
+
           <ColSection title="Height" description="" className="pt-4">
             <RangeSlider
-              // value={topBarHeight}
+              value={topBarSettings.topBarHeight}
               min={30}
               max={80}
               step={1}
-              onValueChange={(value) => {
-                handleSettingUpdate("topBarHeight")(value);
-              }}
+              onValueChange={(value) => updateSetting("topBarHeight", value)}
               onInput={(e) => {
-                // Get the value from the input event for immediate response
                 const value = parseInt(e.target.value, 10);
                 if (!isNaN(value)) {
-                  // Directly update the iframe without waiting for state changes
-                  iframeUtils.updateTopBarHeight(value);
+                  updateIframeCss("--top-bar-height", `${value}px`);
                 }
               }}
             />
             <div className="text-xs text-gray-500 mt-1">
-              {/* Current height: {topBarHeight}px */}
+              Current height: {topBarSettings.topBarHeight}px
             </div>
           </ColSection>
+
           <SettingSection title="Navigation Style" className="px-3">
             <div
               className="flex flex-col gap-2"
-              onChange={handleNavStyleChange}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                updateSetting("topBarNavStyle", e.target.value);
+              }}
             >
               <RadioButtonGroup
                 options={Array.from({ length: 9 }, (_, i) => ({
@@ -620,12 +452,12 @@ export function TopBarSettingsPanel({
                 required
               />
               <div className="mt-1 text-xs text-gray-500">
-                Current style: {navStyle}
+                Current style: {topBarSettings.topBarNavStyle}
               </div>
             </div>
           </SettingSection>
 
-          {/* Navigation Settings */}
+          {/* Text Transform Settings */}
           <SettingSection
             title="Text Transform"
             className="px-3"
@@ -633,7 +465,9 @@ export function TopBarSettingsPanel({
           >
             <div
               className="flex flex-col gap-2"
-              onChange={handleTextTransformChange}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                updateSetting("topBarTextTransform", e.target.value);
+              }}
             >
               <RadioButtonGroup
                 options={[
@@ -658,9 +492,13 @@ export function TopBarSettingsPanel({
               />
             </div>
             <div className="mt-1 text-xs text-gray-500">
-              Current transform: {textTransform}
+              Current transform: {topBarSettings.topBarTextTransform}
             </div>
           </SettingSection>
+
+          <div className="text-xs text-center mt-6 px-3 text-gray-500">
+            Click the Save button in the top bar to save changes
+          </div>
         </>
       )}
     </>

@@ -1,4 +1,4 @@
-/* Generated at 2025-03-12T20:41:35.681Z */
+/* Generated at 2025-03-17T06:47:44.808Z */
 :root {
   /* Global Layout Settings */
   --page-width: 1200px;
@@ -14,15 +14,15 @@
   
   /* Header Visibility */
   --top-bar-visible: true;
-  --bottom-bar-visible: true;
+  --bottom-bar-visible: false;
   
   /* Header Heights */
-  --top-bar-height: 59px;
+  --top-bar-height: 80px;
   --main-bar-height: 80px;
   --bottom-bar-height: 50px;
   
   /* Logo Settings */
-  --logo-width: 99px;
+  --logo-width: 50px;
   
   /* Typography */
   --heading-font: 'Assistant', sans-serif;

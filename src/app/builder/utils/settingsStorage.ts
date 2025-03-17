@@ -140,19 +140,50 @@ export const saveSettings = async (
       settings.globalStyles.colors.schemes = [];
     }
 
+    // Added detailed logging for header settings
     console.log(" [saveSettings] Starting to save settings...", {
       hasGlobalStyles: !!settings.globalStyles,
       hasColors: !!settings.globalStyles?.colors,
       hasSchemes: !!settings.globalStyles?.colors?.schemes,
       schemeCount: settings.globalStyles?.colors?.schemes?.length,
+      headerSettings: {
+        ...settings.headerSettings,
+        topBarVisible: settings.headerSettings?.topBarVisible,
+      },
     });
+
+    // Ensure topBarVisible is properly set in headerSettings
+    if (
+      settings.headerSettings &&
+      typeof settings.headerSettings.topBarVisible !== "boolean"
+    ) {
+      // Try to convert to boolean if it's a string
+      if (typeof settings.headerSettings.topBarVisible === "string") {
+        settings.headerSettings.topBarVisible =
+          settings.headerSettings.topBarVisible === "true" ? true : false;
+      } else {
+        // Use default value if it's not set
+        settings.headerSettings.topBarVisible =
+          settings.headerSettings.topBarVisible === undefined
+            ? true
+            : !!settings.headerSettings.topBarVisible;
+      }
+      console.log(
+        " [saveSettings] Fixed topBarVisible type:",
+        settings.headerSettings.topBarVisible
+      );
+    }
 
     // Save to localStorage
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-    console.log(" [saveSettings] Settings saved to localStorage successfully");
+    console.log(" [saveSettings] Settings saved to localStorage successfully", {
+      headerTopBarVisible: settings.headerSettings?.topBarVisible,
+    });
 
     // Also save to public directory as JSON file
-    console.log(" [saveSettings] Calling saveSettingsToFile...");
+    console.log(" [saveSettings] Calling saveSettingsToFile...", {
+      headerTopBarVisible: settings.headerSettings?.topBarVisible,
+    });
     await saveSettingsToFile(settings);
     console.log(" [saveSettings] Settings saved to file successfully");
 
@@ -190,7 +221,29 @@ export const saveSettingsToFile = async (
       hasColors: !!settings.globalStyles?.colors,
       hasSchemes: !!settings.globalStyles?.colors?.schemes?.length,
       schemeCount: settings.globalStyles?.colors?.schemes?.length,
+      headerSettings: {
+        hasTopBarVisible: settings.headerSettings?.topBarVisible !== undefined,
+        topBarVisible: settings.headerSettings?.topBarVisible,
+        topBarVisibleType: typeof settings.headerSettings?.topBarVisible,
+      },
     });
+
+    // Ensure all important properties are properly set before saving
+    if (settings.headerSettings) {
+      console.log(
+        " [saveSettingsToFile] Validating headerSettings before save"
+      );
+
+      // Ensure topBarVisible is a boolean - use strict equality check
+      const topBarVisibleOriginal = settings.headerSettings.topBarVisible;
+      settings.headerSettings.topBarVisible = topBarVisibleOriginal === true;
+
+      console.log(
+        ` [saveSettingsToFile] Set topBarVisible: ${
+          settings.headerSettings.topBarVisible
+        } (${typeof settings.headerSettings.topBarVisible})`
+      );
+    }
 
     const response = await fetch("/api/settings", {
       method: "POST",
@@ -213,10 +266,10 @@ export const saveSettingsToFile = async (
     }
 
     const responseData = await response.json();
-    console.log(
-      " [saveSettingsToFile] Settings saved to file successfully:",
-      responseData
-    );
+    console.log(" [saveSettingsToFile] Settings saved to file successfully:", {
+      responseData,
+      savedTopBarVisible: settings.headerSettings?.topBarVisible,
+    });
 
     // Show success message
     // alert('Settings have been saved successfully to the public/settings.json file!');
