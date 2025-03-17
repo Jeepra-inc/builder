@@ -8,7 +8,6 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
@@ -46,7 +45,12 @@ const ColorSchemeSelector: React.FC<ColorSchemeSelectorProps> = ({
     return () => {
       console.log("🌈 ColorSchemeSelector component unmounted");
     };
-  }, []);
+  }, [value]);
+
+  // Log when value changes
+  useEffect(() => {
+    console.log("🌈 ColorSchemeSelector value changed:", value);
+  }, [value]);
 
   // Load color schemes when component mounts
   useEffect(() => {
@@ -75,6 +79,16 @@ const ColorSchemeSelector: React.FC<ColorSchemeSelectorProps> = ({
       color: scheme.text,
     };
   };
+
+  // Add a useEffect to log when props change
+  useEffect(() => {
+    console.log("🌈 ColorSchemeSelector props changed:", {
+      value,
+      disabled,
+      width,
+      valueType: typeof value,
+    });
+  }, [value, disabled, width]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -116,7 +130,6 @@ const ColorSchemeSelector: React.FC<ColorSchemeSelectorProps> = ({
       </PopoverTrigger>
       <PopoverContent className="p-0" align="start">
         <Command>
-          <CommandInput placeholder="Search color schemes..." />
           <CommandEmpty>No color schemes found.</CommandEmpty>
           <CommandList>
             <CommandGroup>
@@ -125,7 +138,16 @@ const ColorSchemeSelector: React.FC<ColorSchemeSelectorProps> = ({
                   key={scheme.id}
                   value={scheme.id}
                   onSelect={() => {
+                    console.log(
+                      `🌈 ColorSchemeSelector: Selected scheme before change: ${value}`
+                    );
+                    console.log(
+                      `🌈 ColorSchemeSelector: Selecting new scheme: ${scheme.id} (${scheme.name})`
+                    );
                     onChange(scheme.id);
+                    console.log(
+                      `🌈 ColorSchemeSelector: Selected scheme after change: ${scheme.id}`
+                    );
                     setOpen(false);
                   }}
                   className="flex items-center gap-2"

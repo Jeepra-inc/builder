@@ -46,27 +46,35 @@ export function LayoutSettings() {
   // Minimum time between updates (in ms)
   const UPDATE_THROTTLE = 300;
 
-  // Load page width from localStorage on mount
+  // Load page width from API on mount
   useEffect(() => {
-    try {
-      const settings = JSON.parse(
-        localStorage.getItem("visual-builder-settings") || "{}"
-      );
-      if (settings.globalLayout?.pageWidth) {
-        const match = settings.globalLayout.pageWidth.match(/(\d+)/);
-        if (match) {
-          const savedWidth = parseInt(match[0]);
-          setPageWidth(savedWidth);
-          setPageWidthText(settings.globalLayout.pageWidth);
-          // Initialize the last sent width
-          lastSentWidthRef.current = savedWidth;
-          // Initialize the latest width ref
-          latestWidthRef.current = settings.globalLayout.pageWidth;
+    const fetchPageWidth = async () => {
+      try {
+        const response = await fetch("/api/settings");
+        if (!response.ok) {
+          console.error("Failed to fetch settings:", response.statusText);
+          return;
         }
+
+        const settings = await response.json();
+        if (settings.globalLayout?.pageWidth) {
+          const match = settings.globalLayout.pageWidth.match(/(\d+)/);
+          if (match) {
+            const savedWidth = parseInt(match[0]);
+            setPageWidth(savedWidth);
+            setPageWidthText(settings.globalLayout.pageWidth);
+            // Initialize the last sent width
+            lastSentWidthRef.current = savedWidth;
+            // Initialize the latest width ref
+            latestWidthRef.current = settings.globalLayout.pageWidth;
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load page width from API:", error);
       }
-    } catch (error) {
-      console.error("Failed to load page width from settings:", error);
-    }
+    };
+
+    fetchPageWidth();
 
     // Set mounted flag
     isMountedRef.current = true;
@@ -149,32 +157,10 @@ export function LayoutSettings() {
       if (!isMountedRef.current) return;
 
       try {
-        // Get current width value from our ref
-        const currentWidthPx = latestWidthRef.current;
-
-        // Get current settings
-        const settings = JSON.parse(
-          localStorage.getItem("visual-builder-settings") || "{}"
-        );
-
-        // Ensure globalLayout exists
-        if (!settings.globalLayout) {
-          settings.globalLayout = {};
-        }
-
-        // Only update if the value has changed
-        if (settings.globalLayout.pageWidth !== currentWidthPx) {
-          // Update the page width
-          settings.globalLayout.pageWidth = currentWidthPx;
-
-          // Save back to localStorage (this will be picked up by the actual save function)
-          localStorage.setItem(
-            "visual-builder-settings",
-            JSON.stringify(settings)
-          );
-
-          console.log("Page width prepared for saving:", currentWidthPx);
-        }
+        // The current width value is stored in our ref
+        // It will be saved when the global save button is clicked
+        // No need to manually update localStorage here
+        console.log("Page width prepared for saving:", latestWidthRef.current);
       } catch (error) {
         console.error("Failed to prepare page width for saving:", error);
       }

@@ -92,13 +92,13 @@ export const defaultSettings: GlobalSettings = {
   version: "1.0.0",
 };
 
-// Storage key for localStorage
-const STORAGE_KEY = "visual-builder-settings";
-
 // Flag to track when settings are being saved explicitly
 let isExplicitSave = false;
 
-// Save settings to localStorage and file
+// In-memory cache for settings
+let settingsCache: GlobalSettings | null = null;
+
+// Save settings to API
 export const saveSettings = async (
   settings: GlobalSettings,
   options?: { skipCSSUpdate?: boolean }
@@ -174,16 +174,10 @@ export const saveSettings = async (
       );
     }
 
-    // Save to localStorage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-    console.log(" [saveSettings] Settings saved to localStorage successfully", {
-      headerTopBarVisible: settings.headerSettings?.topBarVisible,
-    });
+    // Update cache
+    settingsCache = settings;
 
-    // Also save to public directory as JSON file
-    console.log(" [saveSettings] Calling saveSettingsToFile...", {
-      headerTopBarVisible: settings.headerSettings?.topBarVisible,
-    });
+    // Save to API
     await saveSettingsToFile(settings);
     console.log(" [saveSettings] Settings saved to file successfully");
 
@@ -270,9 +264,6 @@ export const saveSettingsToFile = async (
       responseData,
       savedTopBarVisible: settings.headerSettings?.topBarVisible,
     });
-
-    // Show success message
-    // alert('Settings have been saved successfully to the public/settings.json file!');
   } catch (error) {
     console.error(
       " [saveSettingsToFile] Failed to save settings to file:",
@@ -282,26 +273,25 @@ export const saveSettingsToFile = async (
   }
 };
 
-// Load settings from localStorage or file
+// Load settings from API
 export const loadSettings = async (): Promise<GlobalSettings> => {
   try {
-    // First try to load from localStorage for current session data
-    const savedSettings = localStorage.getItem(STORAGE_KEY);
-    if (savedSettings) {
-      return JSON.parse(savedSettings);
+    // Check if we have cached settings
+    if (settingsCache) {
+      return settingsCache;
     }
 
-    // If not in localStorage, try to load from the saved file
+    // Load from API
     try {
       const response = await fetch("/api/settings");
       if (response.ok) {
         const fileSettings = await response.json();
-        // Save to localStorage for future use
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(fileSettings));
+        // Update cache
+        settingsCache = fileSettings;
         return fileSettings;
       }
     } catch (fileError) {
-      console.error("Failed to load settings from file:", fileError);
+      console.error("Failed to load settings from API:", fileError);
     }
   } catch (error) {
     console.error("Failed to load settings:", error);
@@ -313,9 +303,9 @@ export const loadSettings = async (): Promise<GlobalSettings> => {
 // Synchronous version for components that can't use async
 export const loadSettingsSync = (): GlobalSettings => {
   try {
-    const savedSettings = localStorage.getItem(STORAGE_KEY);
-    if (savedSettings) {
-      return JSON.parse(savedSettings);
+    // Return cache if available (may be null on first load)
+    if (settingsCache) {
+      return settingsCache;
     }
   } catch (error) {
     console.error("Failed to load settings synchronously:", error);
@@ -354,6 +344,9 @@ export const importSettings = (file: File): Promise<GlobalSettings> => {
           reject(new Error("Invalid settings file: missing version"));
           return;
         }
+
+        // Update cache
+        settingsCache = settings;
         resolve(settings);
       } catch (error) {
         reject(error);
@@ -386,6 +379,8 @@ export const loadSettingsFromUrl = async (
       throw new Error("Invalid settings file: missing version");
     }
 
+    // Update cache
+    settingsCache = settings;
     return settings;
   } catch (error) {
     console.error("Failed to load settings from URL:", error);

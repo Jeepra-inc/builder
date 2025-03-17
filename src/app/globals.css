@@ -294,3 +294,10 @@
 .search-underlined:focus-within {
   border-bottom-color: #a0a0a0;
 }
+
+/* Force repaint helper class */
+.force-repaint {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}

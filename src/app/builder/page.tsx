@@ -1273,6 +1273,7 @@ export default function PageBuilder() {
         console.log("Starting save process, current headerSettings:", {
           ...headerSettings,
           topBarVisible: headerSettings.topBarVisible,
+          topBarHeight: headerSettings.topBarHeight,
         });
 
         // Trigger saving of header layout before continuing
@@ -1286,31 +1287,77 @@ export default function PageBuilder() {
         // Short delay to ensure all state is updated with the latest settings
         await new Promise((resolve) => setTimeout(resolve, 200));
 
-        // Get any stored page width from localStorage
         let globalLayout = {
           pageWidth: globalSettings.globalLayout?.pageWidth || "1200px",
           ...globalSettings.globalLayout,
         };
 
-        try {
-          const settings = JSON.parse(
-            localStorage.getItem("visual-builder-settings") || "{}"
-          );
-          if (settings.globalLayout?.pageWidth) {
-            globalLayout = {
-              ...globalLayout,
-              pageWidth: settings.globalLayout.pageWidth,
-            };
+        // Check for global latest topBarVisible and topBarHeight values (set by TopBarSettingsPanel)
+        let latestTopBarVisible: boolean | undefined = undefined;
+        let latestTopBarHeight: number | undefined = undefined;
+        let latestTopBarNavStyle: string | undefined = undefined;
+        let latestTopBarTextTransform: string | undefined = undefined;
+
+        if (typeof window !== "undefined") {
+          if ((window as any).__latestTopBarVisible !== undefined) {
+            console.log(
+              "Found __latestTopBarVisible global value:",
+              (window as any).__latestTopBarVisible
+            );
+            latestTopBarVisible = Boolean(
+              (window as any).__latestTopBarVisible
+            );
           }
-        } catch (error) {
-          console.error("Error loading global layout settings:", error);
+
+          if ((window as any).__latestTopBarHeight !== undefined) {
+            console.log(
+              "Found __latestTopBarHeight global value:",
+              (window as any).__latestTopBarHeight
+            );
+            latestTopBarHeight = Number((window as any).__latestTopBarHeight);
+          }
+
+          if ((window as any).__latestTopBarNavStyle !== undefined) {
+            console.log(
+              "Found __latestTopBarNavStyle global value:",
+              (window as any).__latestTopBarNavStyle
+            );
+            latestTopBarNavStyle = String(
+              (window as any).__latestTopBarNavStyle
+            );
+          }
+
+          if ((window as any).__latestTopBarTextTransform !== undefined) {
+            console.log(
+              "Found __latestTopBarTextTransform global value:",
+              (window as any).__latestTopBarTextTransform
+            );
+            latestTopBarTextTransform = String(
+              (window as any).__latestTopBarTextTransform
+            );
+          }
         }
 
-        // Ensure headerSettings has the latest topBarVisible value
+        // Ensure headerSettings has the latest values
         const currentHeaderSettings = {
           ...headerSettings,
-          // Ensure topBarVisible is a strict boolean
-          topBarVisible: headerSettings.topBarVisible === true,
+          // Use the global values if available, otherwise use the current state values
+          topBarVisible:
+            latestTopBarVisible !== undefined
+              ? latestTopBarVisible
+              : headerSettings.topBarVisible === true,
+          topBarHeight:
+            latestTopBarHeight !== undefined
+              ? latestTopBarHeight
+              : Number(headerSettings.topBarHeight || 40),
+          topBarNavStyle:
+            latestTopBarNavStyle !== undefined
+              ? latestTopBarNavStyle
+              : headerSettings.topBarNavStyle || "style1",
+          topBarTextTransform:
+            latestTopBarTextTransform !== undefined
+              ? latestTopBarTextTransform
+              : headerSettings.topBarTextTransform || "capitalize",
         };
 
         console.log("Saving with headerSettings:", {
@@ -1318,6 +1365,9 @@ export default function PageBuilder() {
           topBarVisible: `${
             currentHeaderSettings.topBarVisible
           } (${typeof currentHeaderSettings.topBarVisible})`,
+          topBarHeight: `${
+            currentHeaderSettings.topBarHeight
+          } (${typeof currentHeaderSettings.topBarHeight})`,
         });
 
         // Update global settings with current state
@@ -1636,11 +1686,8 @@ export default function PageBuilder() {
 
   // Sync headerSettings.topBarVisible with BuilderContext isTopBarVisible
   useEffect(() => {
-    // Skip if we're in the middle of a change or already syncing
-    if (
-      localStorage.getItem("topbar_change_in_progress") === "true" ||
-      isTopBarSyncingRef.current
-    ) {
+    // Skip if we're already syncing
+    if (isTopBarSyncingRef.current) {
       return;
     }
 
@@ -1779,36 +1826,11 @@ export default function PageBuilder() {
                 },
               };
 
-              // Also update localStorage for immediate persistence
-              const savedSettingsStr = localStorage.getItem(
-                "visual-builder-settings"
-              );
-
-              // Add proper type annotation for savedSettings
-              let savedSettings: any = {};
-              try {
-                if (savedSettingsStr) {
-                  savedSettings = JSON.parse(savedSettingsStr);
-                }
-              } catch (error) {
-                console.error("Error parsing localStorage settings:", error);
-              }
-
-              // Make sure headerSettings exists
-              if (!savedSettings.headerSettings) {
-                savedSettings.headerSettings = {};
-              }
-
-              // Update the setting and save back to localStorage
-              savedSettings.headerSettings[setting] = processedValue;
-
-              localStorage.setItem(
-                "visual-builder-settings",
-                JSON.stringify(savedSettings)
-              );
+              // Note: Settings are saved to API when the save button is clicked
+              // No need to use localStorage anymore
 
               console.log(
-                `Saved header setting to localStorage: ${setting} = ${processedValue}`
+                `Updated header setting (will be saved on save button click): ${setting} = ${processedValue}`
               );
               return updatedGlobalSettings;
             });

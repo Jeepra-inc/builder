@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface RangeSliderProps {
   min?: number;
@@ -18,13 +18,25 @@ const RangeSlider = ({
   step = 1,
   unit = "px",
   color = "#0f172a",
-  value: initialValue = (max + min) / 2,
+  value: propValue,
   onInput,
   onValueChange,
   className,
 }: RangeSliderProps) => {
-  const [value, setValue] = useState<number>(initialValue);
+  // Use the provided value or calculate a default
+  const defaultValue = propValue !== undefined ? propValue : (max + min) / 2;
+  const [value, setValue] = useState<number>(defaultValue);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Sync internal state with prop value when it changes
+  useEffect(() => {
+    if (propValue !== undefined && propValue !== value) {
+      console.log(`RangeSlider: Updating value from prop: ${propValue}`);
+      setValue(propValue);
+    }
+  }, [propValue, value]);
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = parseFloat(e.target.value);
@@ -34,14 +46,20 @@ const RangeSlider = ({
   };
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue(parseFloat(e.target.value));
-    if (onValueChange) onValueChange(parseFloat(e.target.value));
+    const newValue = parseFloat(e.target.value);
+    setValue(newValue);
+    if (onValueChange) onValueChange(newValue);
   };
 
+  // Setup event handlers for drag state
   useEffect(() => {
-    const handleMouseUp = () => setIsDragging(false);
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
     window.addEventListener("mouseup", handleMouseUp);
     window.addEventListener("touchend", handleMouseUp);
+
     return () => {
       window.removeEventListener("mouseup", handleMouseUp);
       window.removeEventListener("touchend", handleMouseUp);
@@ -62,84 +80,95 @@ const RangeSlider = ({
       }
     >
       {/* Slider container */}
-      <div className="relative h-[20px] flex-1">
-        {/* Track elements */}
+      <div className="relative h-[20px] flex-1" ref={sliderRef}>
+        {/* Background track */}
         <div
-          className="absolute w-full top-[8px]"
-          style={
-            {
-              ["--s"]: "2px",
-              height: "4px",
-              background:
-                "radial-gradient(circle closest-side, #ddd 100%, #0000) 0 0 / var(--s) 5%, linear-gradient(90deg, #ddd 50%, #0000 0) calc(var(--s) / 2) 0 / calc(2* var(--s)) 100%",
-            } as React.CSSProperties
-          }
+          className="absolute w-full top-1/2 -translate-y-1/2"
+          style={{
+            height: "4px",
+            background: "#ddd",
+            borderRadius: "2px",
+          }}
         />
+
+        {/* Filled track */}
         <div
-          className="absolute h-[5px] rounded-full top-1/2 transform -translate-y-1/2"
+          className="absolute h-[4px] rounded-full top-1/2 transform -translate-y-1/2"
           style={{
             width: `${percentage}%`,
             backgroundColor: color,
           }}
         />
 
-        {/* Range input */}
+        {/* Range input - This is the interactive element */}
         <input
+          ref={inputRef}
           type="range"
           min={min}
           max={max}
           step={step}
           value={value}
-          onInput={handleSliderChange}
+          onChange={handleSliderChange}
           onMouseDown={() => setIsDragging(true)}
           onTouchStart={() => setIsDragging(true)}
-          className="absolute w-full h-full z-10 m-0 p-0 top-1/2 outline-none cursor-pointer bg-transparent transform -translate-y-1/2"
+          className="absolute w-full h-8 z-10 cursor-pointer top-1/2 -translate-y-1/2"
           style={{
             WebkitAppearance: "none",
+            appearance: "none",
+            background: "transparent",
+            margin: 0,
+            // Important: Don't set opacity too low or it affects interaction
+            opacity: 0.01,
           }}
         />
 
-        {/* Styled thumb for all browsers */}
+        {/* Visual thumb element */}
+        <div
+          className="absolute w-[15px] h-[15px] rounded-full bg-white border-2 top-1/2 -translate-y-1/2 pointer-events-none z-20"
+          style={{
+            left: `${percentage}%`,
+            marginLeft: "-7.5px",
+            borderColor: color,
+            transform: `scale(${isDragging ? 1.3 : 1})`,
+            boxShadow: isDragging ? `0 0 0 5px ${color}30` : "none",
+            transition: "transform 0.2s ease, box-shadow 0.2s ease",
+          }}
+        />
+
+        {/* Browser-specific thumb styling */}
         <style>
           {`
+            /* Hide default thumb but keep it interactive */
             input[type="range"]::-webkit-slider-thumb {
               -webkit-appearance: none;
-              width: 15px;
-              height: 15px;
-              background: var(--main-color);
-              border-radius: 50%;
+              width: 25px;
+              height: 25px;
+              background: transparent;
               cursor: pointer;
-              transition: all 0.2s ease;
-              transform: translateY(-50%) scale(var(--thumb-scale));
-              box-shadow: var(--thumb-shadow);
-              position: relative;
-              top: 50%;
+              border: none;
+              pointer-events: auto;
             }
 
             input[type="range"]::-moz-range-thumb {
-              width: 20px;
-              height: 20px;
-              background: var(--main-color);
-              border-radius: 50%;
+              width: 25px;
+              height: 25px;
+              background: transparent;
               cursor: pointer;
-              transition: all 0.2s ease;
-              transform: translateY(-50%) scale(var(--thumb-scale));
-              box-shadow: var(--thumb-shadow);
               border: none;
-              position: relative;
-              top: 50%;
+              pointer-events: auto;
             }
 
+            /* Hide default track */
             input[type="range"]::-webkit-slider-runnable-track {
               background: transparent;
               border: none;
-              height: 0;
+              height: 5px;
             }
 
             input[type="range"]::-moz-range-track {
               background: transparent;
               border: none;
-              height: 0;
+              height: 5px;
             }
           `}
         </style>
@@ -155,7 +184,7 @@ const RangeSlider = ({
           step={step}
           onChange={handleInput}
           style={{
-            width: "100%",
+            width: "70px",
             padding: "4px 22px 4px 8px",
             border: "1px solid #ddd",
             borderRadius: "4px",

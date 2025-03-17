@@ -37,11 +37,48 @@ export function TopBar({
     setSaveError(false);
 
     try {
-      // Save top bar settings by triggering the event
-      document.dispatchEvent(new Event("saveTopBarSettings"));
+      console.log("TopBar - Starting save process");
+
+      // Create a promise to track when the topBarSettings save is complete
+      const topBarSettingsSavePromise = new Promise<void>((resolve) => {
+        // Create one-time event listener for completion
+        const handleSaveComplete = (event: CustomEvent) => {
+          console.log("TopBar - Received saveTopBarSettings completion event");
+          document.removeEventListener(
+            "saveTopBarSettingsComplete",
+            handleSaveComplete as EventListener
+          );
+          resolve();
+        };
+
+        // Listen for the completion event
+        document.addEventListener(
+          "saveTopBarSettingsComplete",
+          handleSaveComplete as EventListener
+        );
+
+        // Dispatch the save event
+        console.log("TopBar - Dispatching saveTopBarSettings event");
+        document.dispatchEvent(new CustomEvent("saveTopBarSettings"));
+
+        // Set a timeout in case the completion event is never fired
+        setTimeout(() => {
+          console.log("TopBar - saveTopBarSettings timeout reached");
+          document.removeEventListener(
+            "saveTopBarSettingsComplete",
+            handleSaveComplete as EventListener
+          );
+          resolve();
+        }, 3000);
+      });
+
+      // Wait for the top bar settings to be saved
+      await topBarSettingsSavePromise;
+      console.log("TopBar - Top bar settings save completed");
 
       // Call the handleSave function provided from the parent
       await handleSave();
+      console.log("TopBar - Parent handleSave completed");
 
       // Show success state
       setSaveSuccess(true);

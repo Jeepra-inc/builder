@@ -13,21 +13,25 @@
     "layout": {
       "currentPreset": "preset1",
       "containers": {
-        "top_left": [],
+        "top_left": [
+          "html_block_2",
+          "html_block_3",
+          "account"
+        ],
         "top_center": [
-          "topBarMenu"
+          "mainMenu",
+          "bottomMenu"
         ],
         "top_right": [
-          "contact"
+          "contact",
+          "nav_icon",
+          "social_icon"
         ],
         "middle_left": [
           "logo"
         ],
-        "middle_center": [
-          "mainMenu"
-        ],
+        "middle_center": [],
         "middle_right": [
-          "account",
           "cart"
         ],
         "bottom_left": [],
@@ -35,17 +39,13 @@
         "bottom_right": [],
         "available": [
           "html_block_1",
-          "html_block_2",
-          "html_block_3",
           "html_block_4",
           "html_block_5",
-          "nav_icon",
-          "bottomMenu",
+          "topBarMenu",
           "search",
           "button_1",
           "button_2",
           "wishlist",
-          "social_icon",
           "divider_1",
           "divider_2",
           "divider_3",
@@ -62,19 +62,85 @@
       "design": "standard"
     },
     "account": {
-      "showText": true,
-      "text": "Account",
       "showIcon": true
     },
     "contact": {
       "show": true
     },
     "topBarVisible": true,
-    "lastSelectedSetting": "header",
-    "lastSelectedSubmenu": "General",
+    "lastSelectedSetting": "html_block_1",
+    "lastSelectedSubmenu": "HTML",
     "topBarColorScheme": "light",
-    "topBarHeight": 69,
-    "topBarNavStyle": "style4",
-    "topBarTextTransform": "capitalize"
-  }
+    "topBarHeight": 62,
+    "topBarNavStyle": "style3",
+    "topBarTextTransform": "uppercase",
+    "html_block_1": "hgfdxc",
+    "headerHeight": 9,
+    "topBarFontSizeScale": 1
+  },
+  "sections": [],
+  "globalLayout": {
+    "pageWidth": "1200px"
+  },
+  "globalStyles": {
+    "branding": {
+      "logoUrl": "",
+      "logoWidth": 90,
+      "faviconUrl": "",
+      "backgroundColor": "#ffffff"
+    },
+    "typography": {
+      "headingFont": "Assistant",
+      "bodyFont": "Assistant",
+      "headingSizeScale": 100,
+      "bodySizeScale": 100,
+      "headingColor": "#1a1a1a"
+    },
+    "customCSS": "",
+    "colors": {
+      "schemes": [
+        {
+          "name": "Scheme 1",
+          "background": "#FFFFFF",
+          "text": "#121212",
+          "gradient": "linear-gradient(90deg, #00C9FF 0%, #92FE9D 100%)",
+          "buttonBackground": "#121212",
+          "buttonLabel": "#FFFFFF",
+          "outlineButton": "#121212",
+          "id": "scheme-1"
+        },
+        {
+          "name": "Scheme 2",
+          "background": "#F0F0F0",
+          "text": "#121212",
+          "gradient": "linear-gradient(90deg, #FC466B 0%, #3F5EFB 100%)",
+          "buttonBackground": "#121212",
+          "buttonLabel": "#FFFFFF",
+          "outlineButton": "#121212",
+          "id": "scheme-2"
+        },
+        {
+          "name": "Scheme 3",
+          "background": "#333333",
+          "text": "#FFFFFF",
+          "gradient": "linear-gradient(90deg, #FDBB2D 0%, #22C1C3 100%)",
+          "buttonBackground": "#121212",
+          "buttonLabel": "#FFFFFF",
+          "outlineButton": "#121212",
+          "id": "scheme-3"
+        },
+        {
+          "id": "scheme-4",
+          "name": "Scheme 4",
+          "background": "#FFFFFF",
+          "text": "#000000",
+          "gradient": "",
+          "buttonBackground": "#000000",
+          "buttonLabel": "#FFFFFF",
+          "outlineButton": "#000000"
+        }
+      ]
+    }
+  },
+  "version": "1.0.0"
 }

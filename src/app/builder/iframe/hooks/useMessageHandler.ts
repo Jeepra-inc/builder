@@ -429,6 +429,103 @@ export const useMessageHandler = ({
           break;
         }
 
+        case "UPDATE_TOP_BAR_VISIBILITY": {
+          const { isVisible, timestamp } = event.data;
+          console.log("Received UPDATE_TOP_BAR_VISIBILITY message:", {
+            isVisible,
+            timestamp,
+          });
+
+          // Update CSS variable immediately
+          document.documentElement.style.setProperty(
+            "--top-bar-visible",
+            isVisible ? "flex" : "none",
+            "important"
+          );
+
+          // Update all elements with data-section="top"
+          const topSections = document.querySelectorAll('[data-section="top"]');
+          console.log(
+            `Found ${topSections.length} top sections to update visibility`
+          );
+
+          topSections.forEach((element) => {
+            (element as HTMLElement).style.display = isVisible
+              ? "flex"
+              : "none";
+          });
+
+          // Force a repaint to ensure changes take effect
+          document.body.classList.add("force-repaint");
+          setTimeout(() => {
+            document.body.classList.remove("force-repaint");
+          }, 10);
+
+          // Also update headerSettings state for consistency
+          setHeaderSettings((prev) => ({
+            ...prev,
+            topBarVisible: isVisible,
+          }));
+
+          break;
+        }
+
+        case "UPDATE_TOP_BAR_HEIGHT": {
+          const { height, timestamp } = event.data;
+          console.log("Received UPDATE_TOP_BAR_HEIGHT message:", {
+            height,
+            timestamp,
+          });
+
+          // Update CSS variable immediately
+          document.documentElement.style.setProperty(
+            "--top-bar-height",
+            `${height}px`,
+            "important"
+          );
+
+          // Update all elements with data-section="top" to apply the height via CSS variable
+          const topSections = document.querySelectorAll('[data-section="top"]');
+          console.log(
+            `Found ${topSections.length} top sections to update height`
+          );
+
+          // Instead of setting inline height, add a class that uses the CSS variable
+          const styleId = "top-bar-height-style";
+          let styleEl = document.getElementById(styleId) as HTMLStyleElement;
+
+          if (!styleEl) {
+            styleEl = document.createElement("style");
+            styleEl.id = styleId;
+            document.head.appendChild(styleEl);
+          }
+
+          styleEl.textContent = `
+            [data-section="top"] {
+              height: var(--top-bar-height) !important;
+              min-height: var(--top-bar-height) !important;
+            }
+            .top-bar {
+              height: var(--top-bar-height) !important;
+              min-height: var(--top-bar-height) !important;
+            }
+          `;
+
+          // Force a repaint to ensure changes take effect
+          document.body.classList.add("force-repaint");
+          setTimeout(() => {
+            document.body.classList.remove("force-repaint");
+          }, 10);
+
+          // Also update headerSettings state for consistency
+          setHeaderSettings((prev) => ({
+            ...prev,
+            topBarHeight: height,
+          }));
+
+          break;
+        }
+
         // Add more message handlers as needed
       }
     };

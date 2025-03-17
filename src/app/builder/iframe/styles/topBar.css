@@ -1,0 +1,29 @@
+/* Top Bar Styles */
+:root {
+  --top-bar-height: 40px;
+  --top-bar-visible: flex;
+}
+
+.top-bar {
+  display: var(--top-bar-visible, flex);
+  height: var(--top-bar-height) !important;
+  min-height: var(--top-bar-height) !important;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--scheme-topBar-background, #f5f5f5);
+  color: var(--scheme-topBar-text, #333);
+}
+
+[data-section="top"] {
+  height: var(--top-bar-height) !important;
+  min-height: var(--top-bar-height) !important;
+  display: var(--top-bar-visible, flex);
+}
+
+/* Force repaint helper */
+.force-repaint {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}

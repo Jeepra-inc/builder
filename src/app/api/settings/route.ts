@@ -1,135 +1,218 @@
-import { writeFile, readFile, access } from "fs/promises";
-import { constants } from "fs";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import fs from "fs";
 import path from "path";
 
-// Define types for our settings
+// Define types for settings structure
 interface HeaderSettings {
   topBarVisible?: boolean;
   topBarHeight?: number;
-  topBarColorScheme?: string;
   topBarNavStyle?: string;
   topBarTextTransform?: string;
-  [key: string]: any; // Allow other properties
+  topBarFontSizeScale?: number;
+  topBarColorScheme?: string;
+  [key: string]: any;
 }
 
-interface GlobalSettings {
+interface Settings {
   headerSettings?: HeaderSettings;
-  [key: string]: any; // Allow other properties
+  [key: string]: any;
 }
 
-// File path for the settings JSON file
-const SETTINGS_FILE_PATH = path.join(process.cwd(), "public", "settings.json");
+// Path to settings file
+const settingsPath = path.join(process.cwd(), "public", "settings.json");
 
-// Check if a file exists
-async function fileExists(filePath: string): Promise<boolean> {
-  try {
-    await access(filePath, constants.F_OK);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// GET handler to read settings from the file
+// GET handler for fetching settings
 export async function GET() {
   try {
-    // Check if the file exists first
-    const exists = await fileExists(SETTINGS_FILE_PATH);
-
-    if (!exists) {
-      // If the file doesn't exist, return an empty object
-      // This prevents errors on first load
-      return NextResponse.json({});
-    }
-
-    const fileContent = await readFile(SETTINGS_FILE_PATH, "utf-8");
-    const settings = JSON.parse(fileContent);
-    return NextResponse.json(settings);
-  } catch (error) {
-    console.error("Error reading settings file:", error);
-    // Return empty object instead of error to avoid disrupting the UI
-    return NextResponse.json({});
-  }
-}
-
-// POST handler to save settings to the file
-export async function POST(request: NextRequest) {
-  try {
-    // Get the partial settings from the request
-    const partialSettings = (await request.json()) as GlobalSettings;
-    console.log("[API] Received settings update:", partialSettings);
-
-    // First, load existing settings
-    let existingSettings: GlobalSettings = {};
-    try {
-      if (await fileExists(SETTINGS_FILE_PATH)) {
-        const fileContent = await readFile(SETTINGS_FILE_PATH, "utf-8");
-        existingSettings = JSON.parse(fileContent) as GlobalSettings;
-        console.log("[API] Loaded existing settings");
-      } else {
-        console.log("[API] No existing settings file found, creating new one");
-      }
-    } catch (error) {
-      console.log(
-        "[API] Error reading existing settings, creating new file:",
-        error
+    // Check if settings file exists
+    if (!fs.existsSync(settingsPath)) {
+      return NextResponse.json(
+        { error: "Settings file not found" },
+        { status: 404 }
       );
     }
 
-    // Merge the partial settings with existing settings
-    const updatedSettings: GlobalSettings = {
-      ...existingSettings,
-    };
+    // Read settings file
+    const settingsData = fs.readFileSync(settingsPath, "utf-8");
+    const settings = JSON.parse(settingsData);
 
-    // Deep merge headerSettings if provided
-    if (partialSettings.headerSettings) {
-      if (!updatedSettings.headerSettings) {
-        updatedSettings.headerSettings = {};
+    return NextResponse.json(settings);
+  } catch (error) {
+    console.error("Error reading settings file:", error);
+    return NextResponse.json(
+      { error: "Failed to read settings" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST handler for updating settings
+export async function POST(request: Request) {
+  try {
+    // Parse the request body
+    const updatedSettings = (await request.json()) as Settings;
+
+    // Debug logs
+    console.log("API - POST request received:", {
+      hasHeaderSettings: !!updatedSettings.headerSettings,
+      topBarVisible: updatedSettings.headerSettings?.topBarVisible,
+      topBarVisibleType: typeof updatedSettings.headerSettings?.topBarVisible,
+      topBarHeight: updatedSettings.headerSettings?.topBarHeight,
+      topBarHeightType: typeof updatedSettings.headerSettings?.topBarHeight,
+      topBarNavStyle: updatedSettings.headerSettings?.topBarNavStyle,
+      topBarTextTransform: updatedSettings.headerSettings?.topBarTextTransform,
+      topBarColorScheme: updatedSettings.headerSettings?.topBarColorScheme,
+      topBarFontSizeScale: updatedSettings.headerSettings?.topBarFontSizeScale,
+    });
+
+    // Validate settings object
+    if (!updatedSettings) {
+      return NextResponse.json(
+        { error: "Invalid settings data" },
+        { status: 400 }
+      );
+    }
+
+    // Read current settings to merge with updates
+    let currentSettings: Settings = {};
+    if (fs.existsSync(settingsPath)) {
+      try {
+        const currentData = fs.readFileSync(settingsPath, "utf-8");
+        currentSettings = JSON.parse(currentData) as Settings;
+        console.log("API - Current settings read:", {
+          hasHeaderSettings: !!currentSettings.headerSettings,
+          topBarVisible: currentSettings.headerSettings?.topBarVisible,
+          topBarHeight: currentSettings.headerSettings?.topBarHeight,
+          topBarNavStyle: currentSettings.headerSettings?.topBarNavStyle,
+          topBarTextTransform:
+            currentSettings.headerSettings?.topBarTextTransform,
+          topBarFontSizeScale:
+            currentSettings.headerSettings?.topBarFontSizeScale,
+        });
+      } catch (err) {
+        console.error("API - Error reading current settings:", err);
       }
+    }
 
-      updatedSettings.headerSettings = {
-        ...(existingSettings.headerSettings || {}),
-        ...partialSettings.headerSettings,
-      };
-
-      // Ensure topBarVisible is a proper boolean
-      if (
-        updatedSettings.headerSettings &&
-        "topBarVisible" in updatedSettings.headerSettings
-      ) {
+    // Ensure we properly handle topBarVisible as a boolean and topBarHeight as a number
+    if (updatedSettings.headerSettings) {
+      if ("topBarVisible" in updatedSettings.headerSettings) {
         updatedSettings.headerSettings.topBarVisible =
           updatedSettings.headerSettings.topBarVisible === true;
-
         console.log(
-          "[API] Saving topBarVisible as:",
+          "API - Normalized topBarVisible:",
           updatedSettings.headerSettings.topBarVisible
+        );
+      }
+
+      if ("topBarHeight" in updatedSettings.headerSettings) {
+        const rawHeight = updatedSettings.headerSettings.topBarHeight;
+        updatedSettings.headerSettings.topBarHeight = Number(rawHeight || 40);
+        console.log(
+          "API - Normalized topBarHeight:",
+          updatedSettings.headerSettings.topBarHeight
+        );
+      }
+
+      if ("topBarNavStyle" in updatedSettings.headerSettings) {
+        const navStyle = updatedSettings.headerSettings.topBarNavStyle;
+        updatedSettings.headerSettings.topBarNavStyle = String(
+          navStyle || "style1"
+        );
+        console.log(
+          "API - Normalized topBarNavStyle:",
+          updatedSettings.headerSettings.topBarNavStyle
+        );
+      }
+
+      if ("topBarTextTransform" in updatedSettings.headerSettings) {
+        const textTransform =
+          updatedSettings.headerSettings.topBarTextTransform;
+        updatedSettings.headerSettings.topBarTextTransform = String(
+          textTransform || "capitalize"
+        );
+        console.log(
+          "API - Normalized topBarTextTransform:",
+          updatedSettings.headerSettings.topBarTextTransform
+        );
+      }
+
+      if ("topBarFontSizeScale" in updatedSettings.headerSettings) {
+        const fontSizeScale =
+          updatedSettings.headerSettings.topBarFontSizeScale;
+        updatedSettings.headerSettings.topBarFontSizeScale = Number(
+          fontSizeScale || 1
+        );
+        console.log(
+          "API - Normalized topBarFontSizeScale:",
+          updatedSettings.headerSettings.topBarFontSizeScale
+        );
+      }
+
+      if ("topBarColorScheme" in updatedSettings.headerSettings) {
+        const colorScheme = updatedSettings.headerSettings.topBarColorScheme;
+        updatedSettings.headerSettings.topBarColorScheme = String(
+          colorScheme || "light"
+        );
+        console.log(
+          "API - Normalized topBarColorScheme:",
+          updatedSettings.headerSettings.topBarColorScheme
         );
       }
     }
 
-    // Create the directory if it doesn't exist
-    const dirPath = path.dirname(SETTINGS_FILE_PATH);
+    // Merge settings
+    const finalSettings: Settings = {
+      ...currentSettings,
+      ...updatedSettings,
+      headerSettings: {
+        ...(currentSettings.headerSettings || {}),
+        ...(updatedSettings.headerSettings || {}),
+      },
+    };
 
-    // Save settings to a JSON file in the public directory
-    await writeFile(
-      SETTINGS_FILE_PATH,
-      JSON.stringify(updatedSettings, null, 2),
+    console.log("API - Final settings to write:", {
+      hasHeaderSettings: !!finalSettings.headerSettings,
+      topBarVisible: finalSettings.headerSettings?.topBarVisible,
+      topBarVisibleType: typeof finalSettings.headerSettings?.topBarVisible,
+      topBarHeight: finalSettings.headerSettings?.topBarHeight,
+      topBarHeightType: typeof finalSettings.headerSettings?.topBarHeight,
+      topBarNavStyle: finalSettings.headerSettings?.topBarNavStyle,
+      topBarTextTransform: finalSettings.headerSettings?.topBarTextTransform,
+      topBarColorScheme: finalSettings.headerSettings?.topBarColorScheme,
+      topBarFontSizeScale: finalSettings.headerSettings?.topBarFontSizeScale,
+    });
+
+    // Ensure directory exists
+    const dir = path.dirname(settingsPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    // Write updated settings to file
+    fs.writeFileSync(
+      settingsPath,
+      JSON.stringify(finalSettings, null, 2),
       "utf-8"
     );
 
+    console.log("API - Settings file written successfully");
+
     return NextResponse.json({
       success: true,
-      headerSettingsTopBarVisible:
-        updatedSettings?.headerSettings?.topBarVisible,
+      debugInfo: {
+        topBarVisible: finalSettings.headerSettings?.topBarVisible,
+        topBarHeight: finalSettings.headerSettings?.topBarHeight,
+        topBarNavStyle: finalSettings.headerSettings?.topBarNavStyle,
+        topBarTextTransform: finalSettings.headerSettings?.topBarTextTransform,
+        topBarColorScheme: finalSettings.headerSettings?.topBarColorScheme,
+        topBarFontSizeScale: finalSettings.headerSettings?.topBarFontSizeScale,
+      },
     });
   } catch (error) {
-    console.error("Error saving settings file:", error);
+    console.error("Error saving settings:", error);
     return NextResponse.json(
-      {
-        error: "Failed to save settings file",
-        message: error instanceof Error ? error.message : String(error),
-      },
+      { error: "Failed to save settings" },
       { status: 500 }
     );
   }

@@ -575,36 +575,75 @@ export function HeaderLayoutBuilder({
   // Add local state for current preset
   const [currentPreset, setCurrentPreset] = useState(initialPreset);
 
-  // Function to check if localStorage has saved header layout settings
-  const getSavedLayout = () => {
+  // Function to check if API has saved header layout settings
+  const getSavedLayout = async () => {
     try {
-      const savedSettingsStr = localStorage.getItem("visual-builder-settings");
-      if (savedSettingsStr) {
-        const savedSettings = JSON.parse(savedSettingsStr);
-
-        // Check if we have a saved layout in the header settings
-        if (savedSettings?.headerSettings?.layout?.containers) {
-          return savedSettings.headerSettings.layout.containers;
-        }
+      const response = await fetch("/api/settings");
+      if (!response.ok) {
+        console.error("Failed to fetch settings:", response.statusText);
+        return null;
       }
+
+      const savedSettings = await response.json();
+
+      // Check if we have a saved layout in the header settings
+      if (savedSettings?.headerSettings?.layout?.containers) {
+        // Also check if there's a current preset and update it
+        if (savedSettings?.headerSettings?.layout?.currentPreset) {
+          // Update the current preset state with the saved value
+          setCurrentPreset(savedSettings.headerSettings.layout.currentPreset);
+        }
+        return savedSettings.headerSettings.layout.containers;
+      }
+      return null;
     } catch (error) {
-      console.error("Error loading saved layout:", error);
+      console.error("Error getting saved layout:", error);
+      return null;
     }
-    return null;
   };
 
   // Initialize layout state with saved layout if available, otherwise use preset
   const [layoutState, setLayoutState] = useState<HeaderLayout>(() => {
-    const savedLayout = getSavedLayout();
-    if (savedLayout) {
-      return sanitizeLayout(savedLayout);
-    }
+    // We can't use async in useState initializer, so we'll update with useEffect later
     return sanitizeLayout({
       ...(presetLayouts[currentPreset as keyof typeof presetLayouts] ||
         presetLayouts.preset1),
       available: getAllHeaderItems().map((item) => item.id), // Initialize available items
     });
   });
+
+  // Load saved layout on mount and apply to iframe
+  useEffect(() => {
+    const loadSavedLayout = async () => {
+      try {
+        const savedLayout = await getSavedLayout();
+        if (savedLayout) {
+          // Update layout state with saved layout
+          setLayoutState(savedLayout);
+
+          // Also update the local layout state for the UI
+          setLayout(savedLayout);
+
+          // Apply saved layout to iframe
+          if (contentRef.current?.contentWindow) {
+            console.log("Applying saved layout from API to iframe");
+            contentRef.current.contentWindow.postMessage(
+              {
+                type: "UPDATE_HEADER_LAYOUT",
+                presetId: currentPreset,
+                ...savedLayout,
+              },
+              "*"
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Error loading saved layout:", error);
+      }
+    };
+
+    loadSavedLayout();
+  }, []);
 
   // Create a safe setter for layout that always sanitizes the data
   const setLayout = useCallback(
@@ -643,6 +682,11 @@ export function HeaderLayoutBuilder({
   // This now runs automatically whenever the layout changes or when changing presets
   // The Apply Layout button has been removed to simplify the user experience
   const applyLayoutToIframe = useCallback(() => {
+    if (!contentRef.current?.contentWindow) {
+      console.log("Cannot apply layout: iframe not available");
+      return;
+    }
+
     if (currentPreset) {
       console.log("Updating header layout in iframe:", {
         type: "UPDATE_HEADER_LAYOUT",
@@ -650,7 +694,7 @@ export function HeaderLayoutBuilder({
       });
 
       // Send message to iframe to update the header layout using the current layout state
-      contentRef.current?.contentWindow?.postMessage(
+      contentRef.current.contentWindow.postMessage(
         {
           type: "UPDATE_HEADER_LAYOUT",
           presetId: currentPreset,
@@ -673,27 +717,73 @@ export function HeaderLayoutBuilder({
   }, [contentRef, currentPreset, layout]);
 
   // Add a function to save the current layout when triggered by Save button
-  const saveCurrentLayout = useCallback(() => {
-    if (currentPreset) {
-      // Dispatch an event to parent to save these changes
+  const handleSave = useCallback(async () => {
+    // Logic to save the current layout state
+    const layoutToSave = sanitizeLayout(layoutState);
+
+    try {
+      // First get existing settings
+      const response = await fetch("/api/settings");
+      let existingSettings: any = {};
+
+      if (response.ok) {
+        existingSettings = await response.json();
+      }
+
+      // Create updated settings with the current preset ID
+      const updatedSettings = {
+        ...existingSettings,
+        headerSettings: {
+          ...(existingSettings.headerSettings || {}),
+          layout: {
+            ...(existingSettings.headerSettings?.layout || {}),
+            currentPreset: currentPreset,
+            containers: layoutToSave,
+          },
+        },
+      };
+
+      // Save using API
+      const saveResponse = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedSettings),
+      });
+
+      if (!saveResponse.ok) {
+        throw new Error(`API returned ${saveResponse.status}`);
+      }
+
+      console.log("Layout saved successfully to API:", {
+        preset: currentPreset,
+        layout: layoutToSave,
+      });
+
+      // Trigger a layout update in the iframe to ensure what's shown matches what's saved
+      setTimeout(() => {
+        applyLayoutToIframe();
+      }, 100);
+
+      // Dispatch event about successful save
       window.dispatchEvent(
-        new CustomEvent("saveHeaderLayout", {
+        new CustomEvent("headerLayoutSaved", {
           detail: {
-            layout: layout,
+            layout: layoutToSave,
             presetId: currentPreset,
           },
         })
       );
-      console.log("Layout changes ready to be saved:", layout);
+    } catch (error) {
+      console.error("Failed to save layout:", error);
     }
-  }, [currentPreset, layout]);
+  }, [layoutState, currentPreset, applyLayoutToIframe]);
 
-  // Expose the saveCurrentLayout function to the parent component
+  // Expose the handleSave function to the parent component
   // This allows the save button to trigger the save action
   useEffect(() => {
     // Listen for save events from the parent
     const handleSaveRequest = () => {
-      saveCurrentLayout();
+      handleSave();
     };
 
     window.addEventListener("requestSaveHeaderLayout", handleSaveRequest);
@@ -701,29 +791,42 @@ export function HeaderLayoutBuilder({
     return () => {
       window.removeEventListener("requestSaveHeaderLayout", handleSaveRequest);
     };
-  }, [saveCurrentLayout]);
+  }, [handleSave]);
+
+  // Initial layout loading
+  useEffect(() => {
+    const loadInitialLayout = async () => {
+      // Check if we have a saved layout from settings
+      const savedLayout = await getSavedLayout();
+
+      if (savedLayout) {
+        setLayoutState(savedLayout);
+      } else {
+        // Use the default layout for the current preset
+        setLayoutState(
+          presetLayouts[currentPreset as keyof typeof presetLayouts] ||
+            presetLayouts.preset1
+        );
+      }
+    };
+
+    loadInitialLayout();
+  }, [currentPreset]);
 
   // Update local layout state when currentPreset changes, but handle with care
   useEffect(() => {
+    // Skip if contentRef is not available yet
+    if (!contentRef.current) {
+      return;
+    }
+
     // First check if this is an initial mount vs. an actual preset change
     if (isInitialMount.current) {
-      // Try to get saved layout again to double-check it's loaded
-      const savedLayout = getSavedLayout();
-      if (savedLayout) {
-        setLayout(sanitizeLayout(savedLayout));
-      } else if (presetLayouts[currentPreset as keyof typeof presetLayouts]) {
-        // If no saved layout, use the current preset instead
-        setLayout(
-          sanitizeLayout(
-            presetLayouts[currentPreset as keyof typeof presetLayouts]
-          )
-        );
-      }
-
+      // Initial updates will be handled by the loadInitialLayout effect
       isInitialMount.current = false;
       lastPresetRef.current = currentPreset;
-      // Apply the initial layout to the iframe
-      setTimeout(() => applyLayoutToIframe(), 100);
+
+      // We don't need to apply layout here since we already do it in the loadSavedLayout effect
       return;
     }
 
@@ -756,16 +859,27 @@ export function HeaderLayoutBuilder({
         }
       }
 
-      // Update ref for next comparison
+      // Update the last preset reference
       lastPresetRef.current = currentPreset;
     }
-  }, [currentPreset, applyLayoutToIframe, setLayout, onSelectPreset]);
+  }, [
+    currentPreset,
+    applyLayoutToIframe,
+    setLayout,
+    onSelectPreset,
+    contentRef,
+  ]);
 
-  // Apply the layout to the iframe whenever it changes
+  // Apply layout to iframe when layout changes or component opens,
+  // but don't reset the iframe if layout is still loading
   useEffect(() => {
-    if (isOpen && contentRef.current) {
-      applyLayoutToIframe();
-      logLayoutChange(currentPreset, layout);
+    // Only apply layout if the component is open and we have a valid layout
+    if (isOpen && layout && Object.keys(layout).length > 0) {
+      // Apply with a small delay to allow the iframe to be ready
+      setTimeout(() => {
+        // Only apply if we haven't loaded a saved layout yet
+        applyLayoutToIframe();
+      }, 200);
     }
   }, [layout, isOpen, applyLayoutToIframe]);
 
@@ -1050,59 +1164,27 @@ export function HeaderLayoutBuilder({
       const handleHeaderSettings = (event: CustomEvent) => {
         console.log("Received response from parent:", event.detail);
 
-        // Check if we received the current preset from parent
-        if (
-          event.detail?.currentPreset &&
-          event.detail.currentPreset !== currentPreset
-        ) {
+        const { headerSettings, currentPreset: parentPreset } = event.detail;
+
+        // First handle the preset if it's different from our current one
+        if (parentPreset && parentPreset !== currentPreset) {
           console.log(
             "Updating current preset from",
             currentPreset,
             "to",
-            event.detail.currentPreset
+            parentPreset
           );
-          // Update currentPreset state
-          setCurrentPreset(event.detail.currentPreset);
 
-          // Update layout with the new preset
-          if (
-            presetLayouts[
-              event.detail.currentPreset as keyof typeof presetLayouts
-            ]
-          ) {
-            setLayout(
-              sanitizeLayout(
-                presetLayouts[
-                  event.detail.currentPreset as keyof typeof presetLayouts
-                ]
-              )
-            );
-          }
+          // Update the preset state
+          setCurrentPreset(parentPreset);
         }
 
-        // Check if we have layout containers in the response
-        if (event.detail?.headerSettings?.layout?.containers) {
-          console.log("Received LIVE layout containers from parent");
-
-          // Check if received settings match current layout
-          const currentLayoutJSON = JSON.stringify(layout);
-          const receivedLayoutJSON = JSON.stringify(
-            event.detail.headerSettings.layout.containers
+        // Then handle the layout containers if they exist
+        if (headerSettings?.layout?.containers) {
+          console.log(
+            "Received layout containers from parent, applying to builder"
           );
-
-          if (currentLayoutJSON !== receivedLayoutJSON) {
-            console.log(
-              "Layout MISMATCH between builder and live settings - updating builder"
-            );
-            // Update layout with the current settings
-            setLayout(
-              sanitizeLayout(event.detail.headerSettings.layout.containers)
-            );
-          } else {
-            console.log("Layout MATCHES between builder and live settings");
-          }
-        } else {
-          console.log("Received response but no layout containers found");
+          setLayout(sanitizeLayout(headerSettings.layout.containers));
         }
       };
 
@@ -1116,18 +1198,26 @@ export function HeaderLayoutBuilder({
         handleHeaderSettings as EventListener
       );
 
-      // Debug info about current state
-      const savedString = localStorage.getItem("visual-builder-settings");
-      const savedData = savedString ? JSON.parse(savedString) : null;
-      const savedLayout = savedData?.headerSettings?.layout?.containers;
+      // Debug info about current state - using async function for API check
+      const fetchDebugInfo = async () => {
+        try {
+          const response = await fetch("/api/settings");
+          const settings = response.ok ? await response.json() : null;
+          const savedLayout = settings?.headerSettings?.layout?.containers;
 
-      console.log("HeaderLayoutBuilder debug info:", {
-        currentPreset,
-        hasLayout: !!layout,
-        layoutContainers: Object.keys(layout),
-        savedLayoutAvailable: !!savedLayout,
-        savedSettings: savedData ? "available" : "not found",
-      });
+          console.log("HeaderLayoutBuilder debug info:", {
+            currentPreset,
+            hasLayout: !!layout,
+            layoutContainers: Object.keys(layout),
+            savedLayoutAvailable: !!savedLayout,
+            settingsFromAPI: settings ? "available" : "not found",
+          });
+        } catch (error) {
+          console.error("Error fetching debug info:", error);
+        }
+      };
+
+      fetchDebugInfo();
 
       return () => {
         window.removeEventListener(
@@ -1137,23 +1227,6 @@ export function HeaderLayoutBuilder({
       };
     }
   }, [isOpen, currentPreset, layout]);
-
-  // Ensure layout state is ready to be saved when the save button is clicked
-  const handleSave = useCallback(() => {
-    // Logic to save the current layout state
-    const layoutToSave = sanitizeLayout(layoutState);
-    localStorage.setItem(
-      "visual-builder-settings",
-      JSON.stringify({
-        headerSettings: {
-          layout: {
-            containers: layoutToSave,
-          },
-        },
-      })
-    );
-    console.log("Layout saved successfully:", layoutToSave);
-  }, [layoutState]);
 
   if (!isOpen) return null;
 

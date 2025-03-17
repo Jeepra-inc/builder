@@ -1,4 +1,4 @@
-/* Generated at 2025-03-17T06:47:44.808Z */
+/* Generated at 2025-03-17T22:13:23.479Z */
 :root {
   /* Global Layout Settings */
   --page-width: 1200px;
@@ -8,7 +8,7 @@
   --header-sticky: false;
   
   /* Header Color Schemes */
-  --top-bar-color-scheme: scheme-3;
+  --top-bar-color-scheme: light;
   --main-bar-color-scheme: light;
   --bottom-bar-color-scheme: light;
   
@@ -17,12 +17,12 @@
   --bottom-bar-visible: false;
   
   /* Header Heights */
-  --top-bar-height: 80px;
+  --top-bar-height: 62px;
   --main-bar-height: 80px;
   --bottom-bar-height: 50px;
   
   /* Logo Settings */
-  --logo-width: 50px;
+  --logo-width: 90px;
   
   /* Typography */
   --heading-font: 'Assistant', sans-serif;

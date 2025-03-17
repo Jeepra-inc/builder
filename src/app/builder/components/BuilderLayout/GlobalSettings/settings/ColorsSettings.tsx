@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronsUpDown } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { SketchPicker } from "react-color";
 import GradientColorPicker from "react-best-gradient-color-picker";
@@ -199,28 +199,39 @@ const ColorsSettings = () => {
     null
   );
   const [schemes, setSchemes] = useState<ColorScheme[]>(() => {
-    // Try to load saved schemes from localStorage
-    try {
-      const savedSettingsStr = localStorage.getItem("visual-builder-settings");
-      if (savedSettingsStr) {
-        const savedSettings = JSON.parse(savedSettingsStr);
-        if (
-          savedSettings?.globalStyles?.colors?.schemes &&
-          Array.isArray(savedSettings.globalStyles.colors.schemes) &&
-          savedSettings.globalStyles.colors.schemes.length > 0
-        ) {
-          return savedSettings.globalStyles.colors.schemes;
-        }
-      }
-    } catch (error) {
-      console.error("Error loading saved color schemes:", error);
-    }
-    // Return default schemes if nothing is saved
+    // Initialize with default schemes - will be replaced with API data when loaded
     return defaultSchemes.map((scheme, index) => ({
       ...scheme,
       id: `scheme-${index + 1}`,
     }));
   });
+
+  // Load color schemes from API on mount
+  useEffect(() => {
+    const fetchColorSchemes = async () => {
+      try {
+        const response = await fetch("/api/settings");
+        if (!response.ok) {
+          console.error("Error fetching settings:", response.statusText);
+          return;
+        }
+
+        const settings = await response.json();
+
+        if (
+          settings?.globalStyles?.colors?.schemes &&
+          Array.isArray(settings.globalStyles.colors.schemes) &&
+          settings.globalStyles.colors.schemes.length > 0
+        ) {
+          setSchemes(settings.globalStyles.colors.schemes);
+        }
+      } catch (error) {
+        console.error("Error loading saved color schemes:", error);
+      }
+    };
+
+    fetchColorSchemes();
+  }, []);
 
   const handleColorChange = (property: keyof ColorScheme, value: string) => {
     if (!selectedScheme) return;
@@ -234,47 +245,22 @@ const ColorsSettings = () => {
     setSchemes(updated);
     setSelectedScheme((prev) => (prev ? { ...prev, [property]: value } : null));
 
-    // Save updated schemes to localStorage
+    // Save updated schemes to settings (dispatch event only, actual saving occurs on save button)
     saveColorSchemesToSettings(updated);
   };
 
-  // Function to save color schemes to global settings
+  // Function to save color schemes by dispatching an event (actual API save happens on save button click)
   const saveColorSchemesToSettings = (updatedSchemes: ColorScheme[]) => {
     try {
       // Save schemes to local state
       setSchemes(updatedSchemes);
 
-      // Get current settings from localStorage
-      const savedSettingsStr = localStorage.getItem("visual-builder-settings");
-      if (savedSettingsStr) {
-        let savedSettings = JSON.parse(savedSettingsStr);
-
-        // Make sure the basic structure exists
-        if (!savedSettings.globalStyles) {
-          savedSettings.globalStyles = {};
-        }
-
-        if (!savedSettings.globalStyles.colors) {
-          savedSettings.globalStyles.colors = {};
-        }
-
-        // Update the color schemes in the settings
-        savedSettings.globalStyles.colors.schemes = updatedSchemes;
-
-        // Save back to localStorage
-        localStorage.setItem(
-          "visual-builder-settings",
-          JSON.stringify(savedSettings)
-        );
-
-        // Also dispatch an event to notify any listeners
-        window.dispatchEvent(
-          new CustomEvent("colorSchemeUpdated", {
-            detail: { schemes: updatedSchemes },
-          })
-        );
-      } else {
-      }
+      // Dispatch an event to notify any listeners that color schemes have changed
+      window.dispatchEvent(
+        new CustomEvent("colorSchemeUpdated", {
+          detail: { schemes: updatedSchemes },
+        })
+      );
     } catch (error) {
       console.error("🚨 Failed to save color schemes to settings:", error);
     }
@@ -294,7 +280,7 @@ const ColorsSettings = () => {
     const updatedSchemes = [...schemes, newScheme];
     setSchemes(updatedSchemes);
 
-    // Save updated schemes to localStorage
+    // Save updated schemes
     saveColorSchemesToSettings(updatedSchemes);
   };
 

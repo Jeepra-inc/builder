@@ -8,3 +8,10 @@ h1 {
 }
 
 /* Add more global styles as needed */
+
+/* Force repaint helper class */
+.force-repaint {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}

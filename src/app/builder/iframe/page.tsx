@@ -918,6 +918,43 @@ export default function IframeContent() {
     }
   }, [headerSettings]);
 
+  // Add this code at the beginning of the component function to apply saved top bar height on initial load
+  useEffect(() => {
+    // Apply the top bar height CSS variable and styles once the component mounts
+    if (headerSettings && headerSettings.topBarHeight) {
+      const height = Number(headerSettings.topBarHeight);
+      console.log(`Applying initial top bar height: ${height}px`);
+
+      // Set the CSS variable
+      document.documentElement.style.setProperty(
+        "--top-bar-height",
+        `${height}px`,
+        "important"
+      );
+
+      // Add a style element for consistent application of the height
+      const styleId = "top-bar-height-style";
+      let styleEl = document.getElementById(styleId) as HTMLStyleElement;
+
+      if (!styleEl) {
+        styleEl = document.createElement("style");
+        styleEl.id = styleId;
+        document.head.appendChild(styleEl);
+      }
+
+      styleEl.textContent = `
+        [data-section="top"] {
+          height: var(--top-bar-height) !important;
+          min-height: var(--top-bar-height) !important;
+        }
+        .top-bar {
+          height: var(--top-bar-height) !important;
+          min-height: var(--top-bar-height) !important;
+        }
+      `;
+    }
+  }, [headerSettings.topBarHeight]);
+
   // ----------------- RENDER -----------------
   return (
     <>
