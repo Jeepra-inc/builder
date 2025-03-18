@@ -52,6 +52,17 @@ const ColorSchemeSelector: React.FC<ColorSchemeSelectorProps> = ({
     console.log("🌈 ColorSchemeSelector value changed:", value);
   }, [value]);
 
+  // Ensure any non-empty string value is used
+  useEffect(() => {
+    if (value === undefined || value === null || value === "") {
+      console.log(
+        "🌈 ColorSchemeSelector detected empty value, setting default"
+      );
+      // Use a small timeout to avoid infinite loops
+      setTimeout(() => onChange("scheme-1"), 0);
+    }
+  }, [value, onChange]);
+
   // Load color schemes when component mounts
   useEffect(() => {
     console.log("🌈 ColorSchemeSelector: Fetching color schemes...");
@@ -144,11 +155,34 @@ const ColorSchemeSelector: React.FC<ColorSchemeSelectorProps> = ({
                     console.log(
                       `🌈 ColorSchemeSelector: Selecting new scheme: ${scheme.id} (${scheme.name})`
                     );
+
+                    // Add a log for the values right before calling onChange
+                    console.log(
+                      `🌈 IMPORTANT: About to call onChange with: ${scheme.id}`
+                    );
+                    console.log(
+                      `🌈 IMPORTANT: Current value type: ${typeof scheme.id}`
+                    );
+                    console.log(
+                      `🌈 IMPORTANT: Current value content: ${JSON.stringify(
+                        scheme.id
+                      )}`
+                    );
+
+                    // Call onChange with the scheme ID
                     onChange(scheme.id);
+
                     console.log(
                       `🌈 ColorSchemeSelector: Selected scheme after change: ${scheme.id}`
                     );
                     setOpen(false);
+
+                    // Force a DOM update
+                    setTimeout(() => {
+                      console.log(
+                        `🌈 ColorSchemeSelector: Checking value after timeout: ${value}`
+                      );
+                    }, 100);
                   }}
                   className="flex items-center gap-2"
                 >

@@ -1,4 +1,4 @@
-/* Generated at 2025-03-17T22:13:23.479Z */
+/* Generated at 2025-03-18T11:18:54.241Z */
 :root {
   /* Global Layout Settings */
   --page-width: 1200px;
@@ -8,7 +8,7 @@
   --header-sticky: false;
   
   /* Header Color Schemes */
-  --top-bar-color-scheme: light;
+  --top-bar-color-scheme: scheme-1;
   --main-bar-color-scheme: light;
   --bottom-bar-color-scheme: light;
   
@@ -17,7 +17,7 @@
   --bottom-bar-visible: false;
   
   /* Header Heights */
-  --top-bar-height: 62px;
+  --top-bar-height: 37px;
   --main-bar-height: 80px;
   --bottom-bar-height: 50px;
   

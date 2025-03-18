@@ -39,11 +39,49 @@ export function TopBar({
     try {
       console.log("TopBar - Starting save process");
 
+      // Log any top bar settings before initiating the save
+      let currentColorScheme = "light"; // Default value
+
+      // First check the global variable that's set by updateSetting
+      if (typeof window !== "undefined") {
+        if ((window as any).__latestTopBarColorScheme) {
+          currentColorScheme = (window as any).__latestTopBarColorScheme;
+          console.log(
+            `TopBar - Found color scheme in global variable: ${currentColorScheme}`
+          );
+        }
+      }
+
+      // Then check via the getter function
+      if (typeof window !== "undefined" && (window as any)._getTopBarSettings) {
+        const currentSettings = (window as any)._getTopBarSettings();
+        console.log("TopBar - Current top bar settings before save:", {
+          topBarColorScheme: currentSettings.topBarColorScheme,
+          globalColorScheme: currentColorScheme,
+          topBarHeight: currentSettings.topBarHeight,
+          topBarVisible: currentSettings.topBarVisible,
+        });
+
+        // Use the getter value if available
+        if (currentSettings.topBarColorScheme) {
+          currentColorScheme = currentSettings.topBarColorScheme;
+        }
+      } else {
+        console.log("TopBar - No _getTopBarSettings function available");
+      }
+
+      console.log(
+        `TopBar - Will save with color scheme: ${currentColorScheme}`
+      );
+
       // Create a promise to track when the topBarSettings save is complete
       const topBarSettingsSavePromise = new Promise<void>((resolve) => {
         // Create one-time event listener for completion
         const handleSaveComplete = (event: CustomEvent) => {
-          console.log("TopBar - Received saveTopBarSettings completion event");
+          console.log(
+            "TopBar - Received saveTopBarSettings completion event",
+            event.detail ? event.detail : "no details"
+          );
           document.removeEventListener(
             "saveTopBarSettingsComplete",
             handleSaveComplete as EventListener
@@ -57,9 +95,19 @@ export function TopBar({
           handleSaveComplete as EventListener
         );
 
-        // Dispatch the save event
-        console.log("TopBar - Dispatching saveTopBarSettings event");
-        document.dispatchEvent(new CustomEvent("saveTopBarSettings"));
+        // Dispatch the save event with a timestamp to identify this specific save request
+        const saveTimestamp = Date.now();
+        console.log(
+          `TopBar - Dispatching saveTopBarSettings event (timestamp: ${saveTimestamp}, colorScheme: ${currentColorScheme})`
+        );
+        document.dispatchEvent(
+          new CustomEvent("saveTopBarSettings", {
+            detail: {
+              timestamp: saveTimestamp,
+              colorScheme: currentColorScheme,
+            },
+          })
+        );
 
         // Set a timeout in case the completion event is never fired
         setTimeout(() => {
@@ -75,6 +123,29 @@ export function TopBar({
       // Wait for the top bar settings to be saved
       await topBarSettingsSavePromise;
       console.log("TopBar - Top bar settings save completed");
+
+      // Check if the color scheme was properly saved
+      if (
+        typeof window !== "undefined" &&
+        (window as any).__FINAL_topBarColorScheme
+      ) {
+        console.log(
+          `TopBar - Color scheme ${
+            (window as any).__FINAL_topBarColorScheme
+          } will be used in final save`
+        );
+      } else {
+        // Force set the color scheme if not already set
+        if (currentColorScheme && typeof window !== "undefined") {
+          console.log(
+            `TopBar - Setting __FINAL_topBarColorScheme to: ${currentColorScheme}`
+          );
+          (window as any).__FINAL_topBarColorScheme = currentColorScheme;
+        }
+      }
+
+      // Add a small delay to ensure settings are saved before proceeding
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Call the handleSave function provided from the parent
       await handleSave();

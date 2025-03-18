@@ -1398,6 +1398,21 @@ export default function PageBuilder() {
           },
         };
 
+        // Check for the special final color scheme value set by TopBarSettingsPanel
+        if (
+          typeof window !== "undefined" &&
+          (window as any).__FINAL_topBarColorScheme
+        ) {
+          const finalColorScheme = (window as any).__FINAL_topBarColorScheme;
+
+          console.log(
+            `Page handleSave - FOUND FINAL COLOR SCHEME: ${finalColorScheme} - using this value`
+          );
+
+          // Set the color scheme in the updatedSettings object
+          updatedSettings.headerSettings.topBarColorScheme = finalColorScheme;
+        }
+
         console.log(
           "About to save settings with topBarVisible:",
           updatedSettings.headerSettings.topBarVisible

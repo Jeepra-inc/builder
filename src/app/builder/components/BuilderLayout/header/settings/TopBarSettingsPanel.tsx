@@ -21,6 +21,7 @@ interface TopBarSettings {
   topBarTextTransform?: string;
   topBarColorScheme?: string;
   topBarFontSizeScale?: number;
+  topBarNavSpacing?: number;
 }
 
 interface TopBarSettingsPanelProps {
@@ -117,6 +118,21 @@ const syncSettingsToIframe = (settings: TopBarSettings) => {
       settings.topBarColorScheme,
       false
     );
+
+    // Add high-priority color scheme message
+    iframe.contentWindow?.postMessage(
+      {
+        type: "PRIORITY_COLOR_SCHEME_UPDATE",
+        section: "topBar",
+        scheme: settings.topBarColorScheme,
+        timestamp: Date.now(),
+      },
+      "*"
+    );
+
+    console.log(
+      `TopBar color scheme synced to iframe: ${settings.topBarColorScheme} (high priority)`
+    );
   }
 
   if (settings.topBarNavStyle) {
@@ -125,6 +141,45 @@ const syncSettingsToIframe = (settings: TopBarSettings) => {
 
   if (settings.topBarTextTransform) {
     updateIframeCss("--top-bar-text-transform", settings.topBarTextTransform);
+  }
+
+  if (settings.topBarNavSpacing !== undefined) {
+    const spacing = Number(settings.topBarNavSpacing);
+    console.log(`Syncing topBarNavSpacing to iframe: ${spacing}px`);
+
+    // Set the CSS variable
+    updateIframeCss("--top-bar-nav-spacing", `${spacing}px`);
+
+    // Add a style element for consistent application
+    const styleId = "top-bar-nav-spacing-style";
+    let styleEl = iframe.contentDocument.getElementById(
+      styleId
+    ) as HTMLStyleElement;
+
+    if (!styleEl) {
+      styleEl = iframe.contentDocument.createElement("style");
+      styleEl.id = styleId;
+      iframe.contentDocument.head.appendChild(styleEl);
+    }
+
+    styleEl.textContent = `
+      [data-section="top"] {
+        padding-left: var(--top-bar-nav-spacing, 24px) !important;
+      }
+      .top-bar {
+        padding-left: var(--top-bar-nav-spacing, 24px) !important;
+      }
+    `;
+
+    // Also try to send a direct message to the iframe for immediate update
+    iframe.contentWindow?.postMessage(
+      {
+        type: "UPDATE_TOP_BAR_NAV_SPACING",
+        spacing,
+        timestamp: Date.now(),
+      },
+      "*"
+    );
   }
 
   if (settings.topBarFontSizeScale !== undefined) {
@@ -248,6 +303,7 @@ if (typeof window !== "undefined") {
   (window as any).__latestTopBarNavStyle = undefined;
   (window as any).__latestTopBarTextTransform = undefined;
   (window as any).__latestTopBarFontSizeScale = undefined;
+  (window as any).__latestTopBarNavSpacing = undefined;
 }
 
 export function TopBarSettingsPanel({
@@ -291,6 +347,12 @@ export function TopBarSettingsPanel({
         : settings.topBarFontSizeScale
         ? Number(settings.topBarFontSizeScale)
         : 1,
+    topBarNavSpacing:
+      typeof settings.topBarNavSpacing === "number"
+        ? settings.topBarNavSpacing
+        : settings.topBarNavSpacing
+        ? Number(settings.topBarNavSpacing)
+        : 24,
   });
 
   // After initializing the state, add a log
@@ -302,6 +364,39 @@ export function TopBarSettingsPanel({
       sourceType: typeof settings.topBarColorScheme,
       defaultValue: "light",
     });
+  }, []);
+
+  // Ensure settings are synced to iframe on mount
+  useEffect(() => {
+    console.log(
+      "TopBarSettingsPanel - Syncing all settings to iframe on mount"
+    );
+
+    // Apply all current settings to iframe
+    syncSettingsToIframe(topBarSettings);
+
+    // Add a delayed reapplication for more reliable color scheme application
+    setTimeout(() => {
+      if (topBarSettings.topBarColorScheme) {
+        console.log(
+          `TopBarSettingsPanel - Reapplying color scheme on mount: ${topBarSettings.topBarColorScheme}`
+        );
+
+        const iframe = getIframe();
+        if (iframe) {
+          applyColorSchemeToIframe(
+            iframe,
+            "topBar",
+            topBarSettings.topBarColorScheme
+          );
+          sendColorSchemeUpdateToIframe(
+            iframe,
+            "topBar",
+            topBarSettings.topBarColorScheme
+          );
+        }
+      }
+    }, 500);
   }, []);
 
   // Load settings from API on component mount
@@ -330,6 +425,16 @@ export function TopBarSettingsPanel({
             initialColorScheme: topBarSettings.topBarColorScheme,
           });
 
+          // Color scheme specific logging
+          console.log("TopBarSettingsPanel - Color scheme loading:", {
+            loadedFromAPI: headerSettings.topBarColorScheme,
+            currentInState: topBarSettings.topBarColorScheme,
+            willUseValue:
+              headerSettings.topBarColorScheme ||
+              topBarSettings.topBarColorScheme ||
+              "light",
+          });
+
           // First update state with the loaded values
           setTopBarSettings((prev) => {
             const updatedSettings = {
@@ -352,6 +457,10 @@ export function TopBarSettingsPanel({
                 headerSettings.topBarFontSizeScale !== undefined
                   ? Number(headerSettings.topBarFontSizeScale)
                   : prev.topBarFontSizeScale,
+              topBarNavSpacing:
+                headerSettings.topBarNavSpacing !== undefined
+                  ? Number(headerSettings.topBarNavSpacing)
+                  : prev.topBarNavSpacing,
             };
 
             console.log("TopBarSettingsPanel - Updated settings state:", {
@@ -452,6 +561,14 @@ export function TopBarSettingsPanel({
       hasChanges = true;
     }
 
+    if (
+      settings.topBarNavSpacing &&
+      settings.topBarNavSpacing !== topBarSettings.topBarNavSpacing
+    ) {
+      updatedSettings.topBarNavSpacing = Number(settings.topBarNavSpacing);
+      hasChanges = true;
+    }
+
     // Update state if changes detected
     if (hasChanges) {
       setTopBarSettings((prev) => {
@@ -526,27 +643,83 @@ export function TopBarSettingsPanel({
       // Get current global settings
       const globalSettings = await getGlobalSettings();
 
+      // Important: Check for latest color scheme from global variable first
+      let latestColorScheme = topBarSettings.topBarColorScheme;
+      if (
+        typeof window !== "undefined" &&
+        (window as any).__latestTopBarColorScheme
+      ) {
+        latestColorScheme = (window as any).__latestTopBarColorScheme;
+        console.log(
+          `Using latest color scheme from global variable: ${latestColorScheme}`
+        );
+      }
+
+      // Refresh top bar settings from state to ensure we're using the latest values
+      const currentTopBarSettings = {
+        ...topBarSettings,
+        topBarColorScheme: latestColorScheme, // Use the latest color scheme
+      };
+
       // Add a colorScheme variable to make it more prominent
-      const colorScheme = topBarSettings.topBarColorScheme || "light";
+      const colorScheme = currentTopBarSettings.topBarColorScheme || "light";
       console.log(
-        `TopBarSettingsPanel - Using color scheme for saving: ${colorScheme}`
+        `TopBarSettingsPanel - Using color scheme for saving: ${colorScheme} (from ${
+          latestColorScheme || "state"
+        })`
       );
+
+      // Force set a default color scheme if missing
+      if (!colorScheme || colorScheme === "") {
+        console.log(
+          "TopBarSettingsPanel - No color scheme found, using default 'scheme-1'"
+        );
+        // Default to the first color scheme if none is set
+        currentTopBarSettings.topBarColorScheme = "scheme-1";
+      }
 
       // Ensure topBarVisible is a proper boolean and topBarHeight is a number
       const finalTopBarSettings = {
-        ...topBarSettings,
-        topBarVisible: Boolean(topBarSettings.topBarVisible),
-        topBarHeight: Number(topBarSettings.topBarHeight || 40),
-        topBarNavStyle: topBarSettings.topBarNavStyle || "style1",
-        topBarTextTransform: topBarSettings.topBarTextTransform || "capitalize",
-        topBarColorScheme: colorScheme, // Use the variable defined above
-        topBarFontSizeScale: Number(topBarSettings.topBarFontSizeScale || 1),
+        ...currentTopBarSettings,
+        topBarVisible: Boolean(currentTopBarSettings.topBarVisible),
+        topBarHeight: Number(currentTopBarSettings.topBarHeight || 40),
+        topBarNavStyle: currentTopBarSettings.topBarNavStyle || "style1",
+        topBarTextTransform:
+          currentTopBarSettings.topBarTextTransform || "capitalize",
+        topBarColorScheme:
+          currentTopBarSettings.topBarColorScheme || "scheme-1", // Use default if still missing
+        topBarFontSizeScale: Number(
+          currentTopBarSettings.topBarFontSizeScale || 1
+        ),
+        topBarNavSpacing: Number(currentTopBarSettings.topBarNavSpacing || 24),
       };
 
-      // Add extra specific log for the color scheme to make it more visible
-      console.log(
-        `TopBarSettingsPanel - Final color scheme for saving: ${finalTopBarSettings.topBarColorScheme} (original: ${topBarSettings.topBarColorScheme})`
-      );
+      // CRITICAL: Log color scheme details before saving
+      console.log("SAVE OPERATION - Color scheme details:", {
+        from_state: topBarSettings.topBarColorScheme,
+        from_global:
+          typeof window !== "undefined"
+            ? (window as any).__latestTopBarColorScheme
+            : undefined,
+        latest_detected: latestColorScheme,
+        final_value: finalTopBarSettings.topBarColorScheme,
+        will_be_saved_to_API: true,
+      });
+
+      // Log very clearly what color scheme we're using
+      console.log("SAVE OPERATION: Final color scheme to be saved:", {
+        value: finalTopBarSettings.topBarColorScheme,
+        originalStateValue: topBarSettings.topBarColorScheme,
+        willDefinitelySave: true,
+      });
+
+      // Add explicit color scheme validation log
+      console.log("TopBarSettingsPanel - Color scheme validation:", {
+        originalValue: topBarSettings.topBarColorScheme,
+        finalValue: finalTopBarSettings.topBarColorScheme,
+        isValid: !!finalTopBarSettings.topBarColorScheme,
+        willBeWrittenToJSON: true,
+      });
 
       // Store the latest values globally to prevent race conditions
       if (typeof window !== "undefined") {
@@ -561,6 +734,8 @@ export function TopBarSettingsPanel({
           finalTopBarSettings.topBarColorScheme;
         (window as any).__latestTopBarFontSizeScale =
           finalTopBarSettings.topBarFontSizeScale;
+        (window as any).__latestTopBarNavSpacing =
+          finalTopBarSettings.topBarNavSpacing;
       }
 
       console.log("TopBarSettingsPanel - Saving topBar settings:", {
@@ -584,6 +759,11 @@ export function TopBarSettingsPanel({
           convertedValue: Number(topBarSettings.topBarFontSizeScale || 1),
           type: typeof Number(topBarSettings.topBarFontSizeScale || 1),
         },
+        topBarNavSpacing: {
+          originalValue: topBarSettings.topBarNavSpacing,
+          convertedValue: Number(topBarSettings.topBarNavSpacing || 24),
+          type: typeof Number(topBarSettings.topBarNavSpacing || 24),
+        },
       });
 
       // Create final settings structure
@@ -595,11 +775,27 @@ export function TopBarSettingsPanel({
         },
       };
 
+      // Critical: make sure the value is explicitly set in a global to ensure the parent save process uses it
+      if (typeof window !== "undefined") {
+        // This will make the color scheme available to the main page save process
+        (window as any).__FINAL_topBarColorScheme =
+          finalTopBarSettings.topBarColorScheme;
+
+        // Log that we've set this special value
+        console.log(
+          `FINAL COLOR SCHEME EXPLICITLY SET: ${finalTopBarSettings.topBarColorScheme} - this value must be used in final save`
+        );
+      }
+
       console.log("TopBarSettingsPanel - Saving settings to file:", {
         topBarVisibleInHeader: updatedSettings.headerSettings.topBarVisible,
         topBarVisibleType: typeof updatedSettings.headerSettings.topBarVisible,
         topBarHeightInHeader: updatedSettings.headerSettings.topBarHeight,
         topBarHeightType: typeof updatedSettings.headerSettings.topBarHeight,
+        topBarColorSchemeInHeader:
+          updatedSettings.headerSettings.topBarColorScheme,
+        topBarColorSchemeType:
+          typeof updatedSettings.headerSettings.topBarColorScheme,
       });
 
       // Save using the API only
@@ -658,9 +854,83 @@ export function TopBarSettingsPanel({
   // Register a global save handler
   useEffect(() => {
     // Define custom event for saving top bar settings
-    const handleSaveRequest = () => {
-      console.log("Received save request from TopBar");
-      saveAllSettings();
+    const handleSaveRequest = async (event: Event) => {
+      // Cast to CustomEvent to access detail property, if available
+      const customEvent = event as CustomEvent;
+      const detail = customEvent.detail || null;
+      const detailTimestamp = detail?.timestamp || "none";
+
+      // Check for color scheme in the event detail
+      const eventColorScheme = detail?.colorScheme;
+
+      console.log("Received save request from TopBar", {
+        detail,
+        eventTimestamp: detailTimestamp,
+        eventColorScheme,
+      });
+
+      // Important: Log the current color scheme when save is requested from TopBar
+      console.log("TopBar-triggered save with color scheme:", {
+        eventColorScheme: eventColorScheme,
+        stateColorScheme: topBarSettings.topBarColorScheme,
+        globalColorScheme:
+          typeof window !== "undefined"
+            ? (window as any).__latestTopBarColorScheme
+            : undefined,
+        allSettings: topBarSettings,
+        timestamp: detailTimestamp,
+      });
+
+      // Create a fresh copy of settings for this save operation
+      const currentSettings = {
+        ...topBarSettings,
+      };
+
+      // If a specific color scheme was provided in the event, use it
+      if (eventColorScheme) {
+        console.log(`Using color scheme from event: ${eventColorScheme}`);
+        currentSettings.topBarColorScheme = eventColorScheme;
+      } else {
+        console.log(
+          `Using color scheme from state: ${currentSettings.topBarColorScheme}`
+        );
+      }
+
+      console.log(
+        "Using these settings for TopBar-triggered save:",
+        currentSettings
+      );
+
+      // Call save with the fresh settings - temporarily save current settings
+      const originalSettings = { ...topBarSettings };
+
+      // Update the state with the correct color scheme if needed
+      if (
+        eventColorScheme &&
+        eventColorScheme !== topBarSettings.topBarColorScheme
+      ) {
+        setTopBarSettings((prev) => ({
+          ...prev,
+          topBarColorScheme: eventColorScheme,
+        }));
+      }
+
+      // Call the save function after the state update
+      setTimeout(async () => {
+        const saveResult = await saveAllSettings();
+
+        // Provide detailed information in the completion event
+        document.dispatchEvent(
+          new CustomEvent("saveTopBarSettingsComplete", {
+            detail: {
+              success: true,
+              timestamp: detailTimestamp,
+              savedColorScheme: currentSettings.topBarColorScheme,
+              message: "Save completed from TopBar request",
+            },
+          })
+        );
+      }, 100);
     };
 
     // Listen for save request from TopBar
@@ -751,20 +1021,34 @@ export function TopBarSettingsPanel({
       }
 
       console.log(
-        `TopBarSettingsPanel - Updated topBarFontSizeScale to ${processedValue} (current: ${
-          topBarSettings.topBarFontSizeScale
-        }, raw value: ${value}, type: ${typeof value})`
+        `TopBarSettingsPanel - Updated topBarFontSizeScale to ${processedValue} (current: ${topBarSettings.topBarFontSizeScale})`
       );
     } else if (key === "topBarColorScheme") {
       processedValue = String(value);
 
-      // Store globally to prevent race conditions
+      // Ensure non-empty value
+      if (!processedValue || processedValue.trim() === "") {
+        console.warn(
+          `Empty topBarColorScheme value: ${value}, using default of 'scheme-1'`
+        );
+        processedValue = "scheme-1";
+      }
+
+      // Store globally to prevent race conditions - CRITICAL for TopBar save
       if (typeof window !== "undefined") {
+        console.log(`Setting __latestTopBarColorScheme to: ${processedValue}`);
         (window as any).__latestTopBarColorScheme = processedValue;
       }
 
       console.log(
-        `TopBarSettingsPanel - Updated topBarColorScheme to ${processedValue} (current: ${topBarSettings.topBarColorScheme}, raw value: ${value})`
+        `TopBarSettingsPanel - Updated topBarColorScheme to "${processedValue}" (prev: "${topBarSettings.topBarColorScheme}")`,
+        {
+          newValue: processedValue,
+          prevValue: topBarSettings.topBarColorScheme,
+          rawInputValue: value,
+          rawInputType: typeof value,
+          processed: true,
+        }
       );
 
       // Apply to iframe immediately for better UX
@@ -773,6 +1057,17 @@ export function TopBarSettingsPanel({
         applyColorSchemeToIframe(iframe, "topBar", processedValue);
         sendColorSchemeUpdateToIframe(iframe, "topBar", processedValue);
       }
+    } else if (key === "topBarNavSpacing") {
+      processedValue = Number(value);
+
+      // Store globally to prevent race conditions
+      if (typeof window !== "undefined") {
+        (window as any).__latestTopBarNavSpacing = processedValue;
+      }
+
+      console.log(
+        `TopBarSettingsPanel - Updated topBarNavSpacing to ${processedValue} (current: ${topBarSettings.topBarNavSpacing})`
+      );
     }
 
     // Check if the value has actually changed to prevent unnecessary re-renders
@@ -908,6 +1203,44 @@ export function TopBarSettingsPanel({
           "*"
         );
       }
+    } else if (key === "topBarNavSpacing") {
+      // Apply visual update to iframe immediately for better UX
+      updateIframeCss("--top-bar-nav-spacing", processedValue.toString());
+
+      // Get iframe element and update the styles
+      const iframe = getIframe();
+      if (iframe && iframe.contentDocument) {
+        // Add or update the style element
+        const styleId = "top-bar-nav-spacing-style";
+        let styleEl = iframe.contentDocument.getElementById(
+          styleId
+        ) as HTMLStyleElement;
+
+        if (!styleEl) {
+          styleEl = iframe.contentDocument.createElement("style");
+          styleEl.id = styleId;
+          iframe.contentDocument.head.appendChild(styleEl);
+        }
+
+        styleEl.textContent = `
+          [data-section="top"] {
+            padding-left: var(--top-bar-nav-spacing, 24px) !important;
+          }
+          .top-bar {
+            padding-left: var(--top-bar-nav-spacing, 24px) !important;
+          }
+        `;
+
+        // Send a direct message to the iframe for immediate update
+        iframe.contentWindow?.postMessage(
+          {
+            type: "UPDATE_TOP_BAR_NAV_SPACING",
+            spacing: processedValue,
+            timestamp: Date.now(),
+          },
+          "*"
+        );
+      }
     }
 
     // Notify parent component about the change
@@ -948,6 +1281,18 @@ export function TopBarSettingsPanel({
     });
   }, [topBarSettings.topBarColorScheme]);
 
+  // Add this useEffect to track topBarNavSpacing changes
+  useEffect(() => {
+    console.log("TopBarSettingsPanel - topBarNavSpacing changed:", {
+      navSpacing: topBarSettings.topBarNavSpacing,
+      type: typeof topBarSettings.topBarNavSpacing,
+      savedValue:
+        typeof window !== "undefined"
+          ? (window as any).__latestTopBarNavSpacing
+          : undefined,
+    });
+  }, [topBarSettings.topBarNavSpacing]);
+
   return (
     <>
       {/* Enable Top Bar */}
@@ -980,9 +1325,42 @@ export function TopBarSettingsPanel({
             <div className="flex flex-col space-y-2">
               <ColorSchemeSelector
                 value={topBarSettings.topBarColorScheme || "light"}
-                onChange={(value) => updateSetting("topBarColorScheme", value)}
+                onChange={(value) => {
+                  console.log(
+                    `ColorSchemeSelector onChange fired with value: ${value}`
+                  );
+
+                  // Force save immediately after color scheme change for testing
+                  updateSetting("topBarColorScheme", value);
+
+                  // Add a delayed automatic save when color scheme changes
+                  setTimeout(() => {
+                    console.log(
+                      `Auto-saving after color scheme change to: ${value}`
+                    );
+                    saveAllSettings();
+                  }, 500);
+                }}
                 width="w-full"
               />
+
+              {/* Add debug button to explicitly save the color scheme */}
+              <div className="flex justify-between mt-2">
+                <span className="text-xs text-gray-500">
+                  Current: {topBarSettings.topBarColorScheme || "light"}
+                </span>
+                <button
+                  onClick={() => {
+                    console.log(
+                      `Manual save triggered for color scheme: ${topBarSettings.topBarColorScheme}`
+                    );
+                    saveAllSettings();
+                  }}
+                  className="px-2 py-1 text-xs bg-blue-500 text-white rounded"
+                >
+                  Save Color Scheme
+                </button>
+              </div>
             </div>
           </ColSection>
 
@@ -1091,6 +1469,28 @@ export function TopBarSettingsPanel({
               </ToggleGroup>
             </div>
           </SettingSection>
+
+          {/* Nav Spacing Setting */}
+          <ColSection title="Nav Spacing" description="" className="pt-4">
+            <div className="space-y-4">
+              <Slider
+                value={[topBarSettings.topBarNavSpacing || 24]}
+                min={0}
+                max={48}
+                step={2}
+                onValueChange={(value) => {
+                  if (value[0] !== topBarSettings.topBarNavSpacing) {
+                    updateSetting("topBarNavSpacing", value[0]);
+                  }
+                }}
+              />
+              <div className="text-xs text-gray-500 mt-1 flex justify-between">
+                <span>0px</span>
+                <span>Current: {topBarSettings.topBarNavSpacing || 24}px</span>
+                <span>48px</span>
+              </div>
+            </div>
+          </ColSection>
 
           {/* Text Transform Settings */}
           <SettingSection

@@ -14,18 +14,11 @@
       "currentPreset": "preset1",
       "containers": {
         "top_left": [
-          "html_block_2",
-          "html_block_3",
           "account"
         ],
-        "top_center": [
-          "mainMenu",
-          "bottomMenu"
-        ],
+        "top_center": [],
         "top_right": [
-          "contact",
-          "nav_icon",
-          "social_icon"
+          "contact"
         ],
         "middle_left": [
           "logo"
@@ -39,13 +32,19 @@
         "bottom_right": [],
         "available": [
           "html_block_1",
+          "html_block_2",
+          "html_block_3",
           "html_block_4",
           "html_block_5",
           "topBarMenu",
+          "nav_icon",
+          "mainMenu",
+          "bottomMenu",
           "search",
           "button_1",
           "button_2",
           "wishlist",
+          "social_icon",
           "divider_1",
           "divider_2",
           "divider_3",
@@ -68,15 +67,17 @@
       "show": true
     },
     "topBarVisible": true,
-    "lastSelectedSetting": "html_block_1",
-    "lastSelectedSubmenu": "HTML",
-    "topBarColorScheme": "light",
-    "topBarHeight": 62,
+    "lastSelectedSetting": "header",
+    "lastSelectedSubmenu": "General",
+    "topBarColorScheme": "scheme-2",
+    "topBarHeight": 37,
     "topBarNavStyle": "style3",
     "topBarTextTransform": "uppercase",
-    "html_block_1": "hgfdxc",
+    "html_block_1": "This is my first websi",
     "headerHeight": 9,
-    "topBarFontSizeScale": 1
+    "topBarFontSizeScale": 1,
+    "html_block_3": "",
+    "topBarNavSpacing": 24
   },
   "sections": [],
   "globalLayout": {

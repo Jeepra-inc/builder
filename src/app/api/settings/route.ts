@@ -10,6 +10,7 @@ interface HeaderSettings {
   topBarTextTransform?: string;
   topBarFontSizeScale?: number;
   topBarColorScheme?: string;
+  topBarNavSpacing?: number;
   [key: string]: any;
 }
 
@@ -63,6 +64,7 @@ export async function POST(request: Request) {
       topBarTextTransform: updatedSettings.headerSettings?.topBarTextTransform,
       topBarColorScheme: updatedSettings.headerSettings?.topBarColorScheme,
       topBarFontSizeScale: updatedSettings.headerSettings?.topBarFontSizeScale,
+      topBarNavSpacing: updatedSettings.headerSettings?.topBarNavSpacing,
     });
 
     // Validate settings object
@@ -88,6 +90,7 @@ export async function POST(request: Request) {
             currentSettings.headerSettings?.topBarTextTransform,
           topBarFontSizeScale:
             currentSettings.headerSettings?.topBarFontSizeScale,
+          topBarNavSpacing: currentSettings.headerSettings?.topBarNavSpacing,
         });
       } catch (err) {
         console.error("API - Error reading current settings:", err);
@@ -151,12 +154,45 @@ export async function POST(request: Request) {
 
       if ("topBarColorScheme" in updatedSettings.headerSettings) {
         const colorScheme = updatedSettings.headerSettings.topBarColorScheme;
-        updatedSettings.headerSettings.topBarColorScheme = String(
-          colorScheme || "light"
+        // Validate color scheme - ensure it's a valid string
+        const validColorScheme =
+          typeof colorScheme === "string" && colorScheme.trim()
+            ? colorScheme
+            : "light";
+
+        updatedSettings.headerSettings.topBarColorScheme = validColorScheme;
+        console.log("API - RECEIVED COLOR SCHEME FROM REQUEST:", {
+          value: validColorScheme,
+          originalValue: colorScheme,
+        });
+
+        // Add a more explicit log for the color scheme
+        console.log("API - COLOR SCHEME DETAILS:", {
+          original: colorScheme,
+          originalType: typeof colorScheme,
+          normalized: validColorScheme,
+          normalizedType: typeof validColorScheme,
+          isEmpty: !validColorScheme,
+          isLightDefault: validColorScheme === "light",
+          willBeUsed: true,
+        });
+      } else {
+        console.log("API - NO topBarColorScheme FOUND IN REQUEST");
+      }
+
+      if ("topBarNavSpacing" in updatedSettings.headerSettings) {
+        const navSpacing = updatedSettings.headerSettings.topBarNavSpacing;
+        // Convert to number with default of 24
+        updatedSettings.headerSettings.topBarNavSpacing = Number(
+          navSpacing || 24
         );
         console.log(
-          "API - Normalized topBarColorScheme:",
-          updatedSettings.headerSettings.topBarColorScheme
+          "API - Normalized topBarNavSpacing:",
+          updatedSettings.headerSettings.topBarNavSpacing,
+          "Original value:",
+          navSpacing,
+          "Type:",
+          typeof updatedSettings.headerSettings.topBarNavSpacing
         );
       }
     }
@@ -181,6 +217,9 @@ export async function POST(request: Request) {
       topBarTextTransform: finalSettings.headerSettings?.topBarTextTransform,
       topBarColorScheme: finalSettings.headerSettings?.topBarColorScheme,
       topBarFontSizeScale: finalSettings.headerSettings?.topBarFontSizeScale,
+      topBarNavSpacing: finalSettings.headerSettings?.topBarNavSpacing,
+      topBarNavSpacingType:
+        typeof finalSettings.headerSettings?.topBarNavSpacing,
     });
 
     // Ensure directory exists
@@ -207,6 +246,7 @@ export async function POST(request: Request) {
         topBarTextTransform: finalSettings.headerSettings?.topBarTextTransform,
         topBarColorScheme: finalSettings.headerSettings?.topBarColorScheme,
         topBarFontSizeScale: finalSettings.headerSettings?.topBarFontSizeScale,
+        topBarNavSpacing: finalSettings.headerSettings?.topBarNavSpacing,
       },
     });
   } catch (error) {

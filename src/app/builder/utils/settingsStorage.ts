@@ -209,6 +209,26 @@ export const saveSettingsToFile = async (
   try {
     console.log(" [saveSettingsToFile] Starting API call to save settings...");
 
+    // Check for the special final color scheme value set by TopBarSettingsPanel
+    if (
+      typeof window !== "undefined" &&
+      (window as any).__FINAL_topBarColorScheme
+    ) {
+      const finalColorScheme = (window as any).__FINAL_topBarColorScheme;
+
+      console.log(
+        ` [saveSettingsToFile] FOUND FINAL COLOR SCHEME: ${finalColorScheme} - using this value`
+      );
+
+      // Ensure headerSettings exists
+      if (!settings.headerSettings) {
+        settings.headerSettings = {};
+      }
+
+      // Set the color scheme in the settings object
+      settings.headerSettings.topBarColorScheme = finalColorScheme;
+    }
+
     // Log information about the data being saved
     console.log(" [saveSettingsToFile] Settings prepared:", {
       hasGlobalStyles: !!settings.globalStyles,
