@@ -6,8 +6,13 @@ import {
   shouldProcessMessage,
 } from "../utils/messageUtils";
 
-// Create a cache to track processed messages
-const processedMessages = new Map<string, number>();
+// Helper function to force a repaint
+const forceRepaint = (timeout = 10) => {
+  document.body.classList.add("force-repaint");
+  setTimeout(() => {
+    document.body.classList.remove("force-repaint");
+  }, timeout);
+};
 
 // Helper function to update typography settings
 const updateTypography = (typography: any) => {
@@ -45,6 +50,9 @@ const updateTypography = (typography: any) => {
     root.style.setProperty("--body-size-scale", `${bodySizeScale / 100}`);
   }
 };
+
+// Create a cache to track processed messages
+const processedMessages = new Map<string, number>();
 
 /**
  * Custom hook to handle messages from the parent window
@@ -90,7 +98,6 @@ export const useMessageHandler = ({
       }
 
       const { type, timestamp } = event.data;
-      const headers = event.data.headers || {};
 
       // Create a unique key for this message type and content
       const messageKey = `${type}-${JSON.stringify(event.data).slice(0, 100)}`;
@@ -100,9 +107,6 @@ export const useMessageHandler = ({
       if (processedMessages.has(messageKey)) {
         const lastProcessed = processedMessages.get(messageKey) || 0;
         if (now - lastProcessed < 2000) {
-          console.log(
-            `Skipping duplicate message: ${type} (processed recently)`
-          );
           return;
         }
       }
@@ -122,9 +126,6 @@ export const useMessageHandler = ({
         case "LOAD_SETTINGS": {
           // Skip if we're already processing settings or if we've already initialized
           if (processingParentSettings.current) {
-            console.log(
-              "Skipping LOAD_SETTINGS while already processing settings"
-            );
             return;
           }
 
@@ -132,7 +133,6 @@ export const useMessageHandler = ({
           if (isInitialized.current) {
             // Check if we should process this message
             if (!shouldProcessMessage(timestamp, lastMessageTimestamp, 2000)) {
-              console.log("Skipping duplicate LOAD_SETTINGS message");
               return;
             }
           } else {
@@ -140,74 +140,15 @@ export const useMessageHandler = ({
           }
 
           const { settings } = event.data;
-          console.log("Received LOAD_SETTINGS message:", settings);
 
           // Update our local state
           processingParentSettings.current = true;
-
-          // Log the topBarVisible setting for debugging purposes
-          if (settings?.headerSettings?.topBarVisible !== undefined) {
-            console.log(
-              "Processing topBarVisible setting:",
-              settings.headerSettings.topBarVisible
-            );
-          }
 
           try {
             if (settings) {
               // Initialize typography from settings
               if (settings.globalStyles?.typography) {
                 updateTypography(settings.globalStyles.typography);
-                console.log(
-                  "Typography initialized from LOAD_SETTINGS",
-                  settings.globalStyles.typography
-                );
-                const {
-                  headingFont,
-                  bodyFont,
-                  headingColor,
-                  headingSizeScale,
-                  bodySizeScale,
-                } = settings.globalStyles.typography;
-
-                // Apply CSS variables directly
-                const root = document.documentElement;
-
-                if (headingFont) {
-                  const [fontFamily, weight] = headingFont.split(":");
-                  root.style.setProperty(
-                    "--heading-font",
-                    `'${fontFamily}', sans-serif`
-                  );
-                  loadGoogleFont(fontFamily, weight || "400");
-                }
-
-                if (bodyFont) {
-                  const [fontFamily, weight] = bodyFont.split(":");
-                  root.style.setProperty(
-                    "--body-font",
-                    `'${fontFamily}', sans-serif`
-                  );
-                  loadGoogleFont(fontFamily, weight || "400");
-                }
-
-                if (headingColor) {
-                  root.style.setProperty("--heading-color", headingColor);
-                }
-
-                if (headingSizeScale) {
-                  root.style.setProperty(
-                    "--heading-size-scale",
-                    `${headingSizeScale / 100}`
-                  );
-                }
-
-                if (bodySizeScale) {
-                  root.style.setProperty(
-                    "--body-size-scale",
-                    `${bodySizeScale / 100}`
-                  );
-                }
               }
 
               if (settings.sections) {
@@ -240,27 +181,6 @@ export const useMessageHandler = ({
         case "UPDATE_HEADER_SETTINGS": {
           const { settings } = event.data;
 
-          // Check if we're already sending to parent to prevent loops
-          if (sendingToParent.current) {
-            console.log(
-              "Skipping UPDATE_HEADER_SETTINGS while sending to parent"
-            );
-            return;
-          }
-
-          // Skip if we're processing parent settings
-          if (processingParentSettings.current) {
-            console.log(
-              "Skipping UPDATE_HEADER_SETTINGS while processing parent settings"
-            );
-            return;
-          }
-
-          // Add debug for logo updates
-          if (settings.logo) {
-            console.log("IFRAME: Received logo settings:", settings.logo);
-          }
-
           // Apply the settings
           setHeaderSettings((prev) => ({
             ...prev,
@@ -285,52 +205,7 @@ export const useMessageHandler = ({
 
         case "UPDATE_TYPOGRAPHY": {
           const { settings } = event.data;
-          const root = document.documentElement;
-
-          // Apply typography settings to CSS variables
-          if (settings.headingColor) {
-            root.style.setProperty("--heading-color", settings.headingColor);
-          }
-
-          // Handle font updates
-          if (settings.headingFont) {
-            const [headingFontFamily, headingFontWeight] =
-              settings.headingFont.split(":");
-            root.style.setProperty(
-              "--heading-font",
-              `'${headingFontFamily}', sans-serif`
-            );
-
-            // Load the heading font if it's not a system font
-            loadGoogleFont(headingFontFamily, headingFontWeight || "400");
-          }
-
-          if (settings.bodyFont) {
-            const [bodyFontFamily, bodyFontWeight] =
-              settings.bodyFont.split(":");
-            root.style.setProperty(
-              "--body-font",
-              `'${bodyFontFamily}', sans-serif`
-            );
-
-            // Load the body font if it's not a system font
-            loadGoogleFont(bodyFontFamily, bodyFontWeight || "400");
-          }
-
-          // Apply font size scales
-          if (settings.headingSizeScale) {
-            root.style.setProperty(
-              "--heading-size-scale",
-              `${settings.headingSizeScale / 100}`
-            );
-          }
-
-          if (settings.bodySizeScale) {
-            root.style.setProperty(
-              "--body-size-scale",
-              `${settings.bodySizeScale / 100}`
-            );
-          }
+          updateTypography(settings);
           break;
         }
 
@@ -338,11 +213,6 @@ export const useMessageHandler = ({
           const { fontFamily, fontWeight } = event.data;
           if (fontFamily) {
             loadGoogleFont(fontFamily, fontWeight || "400");
-            console.log(
-              `Loaded Google Font from parent request: ${fontFamily} (weight: ${
-                fontWeight || "400"
-              })`
-            );
           }
           break;
         }
@@ -430,11 +300,7 @@ export const useMessageHandler = ({
         }
 
         case "UPDATE_TOP_BAR_VISIBILITY": {
-          const { isVisible, timestamp } = event.data;
-          console.log("Received UPDATE_TOP_BAR_VISIBILITY message:", {
-            isVisible,
-            timestamp,
-          });
+          const { isVisible } = event.data;
 
           // Update CSS variable immediately
           document.documentElement.style.setProperty(
@@ -443,39 +309,18 @@ export const useMessageHandler = ({
             "important"
           );
 
-          // Update all elements with data-section="top"
-          const topSections = document.querySelectorAll('[data-section="top"]');
-          console.log(
-            `Found ${topSections.length} top sections to update visibility`
-          );
-
-          topSections.forEach((element) => {
-            (element as HTMLElement).style.display = isVisible
-              ? "flex"
-              : "none";
-          });
-
-          // Force a repaint to ensure changes take effect
-          document.body.classList.add("force-repaint");
-          setTimeout(() => {
-            document.body.classList.remove("force-repaint");
-          }, 10);
+          forceRepaint();
 
           // Also update headerSettings state for consistency
           setHeaderSettings((prev) => ({
             ...prev,
             topBarVisible: isVisible,
           }));
-
           break;
         }
 
         case "UPDATE_TOP_BAR_HEIGHT": {
-          const { height, timestamp } = event.data;
-          console.log("Received UPDATE_TOP_BAR_HEIGHT message:", {
-            height,
-            timestamp,
-          });
+          const { height } = event.data;
 
           // Update CSS variable immediately
           document.documentElement.style.setProperty(
@@ -484,45 +329,13 @@ export const useMessageHandler = ({
             "important"
           );
 
-          // Update all elements with data-section="top" to apply the height via CSS variable
-          const topSections = document.querySelectorAll('[data-section="top"]');
-          console.log(
-            `Found ${topSections.length} top sections to update height`
-          );
-
-          // Instead of setting inline height, add a class that uses the CSS variable
-          const styleId = "top-bar-height-style";
-          let styleEl = document.getElementById(styleId) as HTMLStyleElement;
-
-          if (!styleEl) {
-            styleEl = document.createElement("style");
-            styleEl.id = styleId;
-            document.head.appendChild(styleEl);
-          }
-
-          styleEl.textContent = `
-            [data-section="top"] {
-              height: var(--top-bar-height) !important;
-              min-height: var(--top-bar-height) !important;
-            }
-            .top-bar {
-              height: var(--top-bar-height) !important;
-              min-height: var(--top-bar-height) !important;
-            }
-          `;
-
-          // Force a repaint to ensure changes take effect
-          document.body.classList.add("force-repaint");
-          setTimeout(() => {
-            document.body.classList.remove("force-repaint");
-          }, 10);
+          forceRepaint();
 
           // Also update headerSettings state for consistency
           setHeaderSettings((prev) => ({
             ...prev,
             topBarHeight: height,
           }));
-
           break;
         }
 
@@ -546,12 +359,7 @@ export const useMessageHandler = ({
     setLocalSections,
     dispatch,
     processingParentSettings,
-    initializeAllSettingsFromJson,
   ]);
 
-  return {
-    sendingToParent,
-    lastMessageTimestamp,
-    sendMessageToParent: sendParentMessage,
-  };
+  return { sendMessageToParent: sendParentMessage };
 };

@@ -1,23 +1,27 @@
-/* Generated at 2025-03-18T11:18:54.241Z */
+/* Generated at 2025-03-19T18:18:11.943Z */
 :root {
   /* Global Layout Settings */
   --page-width: 1200px;
   
   /* Layout Settings */
   --header-max-width: 1200px;
-  --header-sticky: false;
+  --header-sticky: true;
   
   /* Header Color Schemes */
-  --top-bar-color-scheme: scheme-1;
   --main-bar-color-scheme: light;
   --bottom-bar-color-scheme: light;
   
+  /* Top Bar Colors - These will be set based on the color scheme */
+  --top-bar-bg: var(--scheme-topBar-background, #f5f5f5);
+  --top-bar-color: var(--scheme-topBar-text, #333);
+  --top-bar-border: var(--scheme-topBar-border, #e5e5e5);
+  
   /* Header Visibility */
-  --top-bar-visible: true;
-  --bottom-bar-visible: false;
+  --top-bar-visible: flex;
+  --bottom-bar-visible: none;
   
   /* Header Heights */
-  --top-bar-height: 37px;
+  --top-bar-height: 80px;
   --main-bar-height: 80px;
   --bottom-bar-height: 50px;
   

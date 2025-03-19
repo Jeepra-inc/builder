@@ -1,21 +1,10 @@
 {
   "headerSettings": {
-    "logo": {
-      "text": "Builder",
-      "showText": true,
-      "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
-      "size": "medium"
-    },
-    "navigation": {
-      "menuType": "mainMenu",
-      "items": []
-    },
     "layout": {
-      "currentPreset": "preset1",
+      "sticky": true,
+      "maxWidth": "1200px",
       "containers": {
-        "top_left": [
-          "account"
-        ],
+        "top_left": [],
         "top_center": [],
         "top_right": [
           "contact"
@@ -36,6 +25,7 @@
           "html_block_3",
           "html_block_4",
           "html_block_5",
+          "account",
           "topBarMenu",
           "nav_icon",
           "mainMenu",
@@ -50,7 +40,31 @@
           "divider_3",
           "divider_4"
         ]
-      }
+      },
+      "currentPreset": "preset1"
+    },
+    "logo": {
+      "text": "Your Brand",
+      "showText": true
+    },
+    "navigation": {
+      "items": [
+        {
+          "text": "Home",
+          "url": "#",
+          "isButton": false
+        },
+        {
+          "text": "About",
+          "url": "#",
+          "isButton": false
+        },
+        {
+          "text": "Contact",
+          "url": "#",
+          "isButton": true
+        }
+      ]
     },
     "search": {
       "show": true,
@@ -67,19 +81,36 @@
       "show": true
     },
     "topBarVisible": true,
-    "lastSelectedSetting": "header",
-    "lastSelectedSubmenu": "General",
+    "lastSelectedSetting": "html_block_3",
+    "lastSelectedSubmenu": "HTML",
     "topBarColorScheme": "scheme-2",
-    "topBarHeight": 37,
-    "topBarNavStyle": "style3",
-    "topBarTextTransform": "uppercase",
+    "topBarHeight": 80,
+    "topBarNavStyle": "style2",
+    "topBarTextTransform": "capitalize",
     "html_block_1": "This is my first websi",
     "headerHeight": 9,
     "topBarFontSizeScale": 1,
     "html_block_3": "",
     "topBarNavSpacing": 24
   },
-  "sections": [],
+  "sections": [
+    {
+      "id": "section_1742405869363_q8tc5etnu",
+      "type": "hero",
+      "content": [
+        "Example content"
+      ],
+      "settings": {}
+    },
+    {
+      "id": "section_1742405875248_73ccgjfh8",
+      "type": "heronew",
+      "content": [
+        "Example content"
+      ],
+      "settings": {}
+    }
+  ],
   "globalLayout": {
     "pageWidth": "1200px"
   },
@@ -103,11 +134,11 @@
         {
           "name": "Scheme 1",
           "background": "#FFFFFF",
-          "text": "#121212",
-          "gradient": "linear-gradient(90deg, #00C9FF 0%, #92FE9D 100%)",
-          "buttonBackground": "#121212",
-          "buttonLabel": "#FFFFFF",
-          "outlineButton": "#121212",
+          "text": "#ffffff",
+          "gradient": "rgb(0, 0, 87)",
+          "buttonBackground": "#f8e71c",
+          "buttonLabel": "#011022",
+          "outlineButton": "#f8e71c",
           "id": "scheme-1"
         },
         {

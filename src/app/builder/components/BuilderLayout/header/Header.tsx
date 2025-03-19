@@ -21,19 +21,13 @@ import { defaultHeaderSettings } from "./defaultSettings";
 import { generateSearchHTML } from "./searchSettings";
 import { generateMenuHTML } from "./menuUtils";
 import { headerItemStyles } from "./cssUtils";
-import { getSectionStyle } from "./styleUtils";
-import {
-  useCssVariables,
-  useMessageHandling,
-  useLayoutInitialization,
-  useColorSchemeEffects,
-} from "./hooks";
+import { useMessageHandling, useLayoutInitialization } from "./hooks";
 import {
   generateAccountHTML,
   generateNavIconHTML,
   generateContactHTML,
 } from "./generators";
-import { sendMessageToParent, createSchemeNotifier } from "./notifications";
+import { sendMessageToParent } from "./notifications";
 
 function debounce<F extends (...args: any[]) => any>(
   func: F,
@@ -102,20 +96,8 @@ export default function Header({
   isSelected,
   onSelect,
 }: HeaderProps) {
-  // Log the settings received by the Header component
-  console.log("Header component received settings:", settings);
-
-  // Use the custom hooks
-  useCssVariables(settings);
-
   // Merge default settings with provided settings
   const initHeaderSettings = useMemo(() => {
-    console.log(
-      "Merging default settings with provided settings:",
-      defaultHeaderSettings,
-      settings
-    );
-
     // Create a deep copy of the default settings to prevent reference issues
     const defaultSettingsCopy = JSON.parse(
       JSON.stringify(defaultHeaderSettings)
@@ -147,8 +129,6 @@ export default function Header({
         available: [],
       };
     }
-
-    console.log("Merged header settings:", mergedSettings);
     return mergedSettings as HeaderSettings;
   }, [settings]);
 
@@ -158,29 +138,6 @@ export default function Header({
 
   // Track the last received settings to prevent reprocessing identical settings
   const lastReceivedSettingsRef = useRef<string>("");
-
-  // Add ref to track the last notified schemes to prevent notification loops
-  const lastNotifiedSchemesRef = useRef({
-    topBarColorScheme: headerSettings.topBarColorScheme || "light",
-    mainBarColorScheme: headerSettings.mainBarColorScheme || "light",
-    bottomBarColorScheme: headerSettings.bottomBarColorScheme || "light",
-  });
-
-  // Add notification throttling
-  const notificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  );
-
-  // Use the createSchemeNotifier function from the notifications module
-  const notifySchemeChanges = useMemo(
-    () =>
-      createSchemeNotifier(
-        headerSettings,
-        lastNotifiedSchemesRef,
-        notificationTimeoutRef
-      ),
-    [headerSettings]
-  );
 
   const [layoutItems, setLayoutItems] = useState<HeaderLayout>({
     top_left: [],
@@ -221,19 +178,7 @@ export default function Header({
     headerSettings,
     setHeaderSettings,
     setCustomHtml,
-    debouncedSetLayoutItems,
-    notifySchemeChanges,
-    lastNotifiedSchemesRef
-  );
-  useColorSchemeEffects(headerSettings, setHeaderSettings);
-
-  // Get text color for a section based on its color scheme
-  const getSectionTextColor = useCallback(
-    (section: "top" | "main" | "bottom", schemeId?: string): string => {
-      const style = getSectionStyle(section, schemeId);
-      return style.color as string;
-    },
-    []
+    debouncedSetLayoutItems
   );
 
   // Helper function to handle settings gear icon click
@@ -438,11 +383,7 @@ export default function Header({
 
   // Memoize the renderSection function to prevent unnecessary rerenders
   const renderSection = useCallback(
-    (
-      items: string[],
-      sectionName: string = "",
-      textStyle?: React.CSSProperties
-    ) => {
+    (items: string[], sectionName: string = "") => {
       // Ensure items is an array
       if (!Array.isArray(items)) {
         return null;
@@ -476,7 +417,6 @@ export default function Header({
             data-item-id={renderId}
             data-original-id={itemId}
             data-is-menu-item={isMenuType ? "true" : "false"}
-            style={textStyle}
             onClick={() => {
               if (isEditing && !isMenuType) {
                 sendMessageToParent({
@@ -516,28 +456,13 @@ export default function Header({
       if (event.data.type === "UPDATE_HEADER_SETTINGS" && event.data.settings) {
         const updatedSettings = event.data.settings;
 
-        // Handle color scheme and visibility settings
+        // Handle visibility settings
         if (
-          updatedSettings.topBarColorScheme !== undefined ||
-          updatedSettings.mainBarColorScheme !== undefined ||
-          updatedSettings.bottomBarColorScheme !== undefined ||
           updatedSettings.topBarVisible !== undefined ||
           updatedSettings.bottomEnabled !== undefined
         ) {
           setHeaderSettings((prev) => {
             const updatedState = { ...prev };
-
-            // Update color scheme settings
-            [
-              "topBarColorScheme",
-              "mainBarColorScheme",
-              "bottomBarColorScheme",
-            ].forEach((scheme) => {
-              if (updatedSettings[scheme] !== undefined) {
-                updatedState[scheme as keyof HeaderSettings] =
-                  updatedSettings[scheme];
-              }
-            });
 
             // Handle topBarVisible separately
             if (updatedSettings.topBarVisible !== undefined) {
@@ -633,23 +558,20 @@ export default function Header({
         );
       }
 
-      // Apply color schemes and visibility
-      const cssVariablesToSet = [
-        ["--top-bar-color-scheme", settings.topBarColorScheme],
-        ["--main-bar-color-scheme", settings.mainBarColorScheme],
-        ["--bottom-bar-color-scheme", settings.bottomBarColorScheme],
-        ["--top-bar-visible", settings.topBarVisible ? "flex" : "none"],
-        ["--bottom-bar-visible", settings.bottomEnabled ? "flex" : "none"],
-      ];
+      // Apply visibility settings
+      if (settings.topBarVisible !== undefined) {
+        document.documentElement.style.setProperty(
+          "--top-bar-visible",
+          settings.topBarVisible ? "flex" : "none"
+        );
+      }
 
-      cssVariablesToSet.forEach(([variable, value]) => {
-        if (value !== undefined) {
-          document.documentElement.style.setProperty(
-            variable as string,
-            value.toString()
-          );
-        }
-      });
+      if (settings.bottomEnabled !== undefined) {
+        document.documentElement.style.setProperty(
+          "--bottom-bar-visible",
+          settings.bottomEnabled ? "flex" : "none"
+        );
+      }
 
       try {
         window.parent.postMessage(
@@ -669,11 +591,9 @@ export default function Header({
   const Section = useCallback(
     ({
       position,
-      scheme,
       className = "",
     }: {
       position: string;
-      scheme: string;
       className?: string;
     }) => {
       const [left, center, right] = [
@@ -689,37 +609,19 @@ export default function Header({
           <div className="flex items-center gap-4 flex-shrink-0">
             {renderSection(
               layoutItems[left as keyof HeaderLayout] as string[],
-              left,
-              {
-                color: getSectionTextColor(
-                  position as "top" | "main" | "bottom",
-                  scheme
-                ),
-              }
+              left
             )}
           </div>
           <div className="flex gap-6 justify-self-center">
             {renderSection(
               layoutItems[center as keyof HeaderLayout] as string[],
-              center,
-              {
-                color: getSectionTextColor(
-                  position as "top" | "main" | "bottom",
-                  scheme
-                ),
-              }
+              center
             )}
           </div>
           <div className="flex items-center gap-4 justify-self-end flex-shrink-0">
             {renderSection(
               layoutItems[right as keyof HeaderLayout] as string[],
-              right,
-              {
-                color: getSectionTextColor(
-                  position as "top" | "main" | "bottom",
-                  scheme
-                ),
-              }
+              right
             )}
             {position === "top" && headerSettings.showTopBarButton && (
               <button className="px-4 py-1 bg-primary text-white rounded-md text-sm hover:bg-primary-dark transition-colors">
@@ -730,12 +632,7 @@ export default function Header({
         </div>
       );
     },
-    [
-      layoutItems,
-      getSectionTextColor,
-      renderSection,
-      headerSettings.showTopBarButton,
-    ]
+    [layoutItems, renderSection, headerSettings.showTopBarButton]
   );
 
   // Handle header click
@@ -770,37 +667,17 @@ export default function Header({
         isSelected ? "selected" : ""
       }`}
       onClick={handleHeaderClick}
-      data-top-scheme={headerSettings.topBarColorScheme || "light"}
-      data-main-scheme={headerSettings.mainBarColorScheme || "light"}
-      data-bottom-scheme={headerSettings.bottomBarColorScheme || "light"}
     >
       {/* Top Bar - Only render if topBarVisible is true */}
       {headerSettings.topBarVisible === true && (
-        <div
-          className="w-full"
-          data-section="top"
-          style={{
-            ...getSectionStyle("top", headerSettings.topBarColorScheme),
-          }}
-        >
-          <Section
-            position="top"
-            scheme={headerSettings.topBarColorScheme || "light"}
-            className="py-2"
-          />
+        <div className="w-full" data-section="top" id="topBar">
+          <Section position="top" className="py-2" />
         </div>
       )}
 
       {/* Main Section - Always render */}
-      <div
-        className="w-full"
-        style={getSectionStyle("main", headerSettings.mainBarColorScheme)}
-      >
-        <Section
-          position="middle"
-          scheme={headerSettings.mainBarColorScheme || "light"}
-          className="middle-section py-4"
-        />
+      <div className="w-full">
+        <Section position="middle" className="middle-section py-4" />
       </div>
 
       {/* Bottom Section - Only render if bottomEnabled is true AND has at least one item */}
@@ -810,18 +687,8 @@ export default function Header({
           "bottom_center",
           "bottom_right",
         ]) && (
-          <div
-            className="w-full"
-            style={getSectionStyle(
-              "bottom",
-              headerSettings.bottomBarColorScheme
-            )}
-          >
-            <Section
-              position="bottom"
-              scheme={headerSettings.bottomBarColorScheme || "light"}
-              className="bottom-section"
-            />
+          <div className="w-full">
+            <Section position="bottom" className="bottom-section" />
           </div>
         )}
     </header>

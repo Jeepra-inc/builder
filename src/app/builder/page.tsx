@@ -571,6 +571,22 @@ export default function PageBuilder() {
             );
         });
 
+        // Initialize the iframe with saved color scheme settings
+        import(
+          "./components/BuilderLayout/header/settings/LivePreviewUtils"
+        ).then(({ initializeIframeWithSavedScheme }) => {
+          initializeIframeWithSavedScheme()
+            .then(() =>
+              console.log("Iframe initialized with saved color scheme")
+            )
+            .catch((error) =>
+              console.error(
+                "Failed to initialize iframe with saved color scheme:",
+                error
+              )
+            );
+        });
+
         // Explicitly send typography settings to ensure fonts are loaded
         if (
           contentRef.current?.contentWindow &&
@@ -1807,11 +1823,13 @@ export default function PageBuilder() {
             const topSections = iframe.contentDocument.querySelectorAll(
               '[data-section="top"]'
             );
-            topSections.forEach((el) => {
-              (el as HTMLElement).style.display = processedValue
-                ? "flex"
-                : "none";
-            });
+            if (topSections) {
+              topSections.forEach((el) => {
+                if (el instanceof HTMLElement) {
+                  el.style.display = processedValue ? "flex" : "none";
+                }
+              });
+            }
 
             // Force a repaint by toggling a class on the body
             iframe.contentDocument.body.classList.add("force-repaint");

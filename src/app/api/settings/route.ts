@@ -53,20 +53,6 @@ export async function POST(request: Request) {
     // Parse the request body
     const updatedSettings = (await request.json()) as Settings;
 
-    // Debug logs
-    console.log("API - POST request received:", {
-      hasHeaderSettings: !!updatedSettings.headerSettings,
-      topBarVisible: updatedSettings.headerSettings?.topBarVisible,
-      topBarVisibleType: typeof updatedSettings.headerSettings?.topBarVisible,
-      topBarHeight: updatedSettings.headerSettings?.topBarHeight,
-      topBarHeightType: typeof updatedSettings.headerSettings?.topBarHeight,
-      topBarNavStyle: updatedSettings.headerSettings?.topBarNavStyle,
-      topBarTextTransform: updatedSettings.headerSettings?.topBarTextTransform,
-      topBarColorScheme: updatedSettings.headerSettings?.topBarColorScheme,
-      topBarFontSizeScale: updatedSettings.headerSettings?.topBarFontSizeScale,
-      topBarNavSpacing: updatedSettings.headerSettings?.topBarNavSpacing,
-    });
-
     // Validate settings object
     if (!updatedSettings) {
       return NextResponse.json(
@@ -81,17 +67,6 @@ export async function POST(request: Request) {
       try {
         const currentData = fs.readFileSync(settingsPath, "utf-8");
         currentSettings = JSON.parse(currentData) as Settings;
-        console.log("API - Current settings read:", {
-          hasHeaderSettings: !!currentSettings.headerSettings,
-          topBarVisible: currentSettings.headerSettings?.topBarVisible,
-          topBarHeight: currentSettings.headerSettings?.topBarHeight,
-          topBarNavStyle: currentSettings.headerSettings?.topBarNavStyle,
-          topBarTextTransform:
-            currentSettings.headerSettings?.topBarTextTransform,
-          topBarFontSizeScale:
-            currentSettings.headerSettings?.topBarFontSizeScale,
-          topBarNavSpacing: currentSettings.headerSettings?.topBarNavSpacing,
-        });
       } catch (err) {
         console.error("API - Error reading current settings:", err);
       }
@@ -102,29 +77,17 @@ export async function POST(request: Request) {
       if ("topBarVisible" in updatedSettings.headerSettings) {
         updatedSettings.headerSettings.topBarVisible =
           updatedSettings.headerSettings.topBarVisible === true;
-        console.log(
-          "API - Normalized topBarVisible:",
-          updatedSettings.headerSettings.topBarVisible
-        );
       }
 
       if ("topBarHeight" in updatedSettings.headerSettings) {
         const rawHeight = updatedSettings.headerSettings.topBarHeight;
         updatedSettings.headerSettings.topBarHeight = Number(rawHeight || 40);
-        console.log(
-          "API - Normalized topBarHeight:",
-          updatedSettings.headerSettings.topBarHeight
-        );
       }
 
       if ("topBarNavStyle" in updatedSettings.headerSettings) {
         const navStyle = updatedSettings.headerSettings.topBarNavStyle;
         updatedSettings.headerSettings.topBarNavStyle = String(
           navStyle || "style1"
-        );
-        console.log(
-          "API - Normalized topBarNavStyle:",
-          updatedSettings.headerSettings.topBarNavStyle
         );
       }
 
@@ -134,10 +97,6 @@ export async function POST(request: Request) {
         updatedSettings.headerSettings.topBarTextTransform = String(
           textTransform || "capitalize"
         );
-        console.log(
-          "API - Normalized topBarTextTransform:",
-          updatedSettings.headerSettings.topBarTextTransform
-        );
       }
 
       if ("topBarFontSizeScale" in updatedSettings.headerSettings) {
@@ -145,10 +104,6 @@ export async function POST(request: Request) {
           updatedSettings.headerSettings.topBarFontSizeScale;
         updatedSettings.headerSettings.topBarFontSizeScale = Number(
           fontSizeScale || 1
-        );
-        console.log(
-          "API - Normalized topBarFontSizeScale:",
-          updatedSettings.headerSettings.topBarFontSizeScale
         );
       }
 
@@ -161,23 +116,8 @@ export async function POST(request: Request) {
             : "light";
 
         updatedSettings.headerSettings.topBarColorScheme = validColorScheme;
-        console.log("API - RECEIVED COLOR SCHEME FROM REQUEST:", {
-          value: validColorScheme,
-          originalValue: colorScheme,
-        });
-
-        // Add a more explicit log for the color scheme
-        console.log("API - COLOR SCHEME DETAILS:", {
-          original: colorScheme,
-          originalType: typeof colorScheme,
-          normalized: validColorScheme,
-          normalizedType: typeof validColorScheme,
-          isEmpty: !validColorScheme,
-          isLightDefault: validColorScheme === "light",
-          willBeUsed: true,
-        });
       } else {
-        console.log("API - NO topBarColorScheme FOUND IN REQUEST");
+        return;
       }
 
       if ("topBarNavSpacing" in updatedSettings.headerSettings) {
@@ -185,14 +125,6 @@ export async function POST(request: Request) {
         // Convert to number with default of 24
         updatedSettings.headerSettings.topBarNavSpacing = Number(
           navSpacing || 24
-        );
-        console.log(
-          "API - Normalized topBarNavSpacing:",
-          updatedSettings.headerSettings.topBarNavSpacing,
-          "Original value:",
-          navSpacing,
-          "Type:",
-          typeof updatedSettings.headerSettings.topBarNavSpacing
         );
       }
     }
@@ -207,21 +139,6 @@ export async function POST(request: Request) {
       },
     };
 
-    console.log("API - Final settings to write:", {
-      hasHeaderSettings: !!finalSettings.headerSettings,
-      topBarVisible: finalSettings.headerSettings?.topBarVisible,
-      topBarVisibleType: typeof finalSettings.headerSettings?.topBarVisible,
-      topBarHeight: finalSettings.headerSettings?.topBarHeight,
-      topBarHeightType: typeof finalSettings.headerSettings?.topBarHeight,
-      topBarNavStyle: finalSettings.headerSettings?.topBarNavStyle,
-      topBarTextTransform: finalSettings.headerSettings?.topBarTextTransform,
-      topBarColorScheme: finalSettings.headerSettings?.topBarColorScheme,
-      topBarFontSizeScale: finalSettings.headerSettings?.topBarFontSizeScale,
-      topBarNavSpacing: finalSettings.headerSettings?.topBarNavSpacing,
-      topBarNavSpacingType:
-        typeof finalSettings.headerSettings?.topBarNavSpacing,
-    });
-
     // Ensure directory exists
     const dir = path.dirname(settingsPath);
     if (!fs.existsSync(dir)) {
@@ -234,8 +151,6 @@ export async function POST(request: Request) {
       JSON.stringify(finalSettings, null, 2),
       "utf-8"
     );
-
-    console.log("API - Settings file written successfully");
 
     return NextResponse.json({
       success: true,

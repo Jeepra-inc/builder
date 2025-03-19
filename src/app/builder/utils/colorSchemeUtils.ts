@@ -31,19 +31,73 @@ export const fetchColorSchemes = async (): Promise<ColorScheme[]> => {
     }
 
     const data = await response.json();
-    if (data.globalStyles?.colors?.schemes) {
+
+    // Add default schemes if none exist
+    const fallbackSchemes = [
+      {
+        id: "light",
+        name: "Light",
+        background: "#ffffff",
+        text: "#333333",
+      },
+      {
+        id: "dark",
+        name: "Dark",
+        background: "#1a1a1a",
+        text: "#ffffff",
+      },
+      {
+        id: "scheme-1",
+        name: "Scheme 1",
+        background: "#f8f9fa",
+        text: "#212529",
+      },
+      {
+        id: "scheme-2",
+        name: "Scheme 2",
+        background: "#212529",
+        text: "#f8f9fa",
+      },
+    ];
+
+    if (
+      data.globalStyles?.colors?.schemes &&
+      data.globalStyles.colors.schemes.length > 0
+    ) {
       const schemes = data.globalStyles.colors.schemes as ColorScheme[];
       console.log("Fetched color schemes:", schemes);
       // Update the global cache
       globalColorSchemes = schemes;
       return schemes;
+    } else {
+      console.warn("No color schemes found in settings.json, using fallbacks");
+      globalColorSchemes = fallbackSchemes;
+      return fallbackSchemes;
     }
 
     console.warn("No color schemes found in settings.json");
     return [];
   } catch (error) {
     console.error("Error fetching color schemes:", error);
-    return [];
+
+    // Return default schemes on error
+    const fallbackSchemes = [
+      {
+        id: "light",
+        name: "Light",
+        background: "#ffffff",
+        text: "#333333",
+      },
+      {
+        id: "dark",
+        name: "Dark",
+        background: "#1a1a1a",
+        text: "#ffffff",
+      },
+    ];
+
+    globalColorSchemes = fallbackSchemes;
+    return fallbackSchemes;
   }
 };
 

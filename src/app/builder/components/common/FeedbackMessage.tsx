@@ -62,7 +62,9 @@ export function FeedbackMessage({
           exit={{ opacity: 0, y: -20 }}
           className="fixed top-4 right-4 z-50"
         >
-          <div className={`flex items-center p-3 px-4 rounded-md shadow-lg ${getBackgroundColor()}`}>
+          <div
+            className={`flex items-center p-3 px-4 rounded-md shadow-lg ${getBackgroundColor()}`}
+          >
             <div className="mr-3">{getIcon()}</div>
             <div className="text-white font-medium">{message}</div>
             <button
@@ -83,9 +85,9 @@ export function FeedbackMessage({
 // const [feedbackMessage, setFeedbackMessage] = useState("");
 // const [feedbackType, setFeedbackType] = useState<"success" | "error" | "info">("success");
 //
-// <FeedbackMessage 
+// <FeedbackMessage
 //   message={feedbackMessage}
 //   type={feedbackType}
-//   show={showFeedback} 
-//   onClose={() => setShowFeedback(false)} 
+//   show={showFeedback}
+//   onClose={() => setShowFeedback(false)}
 // />

@@ -185,6 +185,17 @@ export interface HeaderSettings {
     textColor?: string;
   };
 
+  /**
+   * Top bar settings
+   */
+  topBarVisible?: boolean;
+  topBarHeight?: number;
+  topBarNavStyle?: "style1" | "style2" | "style3";
+  topBarTextTransform?: string;
+  topBarFontSizeScale?: number;
+  topBarColorScheme?: string;
+  topBarNavSpacing?: number;
+
   /** Allow additional properties */
   [key: string]: any;
 }

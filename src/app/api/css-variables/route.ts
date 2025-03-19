@@ -40,13 +40,17 @@ function generateCSSVariables(settings: any): string {
   --header-sticky: ${layout.sticky ? "true" : "false"};
   
   /* Header Color Schemes */
-  --top-bar-color-scheme: ${headerSettings.topBarColorScheme || "light"};
   --main-bar-color-scheme: ${headerSettings.mainBarColorScheme || "light"};
   --bottom-bar-color-scheme: ${headerSettings.bottomBarColorScheme || "light"};
   
+  /* Top Bar Colors - These will be set based on the color scheme */
+  --top-bar-bg: var(--scheme-topBar-background, #f5f5f5);
+  --top-bar-color: var(--scheme-topBar-text, #333);
+  --top-bar-border: var(--scheme-topBar-border, #e5e5e5);
+  
   /* Header Visibility */
-  --top-bar-visible: ${headerSettings.topBarVisible ? "true" : "false"};
-  --bottom-bar-visible: ${headerSettings.bottomEnabled ? "true" : "false"};
+  --top-bar-visible: ${headerSettings.topBarVisible ? "flex" : "none"};
+  --bottom-bar-visible: ${headerSettings.bottomEnabled ? "flex" : "none"};
   
   /* Header Heights */
   --top-bar-height: ${headerSettings.topBarHeight || 40}px;

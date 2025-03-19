@@ -80,7 +80,47 @@ const ColorSchemeSelector: React.FC<ColorSchemeSelectorProps> = ({
 
   // Helper to find current scheme
   const getCurrentScheme = () => {
-    return colorSchemes.find((scheme) => scheme.id === value);
+    if (!value || !colorSchemes.length) return null;
+
+    console.log("🌈 Looking for scheme with id:", value);
+    console.log(
+      "🌈 Available schemes:",
+      colorSchemes.map((s) => s.id)
+    );
+
+    // Try direct match first
+    const directMatch = colorSchemes.find((scheme) => scheme.id === value);
+    if (directMatch) {
+      console.log("🌈 Found direct match for scheme:", directMatch.id);
+      return directMatch;
+    }
+
+    // If not found, try case-insensitive match
+    const caseInsensitiveMatch = colorSchemes.find(
+      (scheme) => scheme.id.toLowerCase() === value.toLowerCase()
+    );
+    if (caseInsensitiveMatch) {
+      console.log(
+        "🌈 Found case-insensitive match for scheme:",
+        caseInsensitiveMatch.id
+      );
+      return caseInsensitiveMatch;
+    }
+
+    // If still not found, add fallback options
+    if (value === "light" || value === "dark") {
+      // Try to find a matching scheme by name
+      const nameMatch = colorSchemes.find(
+        (scheme) => (scheme.name || "").toLowerCase() === value.toLowerCase()
+      );
+      if (nameMatch) {
+        console.log("🌈 Found name match for scheme:", nameMatch.id);
+        return nameMatch;
+      }
+    }
+
+    console.log("🌈 No matching scheme found for:", value);
+    return null;
   };
 
   // Create preview styles for a scheme
@@ -128,6 +168,19 @@ const ColorSchemeSelector: React.FC<ColorSchemeSelectorProps> = ({
                 ></div>
                 <span className="truncate">
                   {getCurrentScheme()?.name || `Scheme ${value}`}
+                </span>
+              </>
+            ) : value ? (
+              // Show something when we have a value but no matching scheme
+              <>
+                <div
+                  className="w-5 h-5 rounded-full border border-gray-200"
+                  style={{
+                    background: value === "dark" ? "#1a1a1a" : "#ffffff",
+                  }}
+                ></div>
+                <span className="truncate">
+                  {value.charAt(0).toUpperCase() + value.slice(1)}
                 </span>
               </>
             ) : (

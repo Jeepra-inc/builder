@@ -1,10 +1,7 @@
 import { useEffect } from "react";
 import { HeaderLayout, HeaderSettings } from "../types";
 import DOMPurify from "dompurify";
-import {
-  generateSearchHTML,
-  handleSearchSettingsMessage,
-} from "../searchSettings";
+import { handleSearchSettingsMessage } from "../searchSettings";
 import { sendMessageToParent } from "../notifications";
 
 /**
@@ -16,9 +13,7 @@ export const useMessageHandling = (
   headerSettings: HeaderSettings,
   setHeaderSettings: React.Dispatch<React.SetStateAction<HeaderSettings>>,
   setCustomHtml: React.Dispatch<React.SetStateAction<Record<string, string>>>,
-  debouncedSetLayoutItems: (items: HeaderLayout) => void,
-  notifySchemeChanges: (schemes: Partial<HeaderSettings>) => void,
-  lastNotifiedSchemesRef: React.MutableRefObject<any>
+  debouncedSetLayoutItems: (items: HeaderLayout) => void
 ): void => {
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -136,28 +131,8 @@ export const useMessageHandling = (
           break;
 
         case "UPDATE_HEADER_SETTINGS":
-          // Update settings immediately without triggering notifications
+          // Update settings immediately
           setHeaderSettings((prev) => ({ ...prev, ...event.data.settings }));
-
-          // If color schemes were part of the update, notify explicitly
-          if (
-            event.data.settings.topBarColorScheme !== undefined ||
-            event.data.settings.mainBarColorScheme !== undefined ||
-            event.data.settings.bottomBarColorScheme !== undefined ||
-            event.data.settings.topBarVisible !== undefined ||
-            event.data.settings.bottomEnabled !== undefined
-          ) {
-            // Wait for the state update to complete before notifying
-            setTimeout(() => {
-              notifySchemeChanges({
-                topBarColorScheme: event.data.settings.topBarColorScheme,
-                mainBarColorScheme: event.data.settings.mainBarColorScheme,
-                bottomBarColorScheme: event.data.settings.bottomBarColorScheme,
-                topBarVisible: event.data.settings.topBarVisible,
-                bottomEnabled: event.data.settings.bottomEnabled,
-              });
-            }, 50);
-          }
 
           // Extract HTML block updates
           const htmlUpdates: Record<string, string> = {};
@@ -208,21 +183,7 @@ export const useMessageHandling = (
             type: "HEADER_STATE",
             settings: headerSettings,
             layoutItems,
-            schemes: {
-              topBarColorScheme: headerSettings.topBarColorScheme || "light",
-              mainBarColorScheme: headerSettings.mainBarColorScheme || "light",
-              bottomBarColorScheme:
-                headerSettings.bottomBarColorScheme || "light",
-            },
           });
-
-          // Update the last notified schemes ref to match what we just sent
-          lastNotifiedSchemesRef.current = {
-            topBarColorScheme: headerSettings.topBarColorScheme || "light",
-            mainBarColorScheme: headerSettings.mainBarColorScheme || "light",
-            bottomBarColorScheme:
-              headerSettings.bottomBarColorScheme || "light",
-          };
           break;
 
         // More cases would be added here (truncated for brevity)
@@ -248,8 +209,5 @@ export const useMessageHandling = (
     setHeaderSettings,
     setCustomHtml,
     debouncedSetLayoutItems,
-    notifySchemeChanges,
-    lastNotifiedSchemesRef,
-    sendMessageToParent,
   ]);
 };

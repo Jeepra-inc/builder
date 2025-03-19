@@ -18,7 +18,7 @@ interface NewArrivalComponentType extends FC<any> {
 // Create the initial schema
 export const getBaseSchema = (): SectionSchema => ({
   name: "New Arrival",
-  type: SectionType.NewArrival,
+  type: SectionType.Banner,
   schema: [
     {
       id: "title",

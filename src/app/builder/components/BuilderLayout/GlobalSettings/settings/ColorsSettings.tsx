@@ -21,33 +21,33 @@ interface ColorScheme {
 }
 
 const defaultSchemes: Omit<ColorScheme, "id">[] = [
-  {
-    name: "Scheme 1",
-    background: "#FFFFFF",
-    text: "#121212",
-    gradient: "linear-gradient(90deg, #00C9FF 0%, #92FE9D 100%)",
-    buttonBackground: "#121212",
-    buttonLabel: "#FFFFFF",
-    outlineButton: "#121212",
-  },
-  {
-    name: "Scheme 2",
-    background: "#F0F0F0",
-    text: "#121212",
-    gradient: "linear-gradient(90deg, #FC466B 0%, #3F5EFB 100%)",
-    buttonBackground: "#121212",
-    buttonLabel: "#FFFFFF",
-    outlineButton: "#121212",
-  },
-  {
-    name: "Scheme 3",
-    background: "#333333",
-    text: "#FFFFFF",
-    gradient: "linear-gradient(90deg, #FDBB2D 0%, #22C1C3 100%)",
-    buttonBackground: "#121212",
-    buttonLabel: "#FFFFFF",
-    outlineButton: "#121212",
-  },
+  // {
+  //   name: "Scheme 1",
+  //   background: "#FFFFFF",
+  //   text: "#121212",
+  //   gradient: "linear-gradient(90deg, #00C9FF 0%, #92FE9D 100%)",
+  //   buttonBackground: "#121212",
+  //   buttonLabel: "#FFFFFF",
+  //   outlineButton: "#121212",
+  // },
+  // {
+  //   name: "Scheme 2",
+  //   background: "#F0F0F0",
+  //   text: "#121212",
+  //   gradient: "linear-gradient(90deg, #FC466B 0%, #3F5EFB 100%)",
+  //   buttonBackground: "#121212",
+  //   buttonLabel: "#FFFFFF",
+  //   outlineButton: "#121212",
+  // },
+  // {
+  //   name: "Scheme 3",
+  //   background: "#333333",
+  //   text: "#FFFFFF",
+  //   gradient: "linear-gradient(90deg, #FDBB2D 0%, #22C1C3 100%)",
+  //   buttonBackground: "#121212",
+  //   buttonLabel: "#FFFFFF",
+  //   outlineButton: "#121212",
+  // },
 ];
 
 type ColorProperty = keyof Omit<
